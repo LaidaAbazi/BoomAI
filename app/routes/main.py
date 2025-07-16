@@ -9,6 +9,9 @@ from app.utils.text_processing import clean_text, detect_language
 from app.utils.auth_helpers import get_current_user_id
 from app.services.ai_service import AIService
 from flasgger import swag_from
+import logging
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint('main', __name__)
 
@@ -31,6 +34,11 @@ def serve_index():
         return redirect(url_for('main.dashboard'))
     else:
         return redirect(url_for('main.login'))
+
+@bp.route("/favicon.ico")
+def favicon():
+    """Serve favicon to prevent 404 errors"""
+    return "", 204  # Return no content to prevent 404 errors
 
 @bp.route("/login")
 def login():
@@ -901,3 +909,54 @@ def create_client_session(case_study_id):
         db.session.rollback()
         print("❌ Error creating client invite token:", str(e))
         return None 
+
+@bp.route('/health')
+def health_check():
+    """Health check endpoint for debugging"""
+    try:
+        # Test database connection
+        db.engine.execute("SELECT 1")
+        db_status = "healthy"
+    except Exception as e:
+        logger.error(f"Database health check failed: {str(e)}")
+        db_status = f"unhealthy: {str(e)}"
+    
+    return jsonify({
+        "status": "ok",
+        "database": db_status,
+        "environment": {
+            "flask_env": request.environ.get('FLASK_ENV', 'unknown'),
+            "database_url_set": bool(request.environ.get('DATABASE_URL')),
+            "secret_key_set": bool(request.environ.get('SECRET_KEY'))
+        }
+    })
+
+@bp.route('/api/health')
+def api_health_check():
+    """API health check endpoint"""
+    return jsonify({"status": "healthy", "message": "API is running"})
+
+@bp.route('/api/db-health')
+def db_health_check():
+    """Database health check endpoint"""
+    try:
+        # Test database connection
+        db.engine.execute("SELECT 1")
+        
+        # Check if users table exists
+        tables = db.engine.table_names()
+        users_table_exists = 'users' in tables
+        
+        return jsonify({
+            "status": "healthy",
+            "database": "connected",
+            "users_table_exists": users_table_exists,
+            "available_tables": tables
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "database": "error",
+            "error": str(e),
+            "error_type": str(type(e))
+        }), 500 

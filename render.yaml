@@ -3,7 +3,10 @@ services:
     name: storyboom-ai-api
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt
+      python init_db.py
+      python -m flask db upgrade
     startCommand: gunicorn run:app --config gunicorn.conf.py
     envVars:
       - key: PYTHON_VERSION
@@ -14,6 +17,8 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
+      - key: BASE_URL
+        value: https://boomai.onrender.com
       - key: OPENAI_API_KEY
         sync: false
       - key: HEYGEN_API_KEY

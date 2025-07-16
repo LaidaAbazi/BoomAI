@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, request, jsonify, session
 from flask_mail import Message
 from sqlalchemy import create_engine
 from werkzeug.security import check_password_hash
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime, timedelta
 from app.models import db, User
 from app.mappers.user_mapper import UserMapper
@@ -15,6 +15,9 @@ from app import serializer, mail
 from sqlalchemy.engine.create import create_engine
 from flask import url_for
 from flasgger import swag_from
+import logging
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
@@ -65,56 +68,119 @@ bp = Blueprint('auth', __name__, url_prefix='/api')
 def api_signup():
     """User registration endpoint"""
     try:
+        # Check database connection first
+        try:
+            from sqlalchemy import text
+            db.session.execute(text("SELECT 1"))
+            logger.info("Database connection test successful")
+        except Exception as db_error:
+            logger.error(f"Database connection failed: {str(db_error)}")
+            logger.error(f"Database URL: {os.getenv('DATABASE_URL', 'Not set')}")
+            error_response = UserFriendlyErrors.get_general_error("database_error", db_error)
+            return jsonify(error_response), 500
+        
         data = request.get_json()
+        if not data:
+            logger.error("No JSON data received in signup request")
+            error_response = UserFriendlyErrors.get_general_error("invalid_request")
+            return jsonify(error_response), 400
+        
+        logger.info(f"Processing signup request for email: {data.get('email', 'unknown')}")
         
         # Validate input using schema
         schema = UserCreateSchema()
         try:
             validated_data = schema.load(data)
         except ValidationError as e:
+            logger.warning(f"Validation error in signup: {str(e)}")
             error_response = UserFriendlyErrors.get_auth_error("validation_failed", e)
             return jsonify(error_response), 400
         
         # Check if user already exists
-        existing_user = User.query.filter_by(email=validated_data['email'].lower()).first()
-        if existing_user:
-            error_response = UserFriendlyErrors.get_auth_error("user_exists")
-            return jsonify(error_response), 409
+        try:
+            existing_user = User.query.filter_by(email=validated_data['email'].lower()).first()
+            if existing_user:
+                logger.info(f"User already exists: {validated_data['email']}")
+                error_response = UserFriendlyErrors.get_auth_error("user_exists")
+                return jsonify(error_response), 409
+        except Exception as query_error:
+            logger.error(f"Error checking existing user: {str(query_error)}")
+            logger.error(f"Query error type: {type(query_error)}")
+            error_response = UserFriendlyErrors.get_general_error("database_error", query_error)
+            return jsonify(error_response), 500
         
         # Create new user using mapper
-        new_user = UserMapper.dto_to_model(validated_data)
+        try:
+            new_user = UserMapper.dto_to_model(validated_data)
+            logger.info(f"User model created, attempting to save to database...")
+            db.session.add(new_user)
+            db.session.commit()
+            logger.info(f"User created successfully: {new_user.email}")
+        except IntegrityError as integrity_error:
+            db.session.rollback()
+            logger.error(f"Integrity error during user creation: {str(integrity_error)}")
+            error_response = UserFriendlyErrors.get_auth_error("user_exists")
+            return jsonify(error_response), 409
+        except OperationalError as op_error:
+            db.session.rollback()
+            logger.error(f"Operational error during user creation: {str(op_error)}")
+            logger.error(f"Operational error type: {type(op_error)}")
+            error_response = UserFriendlyErrors.get_general_error("database_error", op_error)
+            return jsonify(error_response), 500
+        except Exception as create_error:
+            db.session.rollback()
+            logger.error(f"Unexpected error during user creation: {str(create_error)}")
+            logger.error(f"Create error type: {type(create_error)}")
+            import traceback
+            logger.error(f"Create error traceback: {traceback.format_exc()}")
+            error_response = UserFriendlyErrors.get_general_error("database_error", create_error)
+            return jsonify(error_response), 500
         
-        db.session.add(new_user)
-        db.session.commit()
-        token = serializer.dumps(new_user.email, salt='email-confirm')
-        BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:10000")
-        verification_link = f"{BASE_URL}/api/verify/{token}"
+        # Generate verification token
+        try:
+            token = serializer.dumps(new_user.email, salt='email-confirm')
+            BASE_URL = os.getenv("BASE_URL", "https://boomai.onrender.com")
+            verification_link = f"{BASE_URL}/api/verify/{token}"
+        except Exception as token_error:
+            logger.error(f"Error generating verification token: {str(token_error)}")
+            # Continue without verification token
         
         # Try to send email, but don't fail if it doesn't work
         try:
             send_email(new_user.email, verification_link)
+            logger.info(f"Verification email sent to: {new_user.email}")
         except Exception as email_error:
-            print(f"Email sending failed: {email_error}")
+            logger.error(f"Email sending failed: {email_error}")
             # Continue with signup even if email fails
         
         # Return response using mapper
-        user_dto = UserMapper.model_to_dto(new_user)
-        return jsonify({
-            "success": True,
-            "message": "User created successfully",
-            "user": user_dto
-        }), 201
+        try:
+            user_dto = UserMapper.model_to_dto(new_user)
+            return jsonify({
+                "success": True,
+                "message": "User created successfully",
+                "user": user_dto
+            }), 201
+        except Exception as dto_error:
+            logger.error(f"Error creating user DTO: {str(dto_error)}")
+            # Return basic success response if DTO creation fails
+            return jsonify({
+                "success": True,
+                "message": "User created successfully",
+                "user": {
+                    "id": new_user.id,
+                    "email": new_user.email,
+                    "first_name": new_user.first_name,
+                    "last_name": new_user.last_name
+                }
+            }), 201
         
-    except IntegrityError:
-        db.session.rollback()
-        error_response = UserFriendlyErrors.get_auth_error("user_exists")
-        return jsonify(error_response), 409
     except Exception as e:
         db.session.rollback()
-        print(f"Signup error: {str(e)}")
-        print(f"Error type: {type(e)}")
+        logger.error(f"Unexpected error in signup: {str(e)}")
+        logger.error(f"Error type: {type(e)}")
         import traceback
-        print(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         error_response = UserFriendlyErrors.get_general_error("server_error", e)
         return jsonify(error_response), 500
 

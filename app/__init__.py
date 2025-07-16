@@ -9,8 +9,14 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
+import logging
+
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -30,7 +36,15 @@ def create_app(config_name=None):
     
     # Configuration
     app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev_secret_key")
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///./case_study.db")
+    
+    # Database configuration with better error handling
+    database_url = os.getenv("DATABASE_URL", "sqlite:///./case_study.db")
+    
+    # Handle Render's PostgreSQL URL format
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # JWT configuration
@@ -167,6 +181,22 @@ def create_app(config_name=None):
     # Import models after db initialization
     with app.app_context():
         from app.models import User, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, Feedback
+        
+        # Ensure database tables exist
+        try:
+            logger.info("Checking database connection...")
+            from sqlalchemy import text
+            db.session.execute(text("SELECT 1"))
+            logger.info("Database connection successful")
+            
+            # Create tables if they don't exist
+            logger.info("Creating database tables if they don't exist...")
+            db.create_all()
+            logger.info("Database tables ready")
+            
+        except Exception as e:
+            logger.error(f"Database initialization error: {str(e)}")
+            # Don't fail the app startup, but log the error
     
     # Register blueprints
     from app.routes import auth, case_studies, interviews, media, api, metadata
