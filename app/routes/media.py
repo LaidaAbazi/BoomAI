@@ -7,6 +7,7 @@ from app.utils.auth_helpers import get_current_user_id, login_required
 from app.services.ai_service import AIService
 from app.services.media_service import MediaService
 from app.utils.error_messages import UserFriendlyErrors
+from flasgger import swag_from
 
 bp = Blueprint('media', __name__, url_prefix='/api')
 
@@ -26,6 +27,45 @@ WONDERCRAFT_API_BASE_URL = "https://api.wondercraft.ai/v1"
 
 @bp.route("/generate_video", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Generate video',
+    'description': 'Generate a video using HeyGen API',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Video generation started',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'video_id': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request'},
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Case study not found'}
+    }
+})
 def generate_video():
     """Generate video using HeyGen API"""
     try:
@@ -624,6 +664,33 @@ def serve_podcast_audio(case_study_id):
         return jsonify({"error": "Internal server error"}), 500
 
 @bp.route("/download/<filename>")
+@swag_from({
+    'tags': ['Files'],
+    'summary': 'Download generated files',
+    'description': 'Download generated PDF files',
+    'parameters': [
+        {
+            'name': 'filename',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'}
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'File download',
+            'content': {
+                'application/pdf': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                }
+            }
+        },
+        404: {'description': 'File not found'}
+    }
+})
 def download_pdf(filename):
     """Download generated PDF file"""
     try:
@@ -632,9 +699,84 @@ def download_pdf(filename):
         return jsonify({"error": str(e)}), 500
 
 @bp.route('/generated_pdfs/<filename>')
+@swag_from({
+    'tags': ['Files'],
+    'summary': 'Serve generated PDFs',
+    'description': 'Serve generated PDF files',
+    'parameters': [
+        {
+            'name': 'filename',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'}
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'File served',
+            'content': {
+                'application/pdf': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                }
+            }
+        },
+        404: {'description': 'File not found'}
+    }
+})
 def serve_generated_file(filename):
     """Serve generated files"""
     try:
         return send_file(f"generated_pdfs/{filename}")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/sentiment_chart/<int:case_study_id>')
+@swag_from({
+    'tags': ['Metadata'],
+    'summary': 'Get sentiment chart',
+    'description': 'Retrieve sentiment analysis chart for a case study',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'}
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Sentiment chart retrieved',
+            'content': {
+                'image/png': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                }
+            }
+        },
+        404: {'description': 'Sentiment chart not found'}
+    }
+})
+def serve_sentiment_chart(case_study_id):
+    """Serve sentiment chart image from database"""
+    try:
+        case_study = CaseStudy.query.get(case_study_id)
+        if not case_study or not case_study.sentiment_chart_data:
+            return jsonify({"error": "Sentiment chart not found"}), 404
+        
+        # Return the image data
+        from flask import Response
+        return Response(
+            case_study.sentiment_chart_data,
+            mimetype='image/png',
+            headers={
+                'Cache-Control': 'public, max-age=3600',
+                'Content-Disposition': 'inline'
+            }
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500 

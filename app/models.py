@@ -28,6 +28,7 @@ class CaseStudy(db.Model):
     final_summary_pdf_path = Column(String(500))
     final_summary_pdf_data = Column(db.LargeBinary)
     final_summary_word_data = Column(db.LargeBinary)
+    sentiment_chart_data = Column(db.LargeBinary, nullable=True)
     meta_data_text = Column(Text, nullable=True)
     linkedin_post = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -118,6 +119,7 @@ class Feedback(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     feedback_type = Column(String(50))
     status = Column(String(20), default='pending')
+    feedback_summary = Column(Text, nullable=True)
     
     user = relationship('User', backref='feedbacks')
 
@@ -129,5 +131,6 @@ class Feedback(db.Model):
             'rating': self.rating,
             'created_at': self.created_at.isoformat(),
             'feedback_type': self.feedback_type,
-            'status': self.status
+            'status': self.status,
+            'feedback_summary': self.feedback_summary
         } 

@@ -8,6 +8,7 @@ from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview
 from app.utils.text_processing import clean_text, detect_language
 from app.utils.auth_helpers import get_current_user_id
 from app.services.ai_service import AIService
+from flasgger import swag_from
 
 bp = Blueprint('main', __name__)
 
@@ -75,6 +76,31 @@ def index_page():
     return render_template('index.html')
 
 @bp.route("/session")
+@swag_from({
+    'tags': ['Real-time Interviews'],
+    'summary': 'Create OpenAI realtime session',
+    'description': 'Create OpenAI realtime session for voice interviews',
+    'responses': {
+        200: {
+            'description': 'Session configuration for real-time voice chat',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'client_secret': {
+                                'type': 'object',
+                                'properties': {
+                                    'value': {'type': 'string'}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
 def create_session():
     """Create OpenAI realtime session"""
     headers = {
@@ -89,6 +115,53 @@ def create_session():
     return jsonify(response.json())
 
 @bp.route("/save_transcript", methods=["POST"])
+@swag_from({
+    'tags': ['Real-time Interviews'],
+    'summary': 'Save provider interview transcript',
+    'description': 'Save solution provider interview transcript',
+    'parameters': [
+        {
+            'name': 'provider_session_id',
+            'in': 'query',
+            'required': True,
+            'schema': {'type': 'string'}
+        }
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'speaker': {'type': 'string'},
+                            'text': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Transcript saved to DB',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing provider_session_id'}
+    }
+})
 def save_transcript():
     """Save provider transcript"""
     try:
@@ -132,6 +205,55 @@ def save_transcript():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/save_client_transcript", methods=["POST"])
+@swag_from({
+    'tags': ['Real-time Interviews'],
+    'summary': 'Save client interview transcript',
+    'description': 'Save client interview transcript',
+    'parameters': [
+        {
+            'name': 'token',
+            'in': 'query',
+            'required': True,
+            'schema': {'type': 'string'}
+        }
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'speaker': {'type': 'string'},
+                            'text': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Client transcript saved',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'},
+                            'session_id': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing token'},
+        404: {'description': 'Invalid token'}
+    }
+})
 def save_client_transcript():
     """Save client transcript"""
     try:
@@ -602,6 +724,43 @@ def get_provider_transcript():
 
 
 @bp.route("/extract_names", methods=["POST"])
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Extract names from case study',
+    'description': 'Extract company and project names from case study text',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['summary'],
+                    'properties': {
+                        'summary': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Names extracted successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'names': {'type': 'object'},
+                            'method': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request'}
+    }
+})
 def extract_names():
     """Extract names from case study text"""
     try:

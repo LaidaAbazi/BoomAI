@@ -1,19 +1,18 @@
 services:
   - type: web
-    name: storyAI
+    name: storyboom-ai-api
     env: python
-    buildCommand: python -m pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
-    startCommand: cd backend && gunicorn server:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app --config gunicorn.conf.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: DATABASE_URL
-        fromDatabase:
-          name: storyboomai-db
-          property: connectionString
-      - key: JWT_SECRET_KEY
-        generateValue: true
+        value: 3.9.16
+      - key: FLASK_ENV
+        value: production
       - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
@@ -25,9 +24,15 @@ services:
         sync: false
       - key: PICTORY_USER_ID
         sync: false
-      - key: PORT
-        value: 10000
-      - key: FLASK_ENV
-        value: production
-      - key: FLASK_APP
-        value: server.py 
+      - key: WONDERCRAFT_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: storyboom-ai-db
+          property: connectionString
+
+databases:
+  - name: storyboom-ai-db
+    databaseName: storyboom_ai
+    user: storyboom_ai_user
+    plan: free 

@@ -485,6 +485,35 @@
       color: #1f2937;
       font-size: 1.5rem;
     }
+    .meta-data-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .regenerate-metadata-btn {
+      background: linear-gradient(90deg, #06B6D4 0%, #0891b2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.15);
+    }
+    .regenerate-metadata-btn:hover {
+      background: linear-gradient(90deg, #0891b2 0%, #06B6D4 100%);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+    }
+    .regenerate-metadata-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
     .close-meta-data {
       background: none;
       border: none;
@@ -775,12 +804,18 @@
     <div class="meta-data-content">
         <div class="meta-data-header">
             <h3>Director's Cut Notes</h3>
-            <button class="close-meta-data"><i class="fas fa-times"></i></button>
+            <div class="meta-data-actions">
+                <button class="regenerate-metadata-btn" onclick="regenerateMetadata()" title="Regenerate Metadata">
+                    <i class="fas fa-sync-alt"></i> Regenerate
+                </button>
+                <button class="close-meta-data"><i class="fas fa-times"></i></button>
+            </div>
         </div>
         <div class="meta-data-sections">
             <div class="meta-section">
                 <h4>Sentiment Analysis</h4>
                 <div class="visualization-grid">
+                    <div id="sentimentChart"></div>
                     <div id="sentimentGauge"></div>
                     <div id="emotionsRadar"></div>
                     <div id="satisfactionChart"></div>
@@ -2532,19 +2567,48 @@
       let metaData = {};
       try {
         metaData = JSON.parse(story.meta_data_text || '{}');
+        console.log('🔍 Parsed metadata:', metaData);
+        console.log('🔍 Sentiment data:', metaData.sentiment);
+        if (metaData.sentiment) {
+          console.log('🔍 Sentiment visualizations:', metaData.sentiment.visualizations);
+          console.log('🔍 Sentiment chart img:', metaData.sentiment.visualizations?.sentiment_chart_img);
+          console.log('🔍 Sentiment gauge:', metaData.sentiment.visualizations?.client_satisfaction_gauge);
+          console.log('🔍 Sentiment gauge type:', typeof metaData.sentiment.visualizations?.client_satisfaction_gauge);
+          console.log('🔍 Sentiment gauge length:', metaData.sentiment.visualizations?.client_satisfaction_gauge?.length);
+        }
       } catch (e) {
         console.error('Error parsing meta data:', e);
       }
 
       // --- Improved Sentiment Visualization & Label ---
       if (metaData.sentiment?.visualizations?.sentiment_chart_img) {
+        console.log('✅ Displaying sentiment chart image');
+        console.log('🔍 Sentiment chart URL:', metaData.sentiment.visualizations.sentiment_chart_img);
         const sentiment = metaData.sentiment.overall_sentiment;
         let emoji = '😐', color = '#fbbf24';
         if (sentiment.sentiment === 'positive') { emoji = '😊'; color = '#22c55e'; }
         if (sentiment.sentiment === 'negative') { emoji = '😞'; color = '#ef4444'; }
-        document.getElementById('sentimentGauge').innerHTML = `
+        
+        const imgElement = document.createElement('img');
+        imgElement.src = metaData.sentiment.visualizations.sentiment_chart_img;
+        imgElement.alt = "Sentiment Chart";
+        imgElement.style.maxWidth = "100%";
+        imgElement.style.borderRadius = "8px";
+        imgElement.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)";
+        
+        // Add error handling for image loading
+        imgElement.onerror = function() {
+          console.error('❌ Failed to load sentiment chart image');
+          document.getElementById('sentimentChart').innerHTML = '<span style="color:#9ca3af;">Error loading sentiment chart</span>';
+        };
+        
+        imgElement.onload = function() {
+          console.log('✅ Sentiment chart image loaded successfully');
+        };
+        
+        document.getElementById('sentimentChart').innerHTML = `
           <div style="text-align:center;">
-            <img src="${metaData.sentiment.visualizations.sentiment_chart_img}" alt="Sentiment Chart" style="max-width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08);"><br>
+            ${imgElement.outerHTML}<br>
             <span style="font-size:1.2em; font-weight:bold; color:${color};">
               ${emoji} ${sentiment.sentiment.charAt(0).toUpperCase() + sentiment.sentiment.slice(1)}
               <span style="font-size:0.95em; color:#64748b;">(${sentiment.score}/10, Confidence: ${(sentiment.confidence*100).toFixed(0)}%)</span>
@@ -2557,6 +2621,9 @@
             }
           </div>
         `;
+      } else {
+        console.log('❌ No sentiment chart image found');
+        document.getElementById('sentimentChart').innerHTML = '<span style="color:#9ca3af;">No sentiment chart available</span>';
       }
 
       // --- Improved Additional Quotes Display ---
@@ -2590,8 +2657,63 @@
 
       // --- New code for sentiment gauge ---
       if (metaData.sentiment?.visualizations?.client_satisfaction_gauge) {
+        console.log('✅ Displaying sentiment gauge');
         document.getElementById('sentimentGauge').innerHTML = '';
-        Plotly.newPlot('sentimentGauge', JSON.parse(metaData.sentiment.visualizations.client_satisfaction_gauge));
+        try {
+          Plotly.newPlot('sentimentGauge', JSON.parse(metaData.sentiment.visualizations.client_satisfaction_gauge));
+        } catch (e) {
+          console.error('Error plotting sentiment gauge:', e);
+          document.getElementById('sentimentGauge').innerHTML = '<span style="color:#9ca3af;">Error displaying sentiment gauge</span>';
+        }
+      } else {
+        console.log('❌ No sentiment gauge found');
+        document.getElementById('sentimentGauge').innerHTML = '<span style="color:#9ca3af;">No sentiment gauge available</span>';
+      }
+      
+      // Store current story ID for regenerate function
+      window.currentMetaDataStoryId = story.id;
+    }
+
+    async function regenerateMetadata() {
+      if (!window.currentMetaDataStoryId) {
+        alert('No story selected for metadata regeneration.');
+        return;
+      }
+      
+      try {
+        const regenerateBtn = document.querySelector('.regenerate-metadata-btn');
+        const originalText = regenerateBtn.innerHTML;
+        regenerateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Regenerating...';
+        regenerateBtn.disabled = true;
+        
+        const response = await fetch(`/api/metadata/regenerate/${window.currentMetaDataStoryId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          // Refresh the stories to get updated metadata
+          await fetchStories();
+          
+          // Re-show metadata with new data
+          const story = allStories.find(s => s.id === window.currentMetaDataStoryId);
+          if (story) {
+            showMetaData(story);
+          }
+          
+          alert('Metadata regenerated successfully!');
+        } else {
+          alert(`Error: ${data.error || 'Failed to regenerate metadata'}`);
+        }
+      } catch (error) {
+        console.error('Error regenerating metadata:', error);
+        alert(`Error: ${error.message}`);
+      } finally {
+        const regenerateBtn = document.querySelector('.regenerate-metadata-btn');
+        regenerateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Regenerate';
+        regenerateBtn.disabled = false;
       }
     }
 

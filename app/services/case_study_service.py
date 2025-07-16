@@ -17,6 +17,7 @@ import uuid
 import requests
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken
 from app.services.ai_service import AIService
+from app.services.metadata_service import MetadataService
 from app.utils.text_processing import clean_text, detect_language
 from io import BytesIO
 
@@ -32,6 +33,7 @@ class CaseStudyService:
             "presence_penalty": 0.2,
             "frequency_penalty": 0.2
         }
+        self.metadata_service = MetadataService()
     
     def generate_pdf(self, case_study):
         """Generate PDF from case study and store in DB"""
@@ -94,104 +96,16 @@ class CaseStudyService:
             return None
     
     def analyze_sentiment(self, text):
-        """Analyze sentiment of text"""
-        try:
-            analyzer = SentimentIntensityAnalyzer()
-            scores = analyzer.polarity_scores(text)
-            
-            # Determine sentiment category
-            compound_score = scores['compound']
-            
-            if compound_score >= 0.05:
-                sentiment = 'positive'
-            elif compound_score <= -0.05:
-                sentiment = 'negative'
-            else:
-                sentiment = 'neutral'
-            
-            return {
-                'sentiment': sentiment,
-                'compound_score': compound_score,
-                'scores': scores
-            }
-            
-        except Exception as e:
-            print(f"Error analyzing sentiment: {str(e)}")
-            return {
-                'sentiment': 'neutral',
-                'compound_score': 0,
-                'scores': {'pos': 0, 'neg': 0, 'neu': 1, 'compound': 0}
-            }
+        """Analyze sentiment of text using the metadata service"""
+        return self.metadata_service.analyze_sentiment(text)
     
     def generate_sentiment_chart(self, sentiment_score, output_dir="generated_pdfs"):
-        """Generate sentiment visualization chart"""
-        try:
-            # Create a simple horizontal bar chart
-            fig, ax = plt.subplots(figsize=(8, 2))
-            
-            # Create bar
-            colors = ['red' if sentiment_score < 0 else 'green' if sentiment_score > 0 else 'gray']
-            ax.barh(['Sentiment'], [abs(sentiment_score)], color=colors, alpha=0.7)
-            
-            # Set limits
-            ax.set_xlim(-1, 1)
-            ax.set_xlabel('Sentiment Score')
-            ax.set_title('Client Sentiment Analysis')
-            
-            # Add grid
-            ax.grid(True, alpha=0.3)
-            
-            # Generate filename
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"sentiment_chart_{timestamp}.png"
-            filepath = os.path.join(output_dir, filename)
-            
-            # Save chart
-            plt.tight_layout()
-            plt.savefig(filepath, dpi=300, bbox_inches='tight')
-            plt.close()
-            
-            return filepath
-            
-        except Exception as e:
-            print(f"Error generating sentiment chart: {str(e)}")
-            return None
+        """Generate sentiment visualization chart using the metadata service"""
+        return self.metadata_service.generate_sentiment_chart(sentiment_score, output_dir)
     
     def extract_client_satisfaction(self, client_summary):
-        """Extract client satisfaction metrics from summary"""
-        try:
-            # Define categories and keywords
-            categories = {
-                'very_satisfied': ['excellent', 'outstanding', 'amazing', 'fantastic', 'perfect', 'exceeded expectations'],
-                'satisfied': ['good', 'great', 'happy', 'pleased', 'satisfied', 'met expectations'],
-                'neutral': ['okay', 'fine', 'adequate', 'acceptable', 'neutral'],
-                'dissatisfied': ['poor', 'bad', 'disappointed', 'unsatisfied', 'below expectations'],
-                'very_dissatisfied': ['terrible', 'awful', 'horrible', 'failed', 'disaster']
-            }
-            
-            # Analyze text
-            text_lower = client_summary.lower()
-            scores = {}
-            
-            for category, keywords in categories.items():
-                score = sum(1 for keyword in keywords if keyword in text_lower)
-                scores[category] = score
-            
-            # Determine overall satisfaction
-            if scores['very_satisfied'] > 0:
-                return 'very_satisfied'
-            elif scores['satisfied'] > 0:
-                return 'satisfied'
-            elif scores['dissatisfied'] > 0:
-                return 'dissatisfied'
-            elif scores['very_dissatisfied'] > 0:
-                return 'very_dissatisfied'
-            else:
-                return 'neutral'
-                
-        except Exception as e:
-            print(f"Error extracting client satisfaction: {str(e)}")
-            return 'neutral'
+        """Extract client satisfaction metrics from summary using the metadata service"""
+        return self.metadata_service.extract_client_satisfaction(client_summary)
     
     def generate_client_satisfaction_gauge(self, category):
         """Generate client satisfaction gauge chart"""
@@ -247,97 +161,12 @@ class CaseStudyService:
             return None
     
     def extract_client_takeaways(self, client_summary):
-        """Extract key takeaways from client interview using OpenAI."""
-        try:
-            prompt = f"""
-            Analyze the following client interview summary and extract the 3-5 most important key takeaways.
-            Focus on:
-            - Main pain points or challenges they faced
-            - Most valued aspects of the solution
-            - Key benefits or improvements they experienced
-            - Their overall satisfaction level
-            - Any specific metrics or results they mentioned
-
-            Format the response as a bullet-point list.
-
-            Client Summary:
-            {client_summary}
-            """
-
-            headers = {
-                "Authorization": f"Bearer {self.openai_api_key}",
-                "Content-Type": "application/json"
-            }
-
-            payload = {
-                "model": self.openai_config["model"],
-                "messages": [{"role": "system", "content": prompt}],
-                "temperature": 0.3,
-                "max_tokens": 500
-            }
-
-            response = requests.post("https://api.openai.com/v1/chat/completions", 
-                                  headers=headers, 
-                                  json=payload)
-            result = response.json()
-            return result["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            print(f"Error extracting client takeaways: {str(e)}")
-            return "Unable to extract key takeaways."
+        """Extract key takeaways from client interview using the metadata service."""
+        return self.metadata_service.extract_client_takeaways(client_summary)
 
     def extract_and_remove_metadata_sections(self, text, client_summary=None):
-        """Extract and remove metadata sections from text"""
-        try:
-            # Patterns to extract meta sections
-            conflict_pattern = r"(?:\*\*|__)?Corrected\s*&\s*Conflicted Replies(?:\*\*|__)?\s*[\r\n]+(.*?)(?=(?:\*\*|__)?Quotes? Highlights(?:\*\*|__)?|$)"
-            quotes_pattern = r"(?:\*\*|__)?Quotes? Highlights(?:\*\*|__)?\s*[\r\n\-:]*([\s\S]*?)(?=(?:\*\*|__)?[A-Z][^:]*:|$)"
-            
-            # Extract meta sections
-            conflict_match = re.search(conflict_pattern, text, re.IGNORECASE | re.DOTALL)
-            quotes_match = re.search(quotes_pattern, text, re.IGNORECASE | re.DOTALL)
-            corrected_conflicts = conflict_match.group(1).strip() if conflict_match else ""
-            quote_highlights = quotes_match.group(1).strip() if quotes_match else ""
-
-            # Fallback: if quote_highlights is empty, try to extract blockquotes or bulleted quotes
-            if not quote_highlights:
-                # Try to extract lines like: - **Client:** "Quote here..."
-                blockquote_lines = re.findall(r'- \*\*(Client|Provider)\*\*:\s*["""]([\s\S]*?)["""]', text)
-                if blockquote_lines:
-                    quote_highlights = "\n".join(f'- **{who}:** "{q.strip()}"' for who, q in blockquote_lines)
-                else:
-                    # Fallback: extract multi-line quotes between quotes
-                    multiline_quotes = re.findall(r'["""]([\s\S]*?)["""]', text)
-                    if multiline_quotes:
-                        quote_highlights = "\n".join(f'- "{q.strip()}"' for q in multiline_quotes)
-                    elif client_summary:
-                        # Draft a quote from the client summary
-                        drafted = self.draft_quote_from_summary(client_summary, speaker="Client")
-                        quote_highlights = f'- "{drafted}"'
-
-            # Remove meta sections from the main story
-            text = re.sub(conflict_pattern, "", text, flags=re.IGNORECASE | re.DOTALL)
-            text = re.sub(quotes_pattern, "", text, flags=re.IGNORECASE | re.DOTALL)
-            
-            # Extract key takeaways
-            client_takeaways = self.extract_client_takeaways(client_summary) if client_summary else ""
-
-            # Ensure sentiment analysis is included in meta data
-            sentiment = self.analyze_client_sentiment(client_summary) if client_summary else {}
-
-            return text.strip(), {
-                "corrected_conflicts": corrected_conflicts,
-                "quote_highlights": quote_highlights,
-                "sentiment": sentiment,
-                "client_takeaways": client_takeaways,
-                # Add other meta data fields as needed
-            }
-
-        except Exception as e:
-            print(f"Error extracting metadata: {str(e)}")
-            return text.strip(), {
-                'cleaned_text': text,
-                'extracted_data': {}
-            }
+        """Extract and remove metadata sections from text using the metadata service"""
+        return self.metadata_service.extract_and_remove_metadata_sections(text, client_summary)
 
     def create_case_study(self, user_id, title, final_summary=None):
         """Create a new case study"""
@@ -551,76 +380,8 @@ class CaseStudyService:
 
     def draft_quote_from_summary(self, summary, speaker="Client"):
         """Simple template-based fallback if OpenAI is not available"""
-        return f"As a {speaker.lower()}, I can say this project made a real difference for us. We're very happy with the results."
+        return self.metadata_service.draft_quote_from_summary(summary, speaker)
 
     def analyze_client_sentiment(self, client_summary):
-        """Analyze sentiment of client summary"""
-        try:
-            # Simple sentiment analysis - in production you might want to use a proper sentiment analysis library
-            positive_words = ['good', 'great', 'excellent', 'amazing', 'fantastic', 'wonderful', 'satisfied', 'happy', 'pleased', 'impressed', 'delighted', 'outstanding', 'exceptional', 'valuable', 'helpful', 'effective', 'successful', 'improved', 'better', 'best']
-            negative_words = ['bad', 'terrible', 'awful', 'horrible', 'disappointed', 'dissatisfied', 'unhappy', 'poor', 'worst', 'failed', 'problem', 'issue', 'concern', 'worried', 'frustrated', 'angry', 'upset']
-            
-            text_lower = client_summary.lower()
-            positive_count = sum(1 for word in positive_words if word in text_lower)
-            negative_count = sum(1 for word in negative_words if word in text_lower)
-            
-            if positive_count > negative_count:
-                sentiment = "positive"
-                score = min(10, 5 + positive_count - negative_count)
-            elif negative_count > positive_count:
-                sentiment = "negative"
-                score = max(0, 5 - (negative_count - positive_count))
-            else:
-                sentiment = "neutral"
-                score = 5
-            
-            return {
-                "overall_sentiment": {
-                    "sentiment": sentiment,
-                    "confidence": abs(positive_count - negative_count) / max(1, positive_count + negative_count),
-                    "score": score
-                },
-                "emotional_analysis": {
-                    "primary_emotion": sentiment,
-                    "secondary_emotions": [],
-                    "emotional_intensity": max(positive_count, negative_count)
-                },
-                "key_points": {
-                    "positive": [],
-                    "negative": []
-                },
-                "metrics": [],
-                "satisfaction": {
-                    "score": score,
-                    "confidence": abs(positive_count - negative_count) / max(1, positive_count + negative_count),
-                    "key_factors": [],
-                    "statement": ""
-                },
-                "visualizations": {}
-            }
-        except Exception as e:
-            print(f"Error in sentiment analysis: {str(e)}")
-            return {
-                "overall_sentiment": {
-                    "sentiment": "unknown",
-                    "confidence": 0,
-                    "score": 0
-                },
-                "emotional_analysis": {
-                    "primary_emotion": "unknown",
-                    "secondary_emotions": [],
-                    "emotional_intensity": 0
-                },
-                "key_points": {
-                    "positive": [],
-                    "negative": []
-                },
-                "metrics": [],
-                "satisfaction": {
-                    "score": 0,
-                    "confidence": 0,
-                    "key_factors": [],
-                    "statement": "No explicit satisfaction statement found."
-                },
-                "visualizations": {}
-            } 
+        """Analyze sentiment of client summary using the metadata service"""
+        return self.metadata_service.analyze_sentiment(client_summary) 

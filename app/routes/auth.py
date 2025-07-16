@@ -14,11 +14,54 @@ from sqlalchemy.orm.session import sessionmaker
 from app import serializer, mail
 from sqlalchemy.engine.create import create_engine
 from flask import url_for
+from flasgger import swag_from
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
 
 @bp.route('/signup', methods=['POST'])
+@swag_from({
+    'tags': ['Authentication'],
+    'summary': 'Register a new user',
+    'description': 'Create a new user account',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['first_name', 'last_name', 'email', 'password'],
+                    'properties': {
+                        'first_name': {'type': 'string', 'minLength': 1, 'maxLength': 100},
+                        'last_name': {'type': 'string', 'minLength': 1, 'maxLength': 100},
+                        'email': {'type': 'string', 'format': 'email'},
+                        'password': {'type': 'string', 'minLength': 8},
+                        'company_name': {'type': 'string', 'maxLength': 255}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        201: {
+            'description': 'User created successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'},
+                            'user': {'$ref': '#/components/schemas/User'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Validation error'},
+        409: {'description': 'User already exists'}
+    }
+})
 def api_signup():
     """User registration endpoint"""
     try:
@@ -65,6 +108,45 @@ def api_signup():
         return jsonify(error_response), 500
 
 @bp.route('/login', methods=['POST'])
+@swag_from({
+    'tags': ['Authentication'],
+    'summary': 'User login',
+    'description': 'Authenticate user and create session',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['email', 'password'],
+                    'properties': {
+                        'email': {'type': 'string', 'format': 'email'},
+                        'password': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Login successful',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'},
+                            'user': {'$ref': '#/components/schemas/User'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Invalid credentials'},
+        423: {'description': 'Account locked'}
+    }
+})
 def api_login():
     """User login endpoint"""
     try:
@@ -133,12 +215,54 @@ def api_login():
         return jsonify(error_response), 500
 
 @bp.route('/logout', methods=['POST'])
+@swag_from({
+    'tags': ['Authentication'],
+    'summary': 'User logout',
+    'description': 'End user session',
+    'responses': {
+        200: {
+            'description': 'Logout successful',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
 def api_logout():
     """User logout endpoint"""
     session.clear()
     return jsonify({"message": "Logout successful"})
 
 @bp.route('/user')
+@swag_from({
+    'tags': ['Authentication'],
+    'summary': 'Get current user',
+    'description': 'Retrieve current user information',
+    'responses': {
+        200: {
+            'description': 'User information retrieved',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'user': {'$ref': '#/components/schemas/User'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'User not found'}
+    }
+})
 def api_user():
     """Get current user information"""
     from app.utils.auth_helpers import get_current_user_id

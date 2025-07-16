@@ -19,3 +19,7 @@ pytz
 gunicorn
 python-docx 
 flask-migrate
+flask-jwt-extended
+flask-mail
+flasgger
+python-dotenv

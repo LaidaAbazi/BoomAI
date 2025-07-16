@@ -15,6 +15,7 @@ from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
 from app.mappers.case_study_mapper import CaseStudyMapper
 from io import BytesIO
+from flasgger import swag_from
 
 bp = Blueprint('case_studies', __name__, url_prefix='/api')
 
@@ -23,6 +24,39 @@ GENERATED_PDFS_DIR = os.path.join(BASE_DIR, 'generated_pdfs')
 
 @bp.route('/case_studies', methods=['GET'])
 @login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Get all case studies',
+    'description': 'Retrieve all case studies for the current user',
+    'parameters': [
+        {
+            'name': 'label',
+            'in': 'query',
+            'description': 'Filter by label ID',
+            'schema': {'type': 'integer'}
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Case studies retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'case_studies': {
+                                'type': 'array',
+                                'items': {'$ref': '#/components/schemas/CaseStudy'}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'}
+    }
+})
 def get_case_studies():
     """Get all case studies for the current user"""
     try:
@@ -41,6 +75,7 @@ def get_case_studies():
                 'id': case_study.id,
                 'title': case_study.title,
                 'final_summary': case_study.final_summary,
+                'meta_data_text': case_study.meta_data_text,
                 'solution_provider_summary': case_study.solution_provider_interview.summary if case_study.solution_provider_interview else None,
                 'client_summary': case_study.client_interview.summary if case_study.client_interview else None,
                 'client_link_url': case_study.solution_provider_interview.client_link_url if case_study.solution_provider_interview else None,
@@ -71,6 +106,37 @@ def get_case_studies():
 
 @bp.route('/case_studies/<int:case_study_id>', methods=['GET'])
 @login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Get case study by ID',
+    'description': 'Retrieve a specific case study',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'}
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Case study retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'case_study': {'$ref': '#/components/schemas/CaseStudy'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Case study not found'},
+        401: {'description': 'Not authenticated'}
+    }
+})
 def get_case_study(case_study_id):
     """Get a single case study by ID"""
     try:
@@ -84,6 +150,7 @@ def get_case_study(case_study_id):
             'id': case_study.id,
             'title': case_study.title,
             'final_summary': case_study.final_summary,
+            'meta_data_text': case_study.meta_data_text,
             'solution_provider_summary': case_study.solution_provider_interview.summary if case_study.solution_provider_interview else None,
             'client_summary': case_study.client_interview.summary if case_study.client_interview else None,
             'client_link_url': case_study.solution_provider_interview.client_link_url if case_study.solution_provider_interview else None,
@@ -113,6 +180,31 @@ def get_case_study(case_study_id):
 
 @bp.route('/labels', methods=['GET'])
 @login_required
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Get all labels',
+    'description': 'Retrieve all labels for the current user',
+    'responses': {
+        200: {
+            'description': 'Labels retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'labels': {
+                                'type': 'array',
+                                'items': {'$ref': '#/components/schemas/Label'}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'}
+    }
+})
 def get_labels():
     """Get all labels for the current user"""
     try:
@@ -125,6 +217,43 @@ def get_labels():
 
 @bp.route('/labels', methods=['POST'])
 @login_required
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Create a new label',
+    'description': 'Create a new label for organizing case studies',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['name'],
+                    'properties': {
+                        'name': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Label created successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'label': {'$ref': '#/components/schemas/Label'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request'},
+        401: {'description': 'Not authenticated'}
+    }
+})
 def create_label():
     """Create a new label"""
     try:
@@ -146,6 +275,52 @@ def create_label():
 
 @bp.route('/labels/<int:label_id>', methods=['PATCH'])
 @login_required
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Rename a label',
+    'description': 'Update the name of an existing label',
+    'parameters': [
+        {
+            'name': 'label_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'}
+        }
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['name'],
+                    'properties': {
+                        'name': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Label renamed successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'label': {'$ref': '#/components/schemas/Label'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request'},
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Label not found'}
+    }
+})
 def rename_label(label_id):
     """Rename a label"""
     try:
@@ -170,6 +345,36 @@ def rename_label(label_id):
 
 @bp.route('/labels/<int:label_id>', methods=['DELETE'])
 @login_required
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Delete a label',
+    'description': 'Remove a label (case studies will not be deleted)',
+    'parameters': [
+        {
+            'name': 'label_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'}
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Label deleted successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Label not found'}
+    }
+})
 def delete_label(label_id):
     """Delete a label"""
     try:
@@ -293,6 +498,42 @@ def generate_linkedin_post():
 
 @bp.route("/save_as_word", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Summary'],
+    'summary': 'Generate Word document',
+    'description': 'Generate Word document from case study',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Word document file path',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'word_path': {'type': 'string'},
+                            'status': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case_study_id'}
+    }
+})
 def save_as_word():
     """Save case study as Word document and store in DB"""
     try:
@@ -390,6 +631,47 @@ def download_full_summary_pdf():
 
 @bp.route("/generate_full_case_study", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Summary'],
+    'summary': 'Generate full case study',
+    'description': 'Generate the complete final case study from provider and client interviews',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'},
+                        'solution_provider': {'type': 'string'},
+                        'client_name': {'type': 'string'},
+                        'project_name': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Full case study generated',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'text': {'type': 'string'},
+                            'pdf_url': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing or invalid data'},
+        404: {'description': 'Case study not found'}
+    }
+})
 def generate_full_case_study():
     """Generate the complete final case study"""
     try:
@@ -420,6 +702,17 @@ def generate_full_case_study():
         # Check if client story exists
         has_client_story = bool(client_interview and client_summary.strip())
         
+        # Add detailed debugging for client summary
+        print(f"🔍 Case study generation debugging:")
+        print(f"   Provider summary length: {len(provider_summary)}")
+        print(f"   Client summary length: {len(client_summary) if client_summary else 0}")
+        print(f"   Has client interview: {bool(client_interview)}")
+        print(f"   Has client story: {has_client_story}")
+        if client_summary:
+            print(f"   Client summary preview: {client_summary[:100]}...")
+        else:
+            print(f"   ❌ No client summary available")
+        
         # Generate the full case study using AI service
         ai_service = AIService()
         case_study_service = CaseStudyService()
@@ -428,9 +721,68 @@ def generate_full_case_study():
             provider_summary, client_summary, detected_language, has_client_story
         )
         
+        # Extract and save sentiment chart data if present
+        sentiment_chart_data = None
+        if meta_data.get('sentiment', {}).get('visualizations', {}).get('sentiment_chart_data'):
+            sentiment_chart_data = meta_data['sentiment']['visualizations'].pop('sentiment_chart_data')
+            print(f"🔍 Extracted sentiment chart data: {len(sentiment_chart_data)} bytes")
+        
+        # Debug: Print metadata for troubleshooting
+        print(f"🔍 Generated metadata for case study {case_study_id}:")
+        print(f"   Meta data keys: {list(meta_data.keys()) if meta_data else 'None'}")
+        print(f"   Quote highlights length: {len(meta_data.get('quote_highlights', '')) if meta_data else 0}")
+        print(f"   Client takeaways length: {len(meta_data.get('client_takeaways', '')) if meta_data else 0}")
+        print(f"   Sentiment data: {bool(meta_data.get('sentiment')) if meta_data else False}")
+        
+        # Add detailed sentiment debugging
+        if meta_data and meta_data.get('sentiment'):
+            sentiment = meta_data['sentiment']
+            print(f"   🔍 Sentiment details:")
+            print(f"      Overall sentiment: {sentiment.get('overall_sentiment', {}).get('sentiment', 'unknown')}")
+            print(f"      Score: {sentiment.get('overall_sentiment', {}).get('score', 0)}")
+            print(f"      Has visualizations: {bool(sentiment.get('visualizations'))}")
+            if sentiment.get('visualizations'):
+                viz = sentiment['visualizations']
+                print(f"      Sentiment chart img: {viz.get('sentiment_chart_img', 'missing')}")
+                print(f"      Client satisfaction gauge: {bool(viz.get('client_satisfaction_gauge'))}")
+        else:
+            print(f"   ❌ No sentiment data found in metadata")
+            print(f"   🔍 Client summary provided: {bool(client_summary)}")
+            print(f"   🔍 Client summary length: {len(client_summary) if client_summary else 0}")
+        
         # Update case study
         case_study.final_summary = main_story
-        case_study.meta_data_text = json.dumps(meta_data, ensure_ascii=False, indent=2)
+        
+        # Save sentiment chart data if present
+        if sentiment_chart_data:
+            case_study.sentiment_chart_data = sentiment_chart_data
+            print(f"🔍 Saved sentiment chart data to database: {len(sentiment_chart_data)} bytes")
+            
+            # Update the URL in metadata to use the case study ID
+            if meta_data.get('sentiment', {}).get('visualizations', {}).get('sentiment_chart_img') == "PENDING_CASE_STUDY_ID":
+                meta_data['sentiment']['visualizations']['sentiment_chart_img'] = f"/api/sentiment_chart/{case_study.id}"
+                print(f"🔍 Updated sentiment chart URL to: {meta_data['sentiment']['visualizations']['sentiment_chart_img']}")
+        
+        # Debug: Check metadata size and content
+        print(f"🔍 Metadata size before JSON serialization: {len(str(meta_data))}")
+        if meta_data.get('sentiment', {}).get('visualizations'):
+            viz = meta_data['sentiment']['visualizations']
+            print(f"🔍 Sentiment chart img size: {len(str(viz.get('sentiment_chart_img', '')))}")
+            print(f"🔍 Client satisfaction gauge size: {len(str(viz.get('client_satisfaction_gauge', '')))}")
+        
+        try:
+            meta_data_json = json.dumps(meta_data, ensure_ascii=False, indent=2)
+            print(f"🔍 JSON serialization successful, size: {len(meta_data_json)}")
+            case_study.meta_data_text = meta_data_json
+        except Exception as json_error:
+            print(f"❌ JSON serialization error: {str(json_error)}")
+            # Try without the gauge if it's causing issues
+            if meta_data.get('sentiment', {}).get('visualizations', {}).get('client_satisfaction_gauge'):
+                print("🔍 Attempting to save metadata without gauge...")
+                meta_data['sentiment']['visualizations'].pop('client_satisfaction_gauge', None)
+                case_study.meta_data_text = json.dumps(meta_data, ensure_ascii=False, indent=2)
+            else:
+                raise json_error
         
         # Use edited names from frontend if provided, otherwise extract from final summary
         if solution_provider and client_name and project_name:
@@ -511,6 +863,43 @@ def extract_names():
 
 @bp.route("/save_final_summary", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Summary'],
+    'summary': 'Save final summary',
+    'description': 'Auto-save final case study summary',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id', 'final_summary'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'},
+                        'final_summary': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Final summary saved',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing data'}
+    }
+})
 def save_final_summary():
     """Save final summary"""
     try:
@@ -573,6 +962,39 @@ def save_final_summary():
 
 @bp.route("/generate_pdf", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Summary'],
+    'summary': 'Generate PDF',
+    'description': 'Generate PDF document from case study',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'PDF file download',
+            'content': {
+                'application/pdf': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case_study_id'}
+    }
+})
 def generate_pdf():
     """Generate PDF from existing final summary - always regenerates with latest content"""
     try:

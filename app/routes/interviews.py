@@ -12,11 +12,51 @@ from io import BytesIO
 from fpdf import FPDF
 import requests
 import re
+from flasgger import swag_from
 
 bp = Blueprint('interviews', __name__, url_prefix='/api')
 
 @bp.route("/save_provider_summary", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Interviews'],
+    'summary': 'Save provider interview summary',
+    'description': 'Save the summary from a solution provider interview',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id', 'summary'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'},
+                        'summary': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Provider summary saved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'case_study_id': {'type': 'integer'},
+                            'status': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request'},
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Case study not found'}
+    }
+})
 def save_provider_summary():
     """Save provider interview summary"""
     try:

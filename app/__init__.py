@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flasgger import Swagger, swag_from
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -15,6 +16,7 @@ load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+swagger = Swagger()
 
 mail = Mail()
 serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", "dev_secret_key"))
@@ -34,6 +36,107 @@ def create_app(config_name=None):
     # JWT configuration
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev_jwt_secret")
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+    
+    # Flasgger configuration
+    app.config['SWAGGER'] = {
+        'title': 'StoryBoom AI API',
+        'uiversion': 3,
+        'openapi': '3.0.2',
+        'description': 'API for StoryBoom AI - Case Study Generation Platform',
+        'termsOfService': '',
+        'contact': {
+            'name': 'StoryBoom AI Support',
+            'email': 'storyboomai@gmail.com'
+        },
+        'license': {
+            'name': 'MIT',
+            'url': 'https://opensource.org/licenses/MIT'
+        },
+        'licenseUrl': 'https://opensource.org/licenses/MIT',
+        'specs': [
+            {
+                'endpoint': 'apispec_1',
+                'route': '/apispec_1.json',
+                'rule_filter': lambda rule: True,
+                'model_filter': lambda tag: True,
+            }
+        ],
+        'specs_route': '/apidocs/',
+        'securityDefinitions': {
+            'ApiKeyAuth': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'Authorization',
+                'description': 'Session-based authentication (login required)'
+            }
+        },
+        'security': [
+            {
+                'ApiKeyAuth': []
+            }
+        ],
+        'components': {
+            'schemas': {
+                'User': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {'type': 'integer', 'description': 'User ID'},
+                        'first_name': {'type': 'string', 'description': 'User\'s first name'},
+                        'last_name': {'type': 'string', 'description': 'User\'s last name'},
+                        'email': {'type': 'string', 'format': 'email', 'description': 'User\'s email address'},
+                        'company_name': {'type': 'string', 'description': 'User\'s company name'},
+                        'created_at': {'type': 'string', 'format': 'date-time', 'description': 'Account creation date'},
+                        'last_login': {'type': 'string', 'format': 'date-time', 'description': 'Last login date'},
+                        'is_verified': {'type': 'boolean', 'description': 'Email verification status'}
+                    }
+                },
+                'CaseStudy': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {'type': 'integer'},
+                        'title': {'type': 'string'},
+                        'final_summary': {'type': 'string'},
+                        'meta_data_text': {'type': 'string'},
+                        'created_at': {'type': 'string', 'format': 'date-time'},
+                        'updated_at': {'type': 'string', 'format': 'date-time'},
+                        'video_status': {'type': 'string'},
+                        'pictory_video_status': {'type': 'string'},
+                        'podcast_status': {'type': 'string'},
+                        'labels': {
+                            'type': 'array',
+                            'items': {'$ref': '#/components/schemas/Label'}
+                        }
+                    }
+                },
+                'Label': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {'type': 'integer'},
+                        'name': {'type': 'string'}
+                    }
+                },
+                'Feedback': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {'type': 'integer'},
+                        'content': {'type': 'string'},
+                        'rating': {'type': 'integer', 'minimum': 1, 'maximum': 5},
+                        'feedback_type': {'type': 'string'},
+                        'created_at': {'type': 'string', 'format': 'date-time'},
+                        'feedback_summary': {'type': 'string'}
+                    }
+                },
+                'Error': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'},
+                        'message': {'type': 'string'},
+                        'status': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    }
     
     # Security configurations
     app.config.update(
@@ -56,6 +159,8 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
     mail.init_app(app)
+    swagger.init_app(app)
+    
     # Enable CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
     
@@ -64,12 +169,13 @@ def create_app(config_name=None):
         from app.models import User, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, Feedback
     
     # Register blueprints
-    from app.routes import auth, case_studies, interviews, media, api
+    from app.routes import auth, case_studies, interviews, media, api, metadata
     app.register_blueprint(auth.bp)
     app.register_blueprint(case_studies.bp)
     app.register_blueprint(interviews.bp)
     app.register_blueprint(media.bp)
     app.register_blueprint(api.bp)
+    app.register_blueprint(metadata.metadata_bp)
     
     # Register main routes
     from app.routes import main
