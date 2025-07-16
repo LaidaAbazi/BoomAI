@@ -15,7 +15,7 @@ class User(db.Model):
     last_login = Column(DateTime(timezone=True))
     failed_login_attempts = Column(Integer, default=0)
     account_locked_until = Column(DateTime(timezone=True))
-    is_verified = Column(Boolean)
+    is_verified = Column(Boolean, default=False)
 
     case_studies = relationship('CaseStudy', back_populates='user')
 

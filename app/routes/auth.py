@@ -87,8 +87,15 @@ def api_signup():
         db.session.add(new_user)
         db.session.commit()
         token = serializer.dumps(new_user.email, salt='email-confirm')
-        verification_link = url_for('auth.verify', token=token, _external=True)
-        send_email(new_user.email, verification_link)
+        BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:10000")
+        verification_link = f"{BASE_URL}/api/verify/{token}"
+        
+        # Try to send email, but don't fail if it doesn't work
+        try:
+            send_email(new_user.email, verification_link)
+        except Exception as email_error:
+            print(f"Email sending failed: {email_error}")
+            # Continue with signup even if email fails
         
         # Return response using mapper
         user_dto = UserMapper.model_to_dto(new_user)
@@ -104,6 +111,10 @@ def api_signup():
         return jsonify(error_response), 409
     except Exception as e:
         db.session.rollback()
+        print(f"Signup error: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         error_response = UserFriendlyErrors.get_general_error("server_error", e)
         return jsonify(error_response), 500
 
