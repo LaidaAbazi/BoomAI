@@ -160,9 +160,9 @@ def create_app(config_name=None):
         MAIL_USERNAME='storyboomai@gmail.com',
         MAIL_PASSWORD='rwgmqfqazoyaaxhm',  # App Password, not real Gmail password
         MAIL_DEFAULT_SENDER='storyboomai@gmail.com',
-        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_SECURE=False,
         SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SAMESITE='None',
         PERMANENT_SESSION_LIFETIME=timedelta(hours=24),
         MAX_LOGIN_ATTEMPTS=5,
         LOGIN_LOCKOUT_DURATION=timedelta(minutes=15)
@@ -176,7 +176,12 @@ def create_app(config_name=None):
     swagger.init_app(app)
     
     # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={r"/*": {
+        "origins": "*",
+        "supports_credentials": True,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    }})
     
     # Import models after db initialization
     with app.app_context():
