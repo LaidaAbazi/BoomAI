@@ -32,6 +32,8 @@ class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
     SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = 'None'  # Added this line
+
 
 class ProductionConfig(Config):
     """Production configuration"""
