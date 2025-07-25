@@ -199,7 +199,7 @@ def create_app(config_name=None):
             # Don't fail the app startup, but log the error
     
     # Register blueprints
-    from app.routes import auth, case_studies, interviews, media, api, metadata,
+    from app.routes import auth, case_studies, interviews, media, api, metadata
     app.register_blueprint(auth.bp)
     app.register_blueprint(case_studies.bp)
     app.register_blueprint(interviews.bp)
