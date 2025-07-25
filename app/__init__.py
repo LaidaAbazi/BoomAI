@@ -199,14 +199,13 @@ def create_app(config_name=None):
             # Don't fail the app startup, but log the error
     
     # Register blueprints
-    from app.routes import auth, case_studies, interviews, media, api, metadata, slack_oauth
+    from app.routes import auth, case_studies, interviews, media, api, metadata,
     app.register_blueprint(auth.bp)
     app.register_blueprint(case_studies.bp)
     app.register_blueprint(interviews.bp)
     app.register_blueprint(media.bp)
     app.register_blueprint(api.bp)
     app.register_blueprint(metadata.metadata_bp)
-    app.register_blueprint(slack_oauth.bp)
     
     # Register main routes
     from app.routes import main
