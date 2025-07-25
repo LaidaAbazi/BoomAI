@@ -1,8 +1,6 @@
 import os
 from datetime import timedelta
 
-
-
 class Config:
     """Base configuration class"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
@@ -14,14 +12,13 @@ class Config:
     JWT_TOKEN_LOCATION = ['headers']
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
     
-    # Security configurations - Updated for cross-origin support
-    SESSION_COOKIE_SECURE = False  # Changed from True to False
+    # Security configurations
+    SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'None'  # Changed from 'Lax' to 'None'
+    SESSION_COOKIE_SAMESITE = 'Lax'
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
     MAX_LOGIN_ATTEMPTS = 5
     LOGIN_LOCKOUT_DURATION = timedelta(minutes=15)
-
     
     # API Keys
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
@@ -35,8 +32,6 @@ class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
     SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_SAMESITE = 'None'  # Added this line
-
 
 class ProductionConfig(Config):
     """Production configuration"""
