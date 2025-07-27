@@ -160,7 +160,7 @@ def create_app(config_name=None):
         MAIL_USERNAME='storyboomai@gmail.com',
         MAIL_PASSWORD='rwgmqfqazoyaaxhm',  # App Password, not real Gmail password
         MAIL_DEFAULT_SENDER='storyboomai@gmail.com',
-        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_SECURE=False,  # Set to False to allow HTTP cookies for testing
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
         PERMANENT_SESSION_LIFETIME=timedelta(hours=24),
@@ -176,7 +176,69 @@ def create_app(config_name=None):
     swagger.init_app(app)
     
     # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "*"}})
+        # Enable CORS with credentials support
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "http://scg8g8wcc80048c00wc4s48g.91.99.166.133.sslip.io",
+            "http://localhost:3000",
+            "http://localhost:5000",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5000",
+            "https://boomai.onrender.com"
+        ],
+        methods=["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"],
+        allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+        expose_headers=["Content-Type", "Authorization"]
+    )
+    
+    # Add global CORS preflight handler
+    @app.before_request
+    def handle_preflight():
+        if request.method == "OPTIONS":
+            response = app.make_default_options_response()
+            origin = request.headers.get('Origin', '')
+            
+            # Allow specific origins and any sslip.io domain
+            allowed_origins = [
+                "http://localhost:3000",
+                "http://localhost:5000", 
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:5000",
+                "https://boomai.onrender.com"
+            ]
+            
+            # Check if origin is in allowed list or is an sslip.io domain
+            if origin in allowed_origins or origin.endswith('.sslip.io'):
+                response.headers['Access-Control-Allow-Origin'] = origin
+                response.headers['Access-Control-Allow-Credentials'] = 'true'
+                response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE, PATCH'
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+                return response
+    
+    # Add global CORS response handler
+    @app.after_request
+    def add_cors_headers(response):
+        origin = request.headers.get('Origin', '')
+        
+        # Allow specific origins and any sslip.io domain
+        allowed_origins = [
+            "http://localhost:3000",
+            "http://localhost:5000", 
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5000",
+            "https://boomai.onrender.com"
+        ]
+        
+        # Check if origin is in allowed list or is an sslip.io domain
+        if origin in allowed_origins or origin.endswith('.sslip.io'):
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE, PATCH'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        
+        return response
     
     # Import models after db initialization
     with app.app_context():
