@@ -175,6 +175,49 @@ def generate_video():
 
 @bp.route("/video_status/<video_id>", methods=["GET"])
 @login_required
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Check video generation status',
+    'description': 'Check the status of a video generation job',
+    'parameters': [
+        {
+            'name': 'video_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'},
+            'description': 'Video generation job ID'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Video status retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {
+                                'type': 'string',
+                                'enum': ['completed', 'processing', 'pending', 'failed', 'not_ready'],
+                                'description': 'Current status of the video'
+                            },
+                            'video_url': {
+                                'type': 'string',
+                                'description': 'URL of the completed video (if status is completed)'
+                            },
+                            'message': {
+                                'type': 'string',
+                                'description': 'Status message'
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Video ID is required'},
+        500: {'description': 'Internal server error or API error'}
+    }
+})
 def check_video_status(video_id):
     """Check video generation status"""
     if not video_id:
@@ -309,6 +352,53 @@ def generate_pictory_video():
 
 @bp.route("/pictory_video_status/<storyboard_job_id>", methods=["GET"])
 @login_required
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Check Pictory video status',
+    'description': 'Check the status of a Pictory video generation job',
+    'parameters': [
+        {
+            'name': 'storyboard_job_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'},
+            'description': 'Pictory storyboard job ID'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Pictory video status retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {
+                                'type': 'string',
+                                'enum': ['storyboard_processing', 'completed', 'rendering', 'failed', 'unknown'],
+                                'description': 'Current status of the Pictory video'
+                            },
+                            'video_url': {
+                                'type': 'string',
+                                'description': 'URL of the completed video (if status is completed)'
+                            },
+                            'render_job_id': {
+                                'type': 'string',
+                                'description': 'Render job ID (if rendering)'
+                            },
+                            'message': {
+                                'type': 'string',
+                                'description': 'Status message'
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Storyboard job ID is required'},
+        500: {'description': 'Internal server error or API error'}
+    }
+})
 def check_pictory_video_status(storyboard_job_id):
     """Check Pictory video status"""
     if not storyboard_job_id:
@@ -545,6 +635,49 @@ def generate_podcast():
 
 @bp.route("/podcast_status/<job_id>", methods=["GET"])
 @login_required
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Check podcast generation status',
+    'description': 'Check the status of a podcast generation job',
+    'parameters': [
+        {
+            'name': 'job_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'},
+            'description': 'Podcast generation job ID'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Podcast status retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {
+                                'type': 'string',
+                                'enum': ['processing', 'completed', 'failed'],
+                                'description': 'Current status of the podcast'
+                            },
+                            'audio_url': {
+                                'type': 'string',
+                                'description': 'URL of the completed podcast audio (if status is completed)'
+                            },
+                            'message': {
+                                'type': 'string',
+                                'description': 'Status message'
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Job ID is required'},
+        500: {'description': 'Internal server error or API error'}
+    }
+})
 def check_podcast_status(job_id):
     """Check podcast generation status"""
     if not job_id:

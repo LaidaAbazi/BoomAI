@@ -922,6 +922,54 @@ def generate_full_case_study():
 
 @bp.route("/extract_names", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Summary'],
+    'summary': 'Extract names from case study text',
+    'description': 'Extract company names and project title from case study text using AI',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_text'],
+                    'properties': {
+                        'case_study_text': {
+                            'type': 'string',
+                            'description': 'Case study text to extract names from'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Names extracted successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'names': {
+                                'type': 'object',
+                                'properties': {
+                                    'lead_entity': {'type': 'string', 'description': 'Lead company name'},
+                                    'partner_entity': {'type': 'string', 'description': 'Partner/client company name'},
+                                    'project_title': {'type': 'string', 'description': 'Project title'}
+                                }
+                            },
+                            'method': {'type': 'string', 'description': 'Method used for extraction'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study text'},
+        500: {'description': 'Internal server error'}
+    }
+})
 def extract_names():
     """Extract names from case study text"""
     try:

@@ -150,6 +150,76 @@ def submit_feedback():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@bp.route('/feedback/transcript', methods=['POST'])
+@login_required
+@swag_from({
+    'tags': ['Feedback'],
+    'summary': 'Get feedback transcript',
+    'description': 'Get feedback transcript for real-time feedback collection',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['session_id'],
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Feedback session ID'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Feedback transcript retrieved',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'transcript': {
+                                'type': 'array',
+                                'items': {
+                                    'type': 'object',
+                                    'properties': {
+                                        'speaker': {'type': 'string'},
+                                        'text': {'type': 'string'},
+                                        'timestamp': {'type': 'string'}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing session_id'},
+        404: {'description': 'Session not found'},
+        401: {'description': 'Not authenticated'}
+    }
+})
+def get_feedback_transcript():
+    """Get feedback transcript"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return jsonify({"error": "Session ID is required"}), 400
+        
+        # For now, return empty transcript since we don't store real-time transcripts
+        # This endpoint is used by the frontend to get the transcript during feedback collection
+        return jsonify({
+            'transcript': []
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @bp.route('/feedback/history', methods=['GET'])
 @login_required
 @swag_from({

@@ -743,6 +743,40 @@ Transcript:
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/client-interview/<token>", methods=["GET"])
+@swag_from({
+    'tags': ['Interviews'],
+    'summary': 'Get client interview data',
+    'description': 'Get client interview data using token',
+    'parameters': [
+        {
+            'name': 'token',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'},
+            'description': 'Client interview token'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Client interview data retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'provider_name': {'type': 'string'},
+                            'client_name': {'type': 'string'},
+                            'project_name': {'type': 'string'},
+                            'provider_summary': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Invalid or expired token, or case study not found'}
+    }
+})
 def client_interview(token):
     """Get client interview data"""
     try:
