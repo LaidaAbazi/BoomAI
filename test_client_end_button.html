@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Interview End Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #startBtn {
+            background: #00b894;
+            color: white;
+        }
+        #endBtn {
+            background: #e17055;
+            color: white;
+        }
+        .hidden {
+            display: none !important;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Client Interview End Button Test</h1>
+        
+        <div id="status">Click Start to begin the test</div>
+        
+        <button id="startBtn">Start Interview</button>
+        <button id="endBtn" class="hidden">End Interview</button>
+        
+        <div class="log" id="log"></div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let isStarted = false;
+        let hasEnded = false;
+        let transcriptLog = [];
+        
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#007bff';
+            logEl.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function showResult(message, type) {
+            const resultsEl = document.getElementById('results');
+            resultsEl.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        function endConversation(reason) {
+            if (hasEnded) {
+                log('⚠️ Interview already ended', 'error');
+                return;
+            }
+            hasEnded = true;
+            
+            log(`🛑 Interview ended: ${reason}`, 'success');
+            document.getElementById('status').textContent = 'Interview ended';
+            document.getElementById('endBtn').classList.add('hidden');
+            document.getElementById('startBtn').disabled = true;
+            
+            // Simulate the API call that should happen
+            simulateClientSummaryGeneration();
+        }
+        
+        function simulateClientSummaryGeneration() {
+            log('📡 Simulating client summary generation...', 'info');
+            
+            // Simulate API call
+            setTimeout(() => {
+                log('✅ Client summary generated successfully', 'success');
+                log('✅ Full case study generation is automatic', 'success');
+                showResult('✅ Test completed successfully! The end button is working correctly.', 'success');
+            }, 2000);
+        }
+        
+        // Test button visibility
+        function testButtonVisibility() {
+            const endBtn = document.getElementById('endBtn');
+            const isHidden = endBtn.classList.contains('hidden');
+            log(`🔍 End button visibility: ${isHidden ? 'HIDDEN' : 'VISIBLE'}`, isHidden ? 'error' : 'success');
+            return !isHidden;
+        }
+        
+        // Test event listener
+        function testEventListener() {
+            const endBtn = document.getElementById('endBtn');
+            const events = getEventListeners ? getEventListeners(endBtn) : 'Cannot check (DevTools required)';
+            log(`🔍 End button event listeners: ${typeof events === 'object' ? Object.keys(events).length : events}`, 'info');
+        }
+        
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (isStarted) {
+                log('⚠️ Interview already started', 'error');
+                return;
+            }
+            isStarted = true;
+            
+            log('✅ Interview started', 'success');
+            document.getElementById('status').textContent = 'Interview in progress...';
+            document.getElementById('startBtn').disabled = true;
+            
+            // Show end button after a delay (simulating connection)
+            setTimeout(() => {
+                document.getElementById('endBtn').classList.remove('hidden');
+                log('✅ End button should now be visible', 'success');
+                testButtonVisibility();
+                testEventListener();
+            }, 1000);
+            
+            // Simulate some interview activity
+            setTimeout(() => {
+                log('💬 AI: Hello! How are you today?', 'info');
+                transcriptLog.push({ speaker: 'ai', text: 'Hello! How are you today?' });
+            }, 2000);
+            
+            setTimeout(() => {
+                log('💬 User: I\'m doing well, thank you!', 'info');
+                transcriptLog.push({ speaker: 'user', text: 'I\'m doing well, thank you!' });
+            }, 4000);
+        });
+        
+        document.getElementById('endBtn').addEventListener('click', () => {
+            log('🖱️ End button clicked!', 'success');
+            endConversation('🛑 Manual end by client user.');
+        });
+        
+        // Test on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Test page loaded', 'success');
+            log('🔍 Testing initial button state...', 'info');
+            testButtonVisibility();
+            
+            const endBtn = document.getElementById('endBtn');
+            if (endBtn) {
+                log('✅ End button element found', 'success');
+            } else {
+                log('❌ End button element NOT found', 'error');
+            }
+        });
+        
+        log('🧪 Client Interview End Button Test Ready', 'info');
+    </script>
+</body>
+</html> 

@@ -147,6 +147,42 @@ def create_app(config_name=None):
                         'message': {'type': 'string'},
                         'status': {'type': 'string'}
                     }
+                },
+                'Interview': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {'type': 'integer'},
+                        'case_study_id': {'type': 'integer'},
+                        'session_id': {'type': 'string'},
+                        'transcript': {'type': 'string'},
+                        'summary': {'type': 'string'},
+                        'created_at': {'type': 'string', 'format': 'date-time'}
+                    }
+                },
+                'InviteToken': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {'type': 'integer'},
+                        'token': {'type': 'string'},
+                        'case_study_id': {'type': 'integer'},
+                        'used': {'type': 'boolean'},
+                        'created_at': {'type': 'string', 'format': 'date-time'}
+                    }
+                },
+                'HealthStatus': {
+                    'type': 'object',
+                    'properties': {
+                        'status': {'type': 'string'},
+                        'database': {'type': 'string'},
+                        'environment': {
+                            'type': 'object',
+                            'properties': {
+                                'flask_env': {'type': 'string'},
+                                'database_url_set': {'type': 'boolean'},
+                                'secret_key_set': {'type': 'boolean'}
+                            }
+                        }
+                    }
                 }
             }
         }

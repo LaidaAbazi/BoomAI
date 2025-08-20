@@ -31,14 +31,11 @@ class MetadataService:
             Tuple of (cleaned_text, metadata_dict)
         """
         # Patterns to extract meta sections
-        conflict_pattern = r"(?:\*\*|__)?Corrected\s*&\s*Conflicted Replies(?:\*\*|__)?\s*[\r\n]+(.*?)(?=(?:\*\*|__)?Quotes? Highlights(?:\*\*|__)?|$)"
         quotes_pattern = r"(?:\*\*|__)?Quotes? Highlights(?:\*\*|__)?\s*[\r\n\-:]*([\s\S]*?)(?=(?:\*\*|__)?[A-Z][^:]*:|$)"
         
         # Extract meta sections
-        conflict_match = re.search(conflict_pattern, text, re.IGNORECASE | re.DOTALL)
         quotes_match = re.search(quotes_pattern, text, re.IGNORECASE | re.DOTALL)
         
-        corrected_conflicts = conflict_match.group(1).strip() if conflict_match else ""
         quote_highlights = quotes_match.group(1).strip() if quotes_match else ""
 
         # Fallback: if quote_highlights is empty, try to extract blockquotes or bulleted quotes
@@ -58,7 +55,6 @@ class MetadataService:
                     quote_highlights = f'- "{drafted}"'
 
         # Remove meta sections from the main story
-        text = re.sub(conflict_pattern, "", text, flags=re.IGNORECASE | re.DOTALL)
         text = re.sub(quotes_pattern, "", text, flags=re.IGNORECASE | re.DOTALL)
         
         # Extract key takeaways
@@ -82,7 +78,6 @@ class MetadataService:
                 print(f"🔍 Client satisfaction gauge: {bool(viz.get('client_satisfaction_gauge'))}")
 
         return text.strip(), {
-            "corrected_conflicts": corrected_conflicts,
             "quote_highlights": quote_highlights,
             "sentiment": sentiment,
             "client_takeaways": client_takeaways,
@@ -300,8 +295,8 @@ class MetadataService:
                 if chart_bytes:
                     # Store chart bytes in the case study (will be saved by the caller)
                     final_analysis["visualizations"]["sentiment_chart_data"] = chart_bytes
-                    # The URL will be set by the caller after we have the case study ID
-                    final_analysis["visualizations"]["sentiment_chart_img"] = "PENDING_CASE_STUDY_ID"
+                    # Don't set a placeholder URL - it will be set by the caller after we have the case study ID
+                    # final_analysis["visualizations"]["sentiment_chart_img"] = "PENDING_CASE_STUDY_ID"
                     print(f"🔍 Added sentiment chart to visualizations")
                 else:
                     print("❌ Chart bytes are empty")

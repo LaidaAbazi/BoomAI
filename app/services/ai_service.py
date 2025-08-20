@@ -33,14 +33,16 @@ class AIService:
 
 1. **Solution Provider Name** - The company or organization that provided the solution/service
 2. **Client Name** - The company or organization that received the solution/service  
-3. **Project Name** - The name of the project, product, service, or transformation
+3. **Project Name** - The name of the project, product, service, or transformation (NOT a long descriptive title)
 
 Look for these patterns in the text:
-- Title format: "[Provider] x [Client]: [Project]"
 - Company names mentioned in the introduction or background
-- Project names, product names, or service names
+- Project names, product names, or service names (keep these short and specific)
 - Client references like "client", "customer", "partner"
 - Provider references like "we", "our team", "our company"
+- Business context and industry mentions
+
+IMPORTANT: For the project title, look for specific project names like "ChatBot AI", "Digital Transformation", "Customer Portal", "AI Solution", etc. Do NOT use long descriptive phrases, headlines, or sentences. The project title should be 2-4 words maximum.
 
 Case Study Text:
 {intro_text}
@@ -132,31 +134,20 @@ If any entity cannot be found, use "Unknown" for that field. Ensure the JSON is 
         return self.extract_names_from_case_study_llm(text)
     
     def extract_names_from_case_study_fallback(self, text):
-        """Fallback method using the original regex-based extraction."""
+        """Fallback method using simple text analysis."""
         # normalize dashes
         text = text.replace("—", "-").replace("–", "-")
         lines = text.splitlines()
-        if lines:
-            first = lines[0].strip()
-            # strip markdown bold if present
-            if first.startswith("**") and first.endswith("**"):
-                first = first[2:-2].strip()
-
-            # now expect "Provider x Client: Project Name"
-            if ":" in first:
-                left, proj = first.split(":", 1)
-                proj = proj.strip()
-                if " x " in left:
-                    provider, client = left.split(" x ", 1)
-                else:
-                    provider, client = left.strip(), ""
-                return {
-                    "lead_entity": provider.strip() or "Unknown",
-                    "partner_entity": client.strip(),
-                    "project_title": proj or "Unknown Project"
-                }
-
-        # fallback to old logic (if you really need it)
+        
+        # Look for company names and project references in the first few lines
+        intro_text = '\n'.join(lines[:10])
+        
+        # Simple pattern matching for common business terms
+        provider_keywords = ["we", "our team", "our company", "our organization"]
+        client_keywords = ["client", "customer", "partner", "they", "their"]
+        
+        # For now, return default values since this is a fallback
+        # The LLM method should handle most cases
         return {
             "lead_entity": "Unknown",
             "partner_entity": "",

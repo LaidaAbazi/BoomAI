@@ -2208,6 +2208,55 @@
             btnRow.appendChild(downloadBtn);
           }
 
+          // Add Download Word Document button if available
+          if (story.final_summary) {
+            const downloadWordBtn = document.createElement('button');
+            downloadWordBtn.className = 'word-btn';
+            downloadWordBtn.textContent = 'Download Word Document';
+            downloadWordBtn.style.background = 'linear-gradient(90deg, #1E40AF 0%, #3B82F6 100%)';
+            downloadWordBtn.style.color = '#fff';
+            downloadWordBtn.style.border = 'none';
+            downloadWordBtn.style.borderRadius = '10px';
+            downloadWordBtn.style.padding = '12px 24px';
+            downloadWordBtn.style.fontSize = '1rem';
+            downloadWordBtn.style.fontWeight = '600';
+            downloadWordBtn.style.cursor = 'pointer';
+            downloadWordBtn.style.transition = 'all 0.2s';
+            downloadWordBtn.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.15)';
+            downloadWordBtn.style.marginLeft = '12px';
+            downloadWordBtn.onclick = async () => {
+              try {
+                downloadWordBtn.disabled = true;
+                downloadWordBtn.textContent = 'Downloading...';
+                
+                // Download Word document directly
+                const response = await fetch(`/download_word/${story.id}`);
+                if (response.ok) {
+                  const blob = await response.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${story.title || 'Case Study'}.docx`;
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  document.body.removeChild(a);
+                  alert('Word document downloaded successfully!');
+                } else {
+                  const errorData = await response.json();
+                  throw new Error(errorData.error || 'Failed to download Word document');
+                }
+              } catch (err) {
+                console.error('Word document download error:', err);
+                alert('Failed to download Word document: ' + err.message);
+              } finally {
+                downloadWordBtn.disabled = false;
+                downloadWordBtn.textContent = 'Download Word Document';
+              }
+            };
+            btnRow.appendChild(downloadWordBtn);
+          }
+
           tabContent.appendChild(btnRow);
 
           // Add Generate Client Interview button
@@ -2642,7 +2691,7 @@
 
       // --- Existing code for other sections ---
       document.getElementById('clientTakeaways').innerHTML = metaData.client_takeaways || 'No key takeaways available.';
-      document.getElementById('correctedConflicts').innerHTML = metaData.corrected_conflicts || 'No discrepancies found.';
+      document.getElementById('correctedConflicts').innerHTML = metaData.corrected_conflicted_replies || 'No discrepancies found.';
 
       // Close button handler
       const closeBtn = popup.querySelector('.close-meta-data');

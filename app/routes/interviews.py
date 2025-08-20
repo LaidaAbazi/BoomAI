@@ -144,6 +144,50 @@ def save_client_transcript():
         return jsonify({"error": str(e)}), 500
 
 @bp.route("/generate_client_summary", methods=["POST"])
+@swag_from({
+    'tags': ['Interviews'],
+    'summary': 'Generate client interview summary',
+    'description': 'Generate a client perspective summary from client interview transcript',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['transcript', 'token'],
+                    'properties': {
+                        'transcript': {
+                            'type': 'string',
+                            'description': 'Client interview transcript text'
+                        },
+                        'token': {
+                            'type': 'string',
+                            'description': 'Client interview token'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Client summary generated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'summary': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing transcript or token'},
+        404: {'description': 'Case study not found'}
+    }
+})
 def generate_client_summary():
     """Generate summary from client interview transcript"""
     try:
@@ -167,15 +211,95 @@ def generate_client_summary():
         ai_service = AIService()
         client_summary = ai_service.generate_client_summary(transcript, case_study.final_summary)
         
-        # Update client interview record
+        # Update or create client interview record
         client_interview = ClientInterview.query.filter_by(case_study_id=case_study.id).first()
         if client_interview:
+            client_interview.transcript = transcript
             client_interview.summary = client_summary
-            db.session.commit()
+        else:
+            client_interview = ClientInterview(
+                case_study_id=case_study.id,
+                session_id=str(uuid.uuid4()),
+                transcript=transcript,
+                summary=client_summary
+            )
+            db.session.add(client_interview)
+        
+        db.session.commit()
+        
+        # ✅ Automatically generate full case study after client summary is created
+        try:
+            # Check if provider interview exists
+            if case_study.solution_provider_interview:
+                provider_interview = case_study.solution_provider_interview
+                provider_summary = provider_interview.summary or ""
+                detected_language = detect_language(provider_summary)
+                
+                # Generate full case study using the advanced service
+                case_study_service = CaseStudyService()
+                main_story, meta_data = case_study_service.generate_full_case_study(
+                    provider_summary, client_summary, detected_language, True  # has_client_story = True
+                )
+                
+                if main_story and main_story.strip():
+                    # Update case study with final summary and metadata
+                    case_study.final_summary = main_story
+                    
+                    # Handle bytes data in metadata before JSON serialization
+                    serializable_meta_data = {}
+                    for key, value in meta_data.items():
+                        if key == "sentiment" and isinstance(value, dict):
+                            # Handle sentiment data with bytes
+                            sentiment_copy = value.copy()
+                            if "visualizations" in sentiment_copy:
+                                viz_copy = sentiment_copy["visualizations"].copy()
+                                # Remove bytes data from JSON serialization
+                                if "sentiment_chart_data" in viz_copy:
+                                    del viz_copy["sentiment_chart_data"]
+                                sentiment_copy["visualizations"] = viz_copy
+                            serializable_meta_data[key] = sentiment_copy
+                        else:
+                            serializable_meta_data[key] = value
+                    
+                    case_study.meta_data_text = json.dumps(serializable_meta_data, ensure_ascii=False, indent=2)
+                    
+                    # Store sentiment chart bytes data if available
+                    if "sentiment" in meta_data and "visualizations" in meta_data["sentiment"]:
+                        viz_data = meta_data["sentiment"]["visualizations"]
+                        if "sentiment_chart_data" in viz_data and viz_data["sentiment_chart_data"]:
+                            case_study.sentiment_chart_data = viz_data["sentiment_chart_data"]
+                            # Set the proper URL for the sentiment chart
+                            if "sentiment_chart_img" in viz_data:
+                                viz_data["sentiment_chart_img"] = f"/api/case_studies/{case_study.id}/sentiment_chart"
+                    
+                    # Extract names from the final summary
+                    ai_service = AIService()
+                    names = ai_service.extract_names_from_case_study(main_story)
+                    
+                    # Update case study with extracted names (but keep the title as a short hook)
+                    lead_entity = names["lead_entity"]
+                    partner_entity = names["partner_entity"]
+                    project_title = names["project_title"]
+                    
+                    # Don't override the title - keep the short hook that was already generated
+                    case_study.provider_name = lead_entity
+                    case_study.client_name = partner_entity
+                    case_study.project_name = project_title
+                    
+                    db.session.commit()
+                    print(f"✅ Full case study automatically generated and saved for case study {case_study.id}")
+                else:
+                    print(f"⚠️ Failed to generate full case study content for case study {case_study.id}")
+            else:
+                print(f"⚠️ No provider interview found for case study {case_study.id}")
+        except Exception as e:
+            print(f"⚠️ Error in automatic full case study generation: {str(e)}")
+            # Continue without failing the client summary generation
         
         return jsonify({
             "client_summary": client_summary,
-            "status": "success"
+            "status": "success",
+            "case_study_id": case_study.id
         })
         
     except Exception as e:
@@ -245,7 +369,33 @@ def generate_full_case_study():
         
         # Update case study with final summary and metadata
         case_study.final_summary = main_story
-        case_study.meta_data_text = json.dumps(meta_data, ensure_ascii=False, indent=2)
+        
+        # Handle bytes data in metadata before JSON serialization
+        serializable_meta_data = {}
+        for key, value in meta_data.items():
+            if key == "sentiment" and isinstance(value, dict):
+                # Handle sentiment data with bytes
+                sentiment_copy = value.copy()
+                if "visualizations" in sentiment_copy:
+                    viz_copy = sentiment_copy["visualizations"].copy()
+                    # Remove bytes data from JSON serialization
+                    if "sentiment_chart_data" in viz_copy:
+                        del viz_copy["sentiment_chart_data"]
+                    sentiment_copy["visualizations"] = viz_copy
+                serializable_meta_data[key] = sentiment_copy
+            else:
+                serializable_meta_data[key] = value
+        
+        case_study.meta_data_text = json.dumps(serializable_meta_data, ensure_ascii=False, indent=2)
+        
+        # Store sentiment chart bytes data if available
+        if "sentiment" in meta_data and "visualizations" in meta_data["sentiment"]:
+            viz_data = meta_data["sentiment"]["visualizations"]
+            if "sentiment_chart_data" in viz_data and viz_data["sentiment_chart_data"]:
+                case_study.sentiment_chart_data = viz_data["sentiment_chart_data"]
+                # Set the proper URL for the sentiment chart
+                if "sentiment_chart_img" in viz_data:
+                    viz_data["sentiment_chart_img"] = f"/api/case_studies/{case_study.id}/sentiment_chart"
         
         # Use edited names from frontend if provided, otherwise extract from final summary
         if solution_provider and client_name and project_name:
@@ -261,13 +411,12 @@ def generate_full_case_study():
             names = ai_service.extract_names_from_case_study(main_story)
             print(f"✅ Using extracted names from final summary: {names}")
         
-        # Update case study title with the correct names
+        # Update case study with extracted names (but keep the title as a short hook)
         lead_entity = names["lead_entity"]
         partner_entity = names["partner_entity"]
         project_title = names["project_title"]
-        new_title = f"{lead_entity} x {partner_entity}: {project_title}"
         
-        case_study.title = new_title
+        # Don't override the title - keep the short hook that was already generated
         case_study.provider_name = lead_entity
         case_study.client_name = partner_entity
         case_study.project_name = project_title
@@ -322,6 +471,46 @@ def generate_full_case_study():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @bp.route("/extract_interviewee_name", methods=["POST"])
+@swag_from({
+    'tags': ['Interviews'],
+    'summary': 'Extract interviewee name',
+    'description': 'Extract interviewee name from transcript using AI/LLM with fallback to regex',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['transcript'],
+                    'properties': {
+                        'transcript': {
+                            'type': 'string',
+                            'description': 'Interview transcript text'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Name extracted successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'name': {'type': 'string'},
+                            'method': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing transcript'}
+    }
+})
 def extract_interviewee_name():
     """Extract interviewee name from transcript using AI/LLM with fallback to regex"""
     try:

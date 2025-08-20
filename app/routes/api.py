@@ -343,6 +343,51 @@ def update_feedback_summary(feedback_id):
 
 @bp.route("/save_final_summary", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Save final summary',
+    'description': 'Save final summary to case study',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id', 'final_summary'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study'
+                        },
+                        'final_summary': {
+                            'type': 'string',
+                            'description': 'Final case study summary text'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Final summary saved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing required data'},
+        404: {'description': 'Case study not found'},
+        401: {'description': 'Not authenticated'}
+    }
+})
 def save_final_summary():
     """Save final summary to case study"""
     try:
@@ -374,6 +419,47 @@ def save_final_summary():
 
 @bp.route("/save_as_word", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Summary'],
+    'summary': 'Save as Word document',
+    'description': 'Save case study as Word document',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Word document generated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'word_path': {'type': 'string'},
+                            'status': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study ID'},
+        404: {'description': 'Case study not found'},
+        401: {'description': 'Not authenticated'}
+    }
+})
 def save_as_word():
     """Save case study as Word document"""
     try:

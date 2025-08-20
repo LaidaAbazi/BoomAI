@@ -455,6 +455,47 @@ def remove_label_from_case_study(case_study_id, label_id):
 
 @bp.route("/generate_linkedin_post", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Generate LinkedIn post',
+    'description': 'Generate a LinkedIn post from case study content',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'LinkedIn post generated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'linkedin_post': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study ID or no final summary'},
+        404: {'description': 'Case study not found'},
+        500: {'description': 'Error generating LinkedIn post'}
+    }
+})
 def generate_linkedin_post():
     """Generate LinkedIn post from case study"""
     try:
@@ -601,6 +642,35 @@ def save_as_word():
 
 @bp.route("/download_full_summary_pdf")
 @login_required
+@swag_from({
+    'tags': ['Files'],
+    'summary': 'Download full summary PDF',
+    'description': 'Download the full summary PDF from database',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'query',
+            'required': True,
+            'schema': {'type': 'string'},
+            'description': 'ID of the case study'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'PDF downloaded successfully',
+            'content': {
+                'application/pdf': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study ID'},
+        404: {'description': 'Case study not found or PDF not available'}
+    }
+})
 def download_full_summary_pdf():
     """Download the full summary PDF from DB"""
     case_study_id = request.args.get("case_study_id")
@@ -662,7 +732,8 @@ def download_full_summary_pdf():
                         'properties': {
                             'status': {'type': 'string'},
                             'text': {'type': 'string'},
-                            'pdf_url': {'type': 'string'}
+                            'pdf_url': {'type': 'string'},
+                            'word_url': {'type': 'string'}
                         }
                     }
                 }
@@ -797,13 +868,13 @@ def generate_full_case_study():
             names = ai_service.extract_names_from_case_study(main_story)
             print(f"✅ Using extracted names from final summary: {names}")
         
-        # Update case study title with the correct names
+        # Update case study with extracted names (but don't use old format for title)
         lead_entity = names["lead_entity"]
         partner_entity = names["partner_entity"]
         project_title = names["project_title"]
-        new_title = f"{lead_entity} x {partner_entity}: {project_title}"
         
-        case_study.title = new_title
+        # Keep the title as is (it should be a short hook, not the old format)
+        # The title is already set from the initial generation
         case_study.provider_name = lead_entity
         case_study.client_name = partner_entity
         case_study.project_name = project_title
@@ -817,6 +888,13 @@ def generate_full_case_study():
         pdf = FPDF()
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
+        
+        # Add title in bold at the top
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 10, case_study.title, ln=True, align='C')
+        pdf.ln(10)
+        
+        # Add case study content
         pdf.set_font("Arial", size=12)
         for line in main_story.split("\n"):
             pdf.multi_cell(0, 10, line)
@@ -824,12 +902,18 @@ def generate_full_case_study():
         pdf_buffer = BytesIO()
         pdf.output(pdf_buffer, 'S')
         case_study.final_summary_pdf_data = pdf_buffer.getvalue()
+        
+        # Generate Word document
+        word_path = case_study_service.generate_word_document(case_study)
+        word_filename = os.path.basename(word_path) if word_path else None
+        
         db.session.commit()
 
         return jsonify({
             "status": "success",
             "text": main_story,
-            "pdf_url": f"/download/{pdf_filename}"
+            "pdf_url": f"/download/{pdf_filename}",
+            "word_url": f"/download/{word_filename}" if word_filename else None
         })
 
     except Exception as e:
@@ -939,10 +1023,8 @@ def save_final_summary():
         lead_entity = names["lead_entity"]
         partner_entity = names["partner_entity"]
         project_title = names["project_title"]
-        new_title = f"{lead_entity} x {partner_entity}: {project_title}"
 
-        # Update CaseStudy title and name fields
-        case_study.title = new_title
+        # Update CaseStudy name fields (but keep title as is - it should be a short hook)
         case_study.provider_name = lead_entity
         case_study.client_name = partner_entity
         case_study.project_name = project_title
@@ -998,6 +1080,7 @@ def save_final_summary():
 def generate_pdf():
     """Generate PDF from existing final summary - always regenerates with latest content"""
     try:
+        print("PDF called here")
         data = request.get_json()
         case_study_id = data.get("case_study_id")
 
@@ -1013,20 +1096,35 @@ def generate_pdf():
 
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.set_margins(20, 20, 20)  # Left, Top, Right margins
+        pdf.set_auto_page_break(auto=True, margin=20)
         try:
-            # Add title
             pdf.set_font("Arial", 'B', 16)
+
+            pdf.set_text_color(0, 0, 0)
             title = case_study.title or "Case Study"
             clean_title = title.encode('latin-1', 'replace').decode('latin-1')
-            pdf.cell(0, 10, clean_title, ln=True, align='C')
-            pdf.ln(5)
-            # Add final summary content
-            pdf.set_font("Arial", size=12)
+            pdf.multi_cell(0, 10, title, align='C')
+            pdf.ln(10)
+
+            # Add final summary content with section headings
+            pdf.set_text_color(0, 0, 0)
             summary_lines = case_study.final_summary.split('\n')
             for line in summary_lines:
-                clean_line = line.encode('latin-1', 'replace').decode('latin-1')
-                pdf.multi_cell(0, 10, clean_line)
+                clean_line = line.encode('latin-1', 'replace').decode('latin-1').strip()
+
+                # If line is a heading (uppercase & not too long) → bold
+                if clean_line.isupper() and len(clean_line) < 60:
+                    pdf.set_font("Arial", 'B', 13)
+                    pdf.cell(0, 8, clean_line, ln=True)
+                    pdf.ln(2)
+                # Otherwise → normal paragraph text
+                elif clean_line:
+                    pdf.set_font("Arial", '', 11)
+                    pdf.multi_cell(0, 6, clean_line)
+                    pdf.ln(2)
+                else:
+                    pdf.ln(3)  # Extra space for empty lines
         except Exception as pdf_error:
             print(f"❌ PDF generation error: {str(pdf_error)}")
             pdf = FPDF()
@@ -1034,7 +1132,9 @@ def generate_pdf():
             pdf.set_font("Arial", size=12)
             pdf.multi_cell(0, 10, "Case Study PDF")
             pdf.ln(10)
-            pdf.multi_cell(0, 10, case_study.final_summary[:1000] + "..." if len(case_study.final_summary) > 1000 else case_study.final_summary)
+            summary_text = case_study.final_summary[:1000] + "..." if len(
+                case_study.final_summary) > 1000 else case_study.final_summary
+            pdf.multi_cell(0, 10, summary_text)
 
         # Save PDF to database (not filesystem)
         pdf_bytes = pdf.output(dest='S').encode('latin-1')
@@ -1044,6 +1144,7 @@ def generate_pdf():
         # Return the file directly
         pdf_buffer = BytesIO(pdf_bytes)
         pdf_buffer.seek(0)
+
         return send_file(
             pdf_buffer,
             as_attachment=True,

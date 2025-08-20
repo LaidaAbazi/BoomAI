@@ -277,13 +277,35 @@ async function endConversation(reason) {
   })
   .catch(err => console.error("❌ Failed to save client transcript", err));
   
-  // ✅ Clean up WebRTC
-  if (dataChannel) dataChannel.close();
-  if (peerConnection) peerConnection.close();
-  // ✅ Properly stop the microphone to remove Chrome tab mic icon
-  if (window.localStream) {
-    window.localStream.getTracks().forEach(track => track.stop());
-    window.localStream = null;
+  // ✅ IMMEDIATELY stop all audio and connections
+  try {
+    // Stop all audio tracks immediately
+    if (window.localStream) {
+      window.localStream.getTracks().forEach(track => {
+        track.stop();
+        console.log("🔇 Stopped audio track:", track.kind);
+      });
+      window.localStream = null;
+    }
+
+    // Close data channel immediately
+    if (dataChannel) {
+      dataChannel.close();
+      console.log("🔌 Data channel closed");
+    }
+
+    // Close peer connection immediately
+    if (peerConnection) {
+      peerConnection.close();
+      console.log("🔌 Peer connection closed");
+    }
+
+    // Set session as not ready
+    isSessionReady = false;
+    console.log("❌ Session marked as not ready");
+
+  } catch (err) {
+    console.error("❌ Error during connection cleanup:", err);
   }
 
   const endBtn = document.getElementById("endBtn");
@@ -489,6 +511,12 @@ async function initConnection(clientGreeting) {
   }
   
 function handleMessage(event) {
+  // ✅ Don't process messages if conversation has ended
+  if (hasEnded) {
+    console.log("🚫 Message ignored - conversation ended");
+    return;
+  }
+
   const msg = JSON.parse(event.data);
 
   switch (msg.type) {
@@ -532,5 +560,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   const greeting = `Hi there! Thanks for joining to chat about "${project_name}" today.`;
 
   document.getElementById("startBtn").addEventListener("click", () => initConnection(greeting));
-  document.getElementById("endBtn").addEventListener("click", () => endConversation("🛑 Manual end."));
+  document.getElementById("endBtn").addEventListener("click", () => endConversation("🛑 Manual end by client user."));
 });

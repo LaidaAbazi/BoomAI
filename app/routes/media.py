@@ -667,7 +667,7 @@ def serve_podcast_audio(case_study_id):
 @swag_from({
     'tags': ['Files'],
     'summary': 'Download generated files',
-    'description': 'Download generated PDF files',
+    'description': 'Download generated PDF and Word files',
     'parameters': [
         {
             'name': 'filename',
@@ -685,17 +685,31 @@ def serve_podcast_audio(case_study_id):
                         'type': 'string',
                         'format': 'binary'
                     }
+                },
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
                 }
             }
         },
         404: {'description': 'File not found'}
     }
 })
-def download_pdf(filename):
-    """Download generated PDF file"""
+def download_file(filename):
+    """Download generated PDF or Word file"""
     try:
-        return send_file(f"generated_pdfs/{filename}", as_attachment=True)
+        file_path = f"generated_pdfs/{filename}"
+        print(f"🔍 DEBUG: Attempting to download file: {file_path}")
+        print(f"🔍 DEBUG: File exists: {os.path.exists(file_path)}")
+        
+        if not os.path.exists(file_path):
+            return jsonify({"error": "File not found"}), 404
+            
+        return send_file(file_path, as_attachment=True)
     except Exception as e:
+        print(f"🔍 ERROR: Download failed: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @bp.route('/generated_pdfs/<filename>')
