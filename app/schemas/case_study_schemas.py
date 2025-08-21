@@ -56,12 +56,14 @@ class LabelSchema(Schema):
     """Schema for labels"""
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True, validate=validate.Length(min=1, max=64))
+    color = fields.Str(dump_only=True)  # Auto-assigned color
     created_at = fields.DateTime(dump_only=True)
 
 class LabelResponseSchema(Schema):
     """Schema for label response"""
     id = fields.Int(dump_only=True)
     name = fields.Str()
+    color = fields.Str()  # HEX color code
     created_at = fields.DateTime(dump_only=True)
 
 class LabelCreateSchema(Schema):

@@ -1491,15 +1491,21 @@ def download_word_document(case_study_id):
         # Create Word document
         doc = Document()
         
+        # Set default font for the entire document
+        style = doc.styles['Normal']
+        style.font.name = 'Arial'
+        
         # Add title
         title_para = doc.add_paragraph()
         title_run = title_para.add_run(case_study.title or "Case Study")
         title_run.bold = True
         title_run.font.size = Pt(20)
+        title_run.font.name = 'Arial'
         title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
         # Add some spacing
-        doc.add_paragraph()
+        spacing_para = doc.add_paragraph()
+        spacing_para.style = doc.styles['Normal']  # Use Normal style with Arial font
         
         # Add the final summary content
         lines = case_study.final_summary.split('\n')
@@ -1512,10 +1518,12 @@ def download_word_document(case_study_id):
                     header_run = header_para.add_run(line.strip().replace('**', ''))
                     header_run.bold = True
                     header_run.font.size = Pt(15)
+                    header_run.font.name = 'Arial'
                 else:
                     # It's regular content
                     para = doc.add_paragraph()
-                    para.add_run(line.strip())
+                    content_run = para.add_run(line.strip())
+                    content_run.font.name = 'Arial'
         
         # Save to BytesIO buffer
         word_buffer = BytesIO()

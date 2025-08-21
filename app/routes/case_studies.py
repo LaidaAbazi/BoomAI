@@ -195,7 +195,14 @@ def get_case_study(case_study_id):
                             'success': {'type': 'boolean'},
                             'labels': {
                                 'type': 'array',
-                                'items': {'$ref': '#/components/schemas/Label'}
+                                'items': {
+                                    'type': 'object',
+                                    'properties': {
+                                        'id': {'type': 'integer'},
+                                        'name': {'type': 'string'},
+                                        'color': {'type': 'string', 'description': 'HEX color code'}
+                                    }
+                                }
                             }
                         }
                     }
@@ -210,7 +217,7 @@ def get_labels():
     try:
         user_id = get_current_user_id()
         labels = Label.query.filter_by(user_id=user_id).all()
-        labels_data = [{'id': l.id, 'name': l.name} for l in labels]
+        labels_data = [{'id': l.id, 'name': l.name, 'color': l.color} for l in labels]
         return jsonify({'success': True, 'labels': labels_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -268,7 +275,7 @@ def create_label():
         db.session.add(label)
         db.session.commit()
         
-        return jsonify({'success': True, 'label': {'id': label.id, 'name': label.name}})
+        return jsonify({'success': True, 'label': {'id': label.id, 'name': label.name, 'color': label.color}})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -338,7 +345,7 @@ def rename_label(label_id):
         label.name = new_name
         db.session.commit()
         
-        return jsonify({'success': True, 'label': {'id': label.id, 'name': label.name}})
+        return jsonify({'success': True, 'label': {'id': label.id, 'name': label.name, 'color': label.color}})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -392,6 +399,48 @@ def delete_label(label_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
+@bp.route('/color-palette', methods=['GET'])
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Get color palette information',
+    'description': 'Retrieve information about the color palette used for labels',
+    'responses': {
+        200: {
+            'description': 'Color palette information retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'palette': {
+                                'type': 'object',
+                                'properties': {
+                                    'total_colors': {'type': 'integer'},
+                                    'description': {'type': 'string'},
+                                    'colors': {
+                                        'type': 'array',
+                                        'items': {'type': 'string'}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
+def get_color_palette():
+    """Get color palette information for labels"""
+    try:
+        from app.utils.color_utils import ColorUtils
+        palette_info = ColorUtils.get_color_palette_info()
+        return jsonify({'success': True, 'palette': palette_info})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @bp.route('/case_studies/<int:case_study_id>/labels', methods=['POST'])
 @login_required
 def add_labels_to_case_study(case_study_id):
@@ -426,7 +475,7 @@ def add_labels_to_case_study(case_study_id):
                 case_study.labels.append(label)
         
         db.session.commit()
-        return jsonify({'success': True, 'labels': [{'id': l.id, 'name': l.name} for l in case_study.labels]})
+        return jsonify({'success': True, 'labels': [{'id': l.id, 'name': l.name, 'color': l.color} for l in case_study.labels]})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -589,15 +638,21 @@ def save_as_word():
         # Create Word document using python-docx
         doc = Document()
         
+        # Set default font for the entire document
+        style = doc.styles['Normal']
+        style.font.name = 'Arial'
+        
         # Add title
         title_para = doc.add_paragraph()
         title_run = title_para.add_run(title)
         title_run.bold = True
         title_run.font.size = Inches(0.5)
+        title_run.font.name = 'Arial'
         title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
         # Add some spacing
-        doc.add_paragraph()
+        spacing_para = doc.add_paragraph()
+        spacing_para.style = doc.styles['Normal']  # Use Normal style with Arial font
         
         # Add the final summary content
         lines = final_summary.split('\n')
@@ -610,10 +665,12 @@ def save_as_word():
                     header_run = header_para.add_run(line.strip().replace('**', ''))
                     header_run.bold = True
                     header_run.font.size = Inches(0.3)
+                    header_run.font.name = 'Arial'
                 else:
                     # It's regular content
                     para = doc.add_paragraph()
-                    para.add_run(line.strip())
+                    content_run = para.add_run(line.strip())
+                    content_run.font.name = 'Arial'
         
         # Save to BytesIO buffer
         word_buffer = BytesIO()

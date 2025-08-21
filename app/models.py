@@ -104,11 +104,19 @@ class Label(db.Model):
     __tablename__ = 'labels'
     id = Column(Integer, primary_key=True)
     name = Column(String(64), nullable=False)
+    color = Column(String(7), nullable=False)  # HEX color code (e.g., #FAD0D0)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship('User')
     case_studies = relationship('CaseStudy', secondary=case_study_labels, back_populates='labels')
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Auto-assign color if not provided
+        if not self.color and self.name:
+            from app.utils.color_utils import ColorUtils
+            self.color = ColorUtils.get_color_for_label(self.name)
 
 class Feedback(db.Model):
     __tablename__ = 'feedbacks'

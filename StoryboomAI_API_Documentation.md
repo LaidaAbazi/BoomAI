@@ -145,11 +145,13 @@ Get all case studies for the current user.
       "labels": [
         {
           "id": 1,
-          "name": "Digital Transformation"
+          "name": "Digital Transformation",
+          "color": "#FAD0D0"
         },
         {
           "id": 2,
-          "name": "Success Stories"
+          "name": "Success Stories",
+          "color": "#F7B7B7"
         }
       ],
       "video_url": "https://example.com/video.mp4",
@@ -179,15 +181,18 @@ Get all labels for the current user.
   "labels": [
     {
       "id": 1,
-      "name": "Digital Transformation"
+      "name": "Digital Transformation",
+      "color": "#FAD0D0"
     },
     {
       "id": 2,
-      "name": "Success Stories"
+      "name": "Success Stories",
+      "color": "#F7B7B7"
     },
     {
       "id": 3,
-      "name": "Enterprise"
+      "name": "Enterprise",
+      "color": "#F9C3B9"
     }
   ]
 }
@@ -209,7 +214,8 @@ Create a new label.
   "success": true,
   "label": {
     "id": 4,
-    "name": "New Label"
+    "name": "New Label",
+    "color": "#FAD1C2"
   }
 }
 ```
@@ -230,7 +236,8 @@ Rename a label.
   "success": true,
   "label": {
     "id": 4,
-    "name": "Updated Label Name"
+    "name": "Updated Label Name",
+    "color": "#FAD0D0"
   }
 }
 ```
@@ -242,6 +249,28 @@ Delete a label.
 ```json
 {
   "success": true
+}
+```
+
+### GET `/api/color-palette`
+Get information about the color palette used for labels.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "palette": {
+    "total_colors": 30,
+    "description": "Pastel Rainbow Palette - Ordered red → orange → yellow → green → blue → indigo → violet",
+    "colors": [
+      "#FAD0D0", "#F7B7B7", "#F9C3B9", "#FAD1C2", "#FCD6B5",
+      "#FDE0B2", "#FEE9B8", "#FFF1C1", "#FFF5CC", "#FFF7D6",
+      "#FFF9E0", "#FFFBEA", "#EAF8CF", "#DFF5D2", "#D2F0DA",
+      "#C8EEDD", "#CDEDEA", "#CBEFF2", "#CFEAF7", "#D4EEFF",
+      "#DAF0FF", "#E0F2FF", "#DAD9FF", "#D7D1FF", "#D9C9FF",
+      "#E0CCFF", "#E8C7FF", "#F0C8F9", "#F6C7EE", "#FAD0F0"
+    ]
+  }
 }
 ```
 
@@ -263,15 +292,18 @@ Add labels to a case study.
   "labels": [
     {
       "id": 1,
-      "name": "Digital Transformation"
+      "name": "Digital Transformation",
+      "color": "#FAD0D0"
     },
     {
       "id": 2,
-      "name": "Success Stories"
+      "name": "Success Stories",
+      "color": "#F7B7B7"
     },
     {
       "id": 5,
-      "name": "New Label"
+      "name": "New Label",
+      "color": "#F9C3B9"
     }
   ]
 }
@@ -287,11 +319,13 @@ Remove a label from a case study.
   "labels": [
     {
       "id": 1,
-      "name": "Digital Transformation"
+      "name": "Digital Transformation",
+      "color": "#FAD0D0"
     },
     {
       "id": 2,
-      "name": "Success Stories"
+      "name": "Success Stories",
+      "color": "#F7B7B7"
     }
   ]
 }

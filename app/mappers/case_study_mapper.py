@@ -79,4 +79,13 @@ class LabelMapper:
     def models_to_dto_list(labels: list) -> list:
         """Convert list of Label models to DTOs"""
         schema = LabelResponseSchema(many=True)
-        return schema.dump(labels) 
+        return schema.dump(labels)
+    
+    @staticmethod
+    def model_to_dto_with_color(label: Label) -> dict:
+        """Convert Label model to DTO with color"""
+        return {
+            'id': label.id,
+            'name': label.name,
+            'color': label.color
+        } 

@@ -68,9 +68,16 @@ class CaseStudyService:
             # Create document
             doc = Document()
             
+            # Set default font for the entire document
+            style = doc.styles['Normal']
+            style.font.name = 'Arial'
+            
             # Add case study title in bold
             title = doc.add_heading(case_study.title, 0)
             title.alignment = 1  # Center alignment
+            # Set font to Arial for title
+            for run in title.runs:
+                run.font.name = 'Arial'
             
             # Add case study content
             if case_study.final_summary:
@@ -78,8 +85,13 @@ class CaseStudyService:
                 
                 for paragraph in paragraphs:
                     if paragraph.strip():
-                        doc.add_paragraph(paragraph.strip())
-                        doc.add_paragraph()  # Add spacing
+                        para = doc.add_paragraph(paragraph.strip())
+                        # Set font to Arial for paragraph content
+                        for run in para.runs:
+                            run.font.name = 'Arial'
+                        # Add spacing with Normal style (Arial font)
+                        spacing_para = doc.add_paragraph()
+                        spacing_para.style = doc.styles['Normal']
             
             # Generate filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
