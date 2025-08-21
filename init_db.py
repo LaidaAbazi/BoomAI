@@ -6,6 +6,7 @@ import os
 import sys
 from app import create_app, db
 from app.models import User, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, Feedback
+from sqlalchemy import inspect
 
 def init_database():
     """Initialize the database and create all tables"""
@@ -24,8 +25,9 @@ def init_database():
             db.create_all()
             print("✓ Database tables created successfully")
             
-            # Verify tables exist
-            tables = db.engine.table_names()
+            # Verify tables exist using modern SQLAlchemy approach
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
             print(f"✓ Available tables: {', '.join(tables)}")
             
             return True
