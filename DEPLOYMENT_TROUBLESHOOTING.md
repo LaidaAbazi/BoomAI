@@ -17,7 +17,7 @@
 python test_db_connection.py
 
 # Check health endpoint
-curl https://boomai.onrender.com/health
+curl https://storyboom.ai/health
 ```
 
 #### Verify Environment Variables
@@ -25,7 +25,7 @@ Ensure these environment variables are set in Render:
 - `DATABASE_URL` - PostgreSQL connection string
 - `SECRET_KEY` - Application secret key
 - `JWT_SECRET_KEY` - JWT secret key
-- `BASE_URL` - Application base URL (https://boomai.onrender.com)
+- `BASE_URL` - Application base URL (https://storyboom.ai)
 
 #### Database Initialization
 The app now automatically:
@@ -65,7 +65,7 @@ In Render dashboard, check the logs for:
 
 #### 2. Test Health Endpoint
 ```bash
-curl https://boomai.onrender.com/health
+curl https://storyboom.ai/health
 ```
 
 Expected response:
@@ -83,7 +83,7 @@ Expected response:
 
 #### 3. Test Database Connection
 ```bash
-curl https://boomai.onrender.com/api/health
+curl https://storyboom.ai/api/health
 ```
 
 #### 4. Check Database Tables

@@ -37,6 +37,9 @@ def create_app(config_name=None):
     # Configuration
     app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev_secret_key")
     
+    # Base URL configuration
+    app.config['BASE_URL'] = os.getenv("BASE_URL", "http://127.0.0.1:10000")
+    
     # Database configuration with better error handling
     database_url = os.getenv("DATABASE_URL", "sqlite:///./case_study.db")
     
@@ -217,11 +220,12 @@ def create_app(config_name=None):
         app,
         supports_credentials=True,
         origins=[
-            "http://scg8g8wcc80048c00wc4s48g.91.99.166.133.sslip.io",
+            "http://scg8g8wcc80048c00wc4s48g.91.99.166.48.sslip.io",
             "http://localhost:3000",
             "http://localhost:5000",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:5000",
+            "https://storyboom.ai",
             "https://boomai.onrender.com"
         ],
         methods=["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"],
@@ -242,6 +246,7 @@ def create_app(config_name=None):
                 "http://localhost:5000", 
                 "http://127.0.0.1:3000",
                 "http://127.0.0.1:5000",
+                "https://storyboom.ai",
                 "https://boomai.onrender.com"
             ]
             
@@ -264,8 +269,9 @@ def create_app(config_name=None):
             "http://localhost:5000", 
             "http://127.0.0.1:3000",
             "http://127.0.0.1:5000",
+            "https://storyboom.ai",
             "https://boomai.onrender.com"
-        ]
+            ]
         
         # Check if origin is in allowed list or is an sslip.io domain
         if origin in allowed_origins or origin.endswith('.sslip.io'):

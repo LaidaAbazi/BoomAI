@@ -13,7 +13,7 @@ import os
 from sqlalchemy.orm.session import sessionmaker
 from app import serializer, mail
 from sqlalchemy.engine.create import create_engine
-from flask import url_for
+from flask import url_for, current_app
 from flasgger import swag_from
 import logging
 
@@ -139,7 +139,8 @@ def api_signup():
         # Generate verification token
         try:
             token = serializer.dumps(new_user.email, salt='email-confirm')
-            BASE_URL = os.getenv("BASE_URL", "https://boomai.onrender.com")
+            # Use config BASE_URL which falls back to local development
+            BASE_URL = current_app.config.get('BASE_URL', os.getenv("BASE_URL", "https://storyboom.ai"))
             verification_link = f"{BASE_URL}/api/verify/{token}"
         except Exception as token_error:
             logger.error(f"Error generating verification token: {str(token_error)}")

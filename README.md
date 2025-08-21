@@ -266,6 +266,25 @@ docker build -t ai-case-study .
 docker run -p 5000:5000 ai-case-study
 ```
 
+## Configuration
+
+### Environment Setup
+1. Copy `env.example` to `.env` for local development
+2. Set the required environment variables
+3. For production deployment on Render, the `BASE_URL` will automatically be set to `https://storyboom.ai`
+
+### Base URL Configuration
+The application supports both local development and production deployment:
+- **Local Development**: `BASE_URL=http://127.0.0.1:10000` (default)
+- **Production**: `BASE_URL=https://storyboom.ai` (set by Render)
+- **Custom Domain**: Set `BASE_URL` to your preferred domain
+
+This configuration affects:
+- Email verification links
+- Client interview links
+- CORS origins
+- All generated URLs
+
 ## Environment Variables
 
 | Variable | Description | Required |
@@ -273,6 +292,7 @@ docker run -p 5000:5000 ai-case-study
 | `SECRET_KEY` | Flask secret key | Yes |
 | `JWT_SECRET_KEY` | JWT signing key | Yes |
 | `DATABASE_URL` | Database connection string | No (defaults to SQLite) |
+| `BASE_URL` | Application base URL | No (defaults to http://127.0.0.1:10000) |
 | `OPENAI_API_KEY` | OpenAI API key | No (AI features disabled) |
 | `HEYGEN_API_KEY` | HeyGen API key | No (video features disabled) |
 | `PICTORY_CLIENT_ID` | Pictory client ID | No (Pictory features disabled) |

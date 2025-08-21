@@ -7,6 +7,9 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///./case_study.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # Base URL configuration - supports both local and production
+    BASE_URL = os.environ.get('BASE_URL') or 'http://127.0.0.1:10000'
+    
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'dev-jwt-secret-change-in-production'
     JWT_TOKEN_LOCATION = ['headers']

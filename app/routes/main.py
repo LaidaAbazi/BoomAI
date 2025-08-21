@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, send_from_directory, send_file
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, send_from_directory, send_file, current_app
 import uuid
 import os
 import requests
@@ -927,7 +927,8 @@ def generate_client_interview_link():
         if not token:
             return jsonify({"status": "error", "message": "Failed to create client session."}), 500
         
-        BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:10000")
+        # Use config BASE_URL which supports both local and production
+        BASE_URL = current_app.config.get('BASE_URL', os.getenv("BASE_URL", "http://127.0.0.1:10000"))
         interview_link = f"{BASE_URL}/client/{token}"
         
         print(f"🔗 Generated interview link: {interview_link}")
