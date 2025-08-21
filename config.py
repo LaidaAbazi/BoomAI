@@ -4,29 +4,8 @@ from datetime import timedelta
 class Config:
     """Base configuration class"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    
-    # Database configuration with PostgreSQL SSL handling
-    database_url = os.environ.get('DATABASE_URL') or 'sqlite:///./case_study.db'
-    if database_url.startswith('postgres://'):
-        # Convert postgres:// to postgresql:// for newer psycopg2 versions
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    
-    SQLALCHEMY_DATABASE_URI = database_url
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///./case_study.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # PostgreSQL-specific configuration for Render
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'pool_timeout': 20,
-        'max_overflow': 10,
-        'pool_size': 5,
-        'connect_args': {
-            'sslmode': 'require',
-            'connect_timeout': 10,
-            'application_name': 'BoomAI'
-        }
-    }
     
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'dev-jwt-secret-change-in-production'
@@ -53,15 +32,6 @@ class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
     SESSION_COOKIE_SECURE = False
-    
-    # Override PostgreSQL settings for development
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'pool_timeout': 20,
-        'max_overflow': 10,
-        'pool_size': 5
-    }
 
 class ProductionConfig(Config):
     """Production configuration"""

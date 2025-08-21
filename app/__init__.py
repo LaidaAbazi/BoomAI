@@ -280,33 +280,21 @@ def create_app(config_name=None):
     with app.app_context():
         from app.models import User, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, Feedback
         
-        # Ensure database tables exist with retry logic
-        max_retries = 3
-        retry_delay = 2
-        
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"Checking database connection... (attempt {attempt + 1}/{max_retries})")
-                from sqlalchemy import text
-                db.session.execute(text("SELECT 1"))
-                logger.info("Database connection successful")
-                
-                # Create tables if they don't exist
-                logger.info("Creating database tables if they don't exist...")
-                db.create_all()
-                logger.info("Database tables ready")
-                break  # Success, exit retry loop
-                
-            except Exception as e:
-                logger.error(f"Database initialization error (attempt {attempt + 1}/{max_retries}): {str(e)}")
-                if attempt < max_retries - 1:
-                    logger.info(f"Retrying in {retry_delay} seconds...")
-                    import time
-                    time.sleep(retry_delay)
-                    retry_delay *= 2  # Exponential backoff
-                else:
-                    logger.error("Database initialization failed after all retries. App will continue but database operations may fail.")
-                    # Don't fail the app startup, but log the error
+        # Ensure database tables exist
+        try:
+            logger.info("Checking database connection...")
+            from sqlalchemy import text
+            db.session.execute(text("SELECT 1"))
+            logger.info("Database connection successful")
+            
+            # Create tables if they don't exist
+            logger.info("Creating database tables if they don't exist...")
+            db.create_all()
+            logger.info("Database tables ready")
+            
+        except Exception as e:
+            logger.error(f"Database initialization error: {str(e)}")
+            # Don't fail the app startup, but log the error
     
     # Register blueprints
     from app.routes import auth, case_studies, interviews, media, api, metadata
