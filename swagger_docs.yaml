@@ -150,6 +150,9 @@ components:
           type: integer
         name:
           type: string
+        color:
+          type: string
+          description: HEX color code for this label
     
     Feedback:
       type: object
@@ -366,6 +369,116 @@ paths:
                 $ref: '#/components/schemas/Error'
   
   # Labels endpoints
+  /api/color-palette:
+    get:
+      tags:
+        - Labels
+      summary: Get color palette information
+      description: Retrieve information about the color palette used for labels
+      responses:
+        '200':
+          description: Color palette information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  palette:
+                    type: object
+                    properties:
+                      total_colors:
+                        type: integer
+                      description:
+                        type: string
+                      colors:
+                        type: array
+                        items:
+                          type: string
+  
+  # Labels endpoints
+  /api/case_studies/{case_study_id}/labels:
+    post:
+      tags:
+        - Labels
+      summary: Add labels to a case study
+      description: Attach existing labels by ID or create by name and attach
+      parameters:
+        - name: case_study_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label_ids:
+                  type: array
+                  items:
+                    type: integer
+                label_names:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Labels added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  labels:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Label'
+        '401':
+          description: Not authenticated
+        '404':
+          description: Case study not found
+  
+  /api/case_studies/{case_study_id}/labels/{label_id}:
+    delete:
+      tags:
+        - Labels
+      summary: Remove a label from a case study
+      parameters:
+        - name: case_study_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: label_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Label removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  labels:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Label'
+        '401':
+          description: Not authenticated
+        '404':
+          description: Case study or label not found
+  
   /api/labels:
     get:
       tags:

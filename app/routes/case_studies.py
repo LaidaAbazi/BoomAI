@@ -159,7 +159,7 @@ def get_case_study(case_study_id):
             'video_status': case_study.video_status,
             'pictory_video_status': case_study.pictory_video_status,
             'podcast_status': case_study.podcast_status,
-            'labels': [{'id': l.id, 'name': l.name} for l in case_study.labels],
+            'labels': [{'id': l.id, 'name': l.name, 'color': l.color} for l in case_study.labels],
             'video_url': case_study.video_url,
             'video_id': case_study.video_id,
             'video_created_at': case_study.video_created_at.isoformat() if case_study.video_created_at else None,
@@ -443,6 +443,54 @@ def get_color_palette():
 
 @bp.route('/case_studies/<int:case_study_id>/labels', methods=['POST'])
 @login_required
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Add labels to a case study',
+    'description': 'Attach existing labels by ID or create by name and attach',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'}
+        }
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'label_ids': {'type': 'array', 'items': {'type': 'integer'}},
+                        'label_names': {'type': 'array', 'items': {'type': 'string'}}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Labels added successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'labels': {
+                                'type': 'array',
+                                'items': {'$ref': '#/components/schemas/Label'}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Case study not found'},
+        401: {'description': 'Not authenticated'}
+    }
+})
 def add_labels_to_case_study(case_study_id):
     """Add labels to a case study"""
     try:
@@ -482,6 +530,32 @@ def add_labels_to_case_study(case_study_id):
 
 @bp.route('/case_studies/<int:case_study_id>/labels/<int:label_id>', methods=['DELETE'])
 @login_required
+@swag_from({
+    'tags': ['Labels'],
+    'summary': 'Remove a label from a case study',
+    'parameters': [
+        {'name': 'case_study_id', 'in': 'path', 'required': True, 'schema': {'type': 'integer'}},
+        {'name': 'label_id', 'in': 'path', 'required': True, 'schema': {'type': 'integer'}}
+    ],
+    'responses': {
+        200: {
+            'description': 'Label removed successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'labels': {'type': 'array', 'items': {'$ref': '#/components/schemas/Label'}}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Case study or label not found'},
+        401: {'description': 'Not authenticated'}
+    }
+})
 def remove_label_from_case_study(case_study_id, label_id):
     """Remove a label from a case study"""
     try:
@@ -497,7 +571,7 @@ def remove_label_from_case_study(case_study_id, label_id):
         case_study.labels.remove(label)
         db.session.commit()
         
-        return jsonify({'success': True, 'labels': [{'id': l.id, 'name': l.name} for l in case_study.labels]})
+        return jsonify({'success': True, 'labels': [{'id': l.id, 'name': l.name, 'color': l.color} for l in case_study.labels]})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
