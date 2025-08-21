@@ -84,7 +84,7 @@ def get_case_studies():
                 'video_status': case_study.video_status,
                 'pictory_video_status': case_study.pictory_video_status,
                 'podcast_status': case_study.podcast_status,
-                'labels': [{'id': l.id, 'name': l.name} for l in case_study.labels],
+                'labels': [{'id': l.id, 'name': l.name, 'color': l.color} for l in case_study.labels],
                 'video_url': case_study.video_url,
                 'video_id': case_study.video_id,
                 'video_created_at': case_study.video_created_at.isoformat() if case_study.video_created_at else None,
