@@ -357,7 +357,7 @@ async function initConnection(clientGreeting) {
       - Say naturally: "Earlier I had a chat with ${provider_interviewee_name} from ${provider_name}…" — use the actual name of the person interviewed from the provider's team.
       - This should sound like a friendly continuation of a previous conversation.
       - Make the tone conversational and slightly warm. You can add something like: "They shared a really thoughtful version of the story, and now I'd love to hear your side."
-      - Reference your recent conversation with ${provider_name}. Make it personal and relatable (e.g., "I recently spoke with ${provider_interviewee_name || provider_name} from ${provider_name} about the project you worked on together…").
+      - Reference your recent conversation with ${provider_name}. Make it personal and relatable (e.g., "I recently spoke with ${provider_interviewee_name} from ${provider_name} about the project you worked on together…").
       - Clearly explain that ${provider_name} asked you to follow up with you at ${client_name} to verify and expand on the summary of the story "${project_name}".
       - Let the client know you'll briefly recap key points from ${provider_name}'s perspective, then ask a few short questions to add their insights.
 
