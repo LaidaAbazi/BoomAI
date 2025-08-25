@@ -94,7 +94,7 @@ If the user already gave the answer,or gave this information in the past, do not
 - You must collect all five intro fields **before any main or follow-up questions.**  
 - **Do not proceed** until all are gathered (or you have asked twice, if unanswered).
 
-⚠️ This clarification MUST happen right after the check-in — before any structured questions begin — to manage expectations early and create a smooth experience.
+This clarification MUST happen right after the check-in — before any structured questions begin — to manage expectations early and create a smooth experience.
 
 - **Set Timing Expectations (MANDATORY)**  
 Say in a warm, human tone that the conversation will only take about 5 to 10 minutes and involve just a few questions. You must say this out loud — do not skip it. Use natural, varied phrasing each time.
@@ -342,7 +342,7 @@ async function endConversation(reason) {
   // 👇 IMMEDIATELY end peer session & update UI
   if (dataChannel) dataChannel.close();
   if (peerConnection) peerConnection.close();
-  // ✅ Stop all media tracks to release mic
+          // Stop all media tracks to release mic
   if (window.localStream) {
     window.localStream.getTracks().forEach(track => track.stop());
     window.localStream = null;
@@ -387,12 +387,12 @@ async function endConversation(reason) {
       });
 
       const saveData = await saveRes.json();
-      console.log("✅ Transcript saved:", saveData);
+      console.log("Transcript saved:", saveData);
 
       if (summaryData.status === "success") {
         showEditableSmartSyncUI(summaryData.text, summaryData.names);
        
-        // ✅ Automatically generate final story after provider summary is created
+        // Automatically generate final story after provider summary is created
         try {
           const fullRes = await fetch("/api/generate_full_case_study", {
             method: "POST",
@@ -402,18 +402,18 @@ async function endConversation(reason) {
 
           const fullResData = await fullRes.json();
           if (fullResData.status === "success") {
-            console.log("✅ Final story automatically generated for provider interview.");
+            console.log("Final story automatically generated for provider interview.");
           } else {
-            console.warn("⚠️ Failed to generate final story:", fullResData.message);
+            console.warn("Failed to generate final story:", fullResData.message);
           }
         } catch (err) {
-          console.warn("⚠️ Error in automatic final story generation:", err);
+          console.warn("Error in automatic final story generation:", err);
         }
       } else {
-        console.error("❌ Failed to generate summary:", summaryData.message);
+        console.error("Failed to generate summary:", summaryData.message);
       }
     } catch (err) {
-      console.error("❌ Error during post-end logic:", err);
+      console.error("Error during post-end logic:", err);
     }
   }, 100); // small delay to ensure UI updates first
 }
@@ -469,9 +469,9 @@ async function initConnection() {
     await peerConnection.setRemoteDescription({ type: "answer", sdp: answer });
 
     isSessionReady = true;
-    statusEl.textContent = "✅ Session created. Ready to start interview.";
+    statusEl.textContent = "Session created. Ready to start interview.";
   } catch (err) {
-    statusEl.textContent = "❌ Failed to get token.";
+          statusEl.textContent = "Failed to get token.";
     console.error(err);
   }
 }
@@ -484,7 +484,7 @@ function handleMessage(event) {
     case "session.created":
       isSessionReady = true;
 
-      // ✅ Send systemInstructions only after session is created
+      // Send systemInstructions only after session is created
       dataChannel.send(JSON.stringify({
         type: "session.update",
         session: {
@@ -499,7 +499,7 @@ function handleMessage(event) {
       break;
 
     case "session.updated":
-      // ✅ When instructions are applied, start greeting
+      // When instructions are applied, start greeting
       if (!isInstructionsApplied) {
         isInstructionsApplied = true;
         beginGreeting(); // custom function
@@ -533,7 +533,7 @@ function handleMessage(event) {
         userBuffer = "";
 
         if (isFarewell(cleanedText)) {
-          console.log("👋 Detected farewell from user. Ending politely...");
+          console.log("Detected farewell from user. Ending politely...");
 
           dataChannel.send(JSON.stringify({
             type: "response.create",
@@ -555,7 +555,7 @@ function handleMessage(event) {
           }));
 
           setTimeout(() => {
-            endConversation("👋 User said farewell.");
+            endConversation("User said farewell.");
           }, 4200);
         }
       }
@@ -754,7 +754,7 @@ startBtn.onclick = async () => {
   }));
 
   sessionTimeout = setTimeout(() => {
-    endConversation('⏱️ 10-minute limit reached.');
+              endConversation('10-minute limit reached.');
   }, 10 * 60 * 1000);
 };
 
@@ -762,7 +762,7 @@ endBtn.onclick = () => {
   endBtn.disabled = true;
   endBtn.textContent = 'Interview Ended';
   statusEl.textContent = 'Interview ended.';
-  endConversation('🛑 Manual end by user.');
+  endConversation('Manual end by user.');
   stopBarAnimation(); // <--- Stop bar animation
 };
 
@@ -908,7 +908,7 @@ function showEditableSmartSyncUI(summaryText, originalNames) {
 
     // Convert the text to HTML with linked names
     const htmlWithLinks = convertNamesToLinks(summaryText);
-    console.log('📄 Generated HTML:', htmlWithLinks);
+    console.log('Generated HTML:', htmlWithLinks);
     richTextDisplay.innerHTML = htmlWithLinks;
    
     // Add event listeners to name links
@@ -957,7 +957,7 @@ function showEditableSmartSyncUI(summaryText, originalNames) {
        
         const result = await res.json();
         if (result.status === 'success') {
-          console.log('✅ Provider summary auto-saved successfully');
+          console.log('Provider summary auto-saved successfully');
           // Store the case study ID for database operations
           if (result.case_study_id) {
             caseStudyId = result.case_study_id;
@@ -985,19 +985,19 @@ function showEditableSmartSyncUI(summaryText, originalNames) {
               
               const finalResult = await finalRes.json();
               if (finalResult.status === 'success') {
-                console.log('✅ Final summary auto-saved with edited names');
+                console.log('Final summary auto-saved with edited names');
               } else {
-                console.warn('⚠️ Final summary auto-save failed:', finalResult.message);
+                                  console.warn('Final summary auto-save failed:', finalResult.message);
               }
             } catch (finalErr) {
-              console.warn('⚠️ Final summary auto-save error:', finalErr);
+                              console.warn('Final summary auto-save error:', finalErr);
             }
           }
         } else {
-          console.error('❌ Provider summary auto-save failed:', result.message);
+          console.error('Provider summary auto-save failed:', result.message);
         }
       } catch (err) {
-        console.error('❌ Auto-save error:', err);
+        console.error('Auto-save error:', err);
       }
     }
 
@@ -1118,14 +1118,14 @@ function showEditableSmartSyncUI(summaryText, originalNames) {
          
          
          
-          alert('✅ Client link generated successfully!');
+          alert('Client link generated successfully!');
         } else {
-          console.error('❌ Name extraction failed:', extractData.message);
-          alert('❌ Failed to extract names from summary');
+                      console.error('Name extraction failed:', extractData.message);
+            alert('Failed to extract names from summary');
         }
       } catch (err) {
-        console.error('❌ Error generating client link:', err);
-        alert('❌ Failed to generate client link: ' + err.message);
+                  console.error('Error generating client link:', err);
+          alert('Failed to generate client link: ' + err.message);
       }
     };
 
@@ -1181,7 +1181,7 @@ function showCaseStudyControls() {
       }
       showEditableSmartSyncUI(data.text, data.names); // 👈 use smart replacement
     } else {
-      alert("❌ Failed to generate summary: " + data.message);
+              alert("Failed to generate summary: " + data.message);
     }
 
     generateBtn.disabled = false;
@@ -1196,7 +1196,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const endBtn = document.getElementById("endBtn");
   if (endBtn) {
     endBtn.addEventListener("click", () => {
-      endConversation("🛑 Manual end by user.");
+      endConversation("Manual end by user.");
     });
   }
   const loadingText = document.getElementById('summaryLoadingText');

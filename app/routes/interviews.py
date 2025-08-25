@@ -305,22 +305,22 @@ def generate_client_summary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@bp.route("/extract_names", methods=["POST"])
-@login_required
-def extract_names():
-    """Extract names from case study text"""
-    try:
-        data = request.get_json()
-        case_study_text = data.get('case_study_text', '')
-        if not case_study_text:
-            return jsonify({"error": "Missing case study text"}), 400
-        # Extract names using AI service
-        ai_service = AIService()
-        names = ai_service.extract_names_from_case_study(case_study_text)
-        # Return as flat JSON (not nested under 'names')
-        return jsonify(names)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# @bp.route("/extract_names", methods=["POST"])
+# @login_required
+# def extract_names():
+#     """Extract names from case study text"""
+#     try:
+#         data = request.get_json()
+#         case_study_text = data.get('case_study_text', '')
+#         if not case_study_text:
+#             return jsonify({"error": "Missing case study text"}), 400
+#         # Extract names using AI service
+#         ai_service = AIService()
+#         names = ai_service.extract_names_from_case_study(case_study_text)
+#         # Return as flat JSON (not nested under 'names')
+#         return jsonify(names)
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 @bp.route("/generate_full_case_study", methods=["POST"])
 @login_required

@@ -1,4 +1,3 @@
-// Client-side logic for AI Case Study Client Interview
 let peerConnection, dataChannel, isSessionReady = false;
 const transcriptLog = [];
 let sessionTimeout;
@@ -17,6 +16,7 @@ let provider_name = "";
 let client_name = "";
 let project_name = "";
 let provider_interviewee_name = "";
+let provider_summary = ""; // Add this variable
 
 function isFarewell(text) {
   const cleaned = text.toLowerCase().trim();
@@ -54,11 +54,11 @@ async function fetchProviderTranscript(token) {
     const response = await fetch(`/get_provider_transcript?token=${token}`);
     const data = await response.json();
     if (data.status === "success" && data.transcript) {
-      console.log("📄 Provider transcript received, length:", data.transcript.length);
+      console.log("Provider transcript received, length:", data.transcript.length);
       
       // First try LLM extraction for maximum accuracy
       try {
-        console.log("🤖 Attempting LLM name extraction...");
+        console.log("Attempting LLM name extraction...");
         const llmResponse = await fetch('/api/extract_interviewee_name', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -66,26 +66,25 @@ async function fetchProviderTranscript(token) {
         });
         
         const llmData = await llmResponse.json();
-        console.log("🤖 LLM response:", llmData);
+        console.log("LLM response:", llmData);
         
         if (llmData.status === "success" && llmData.name && llmData.name.trim() !== "") {
           provider_interviewee_name = llmData.name.trim();
-          console.log("✅ LLM successfully extracted provider name:", provider_interviewee_name);
-          console.log("✅ Method used: LLM (OpenAI)");
+          console.log("LLM successfully extracted provider name:", provider_interviewee_name);
+          console.log("Method used: LLM (OpenAI)");
           if (statusEl) {
             statusEl.innerHTML += `<br><small style="color: #666;">Name extracted via: ${llmData.method || 'Regex'}</small>`;
           }
           return;
         } else {
-          console.warn("⚠️ LLM extraction returned empty or invalid name:", llmData.name);
-          console.log("🔄 Falling back to regex extraction...");
+          console.warn("LLM extraction returned empty or invalid name:", llmData.name);
+          console.log("Falling back to regex extraction...");
         }
       } catch (llmErr) {
-        console.warn("⚠️ LLM extraction failed, falling back to regex:", llmErr);
+        console.warn("LLM extraction failed, falling back to regex:", llmErr);
       }
       
-      // Enhanced regex fallback with multiple patterns
-      console.log("🔍 Starting regex name extraction...");
+      console.log("Starting regex name extraction...");
       const lines = data.transcript.split('\n');
       let regexMethodUsed = null;
       
@@ -99,7 +98,6 @@ async function fetchProviderTranscript(token) {
             break;
           }
           
-          // Pattern 2: "I'm [name]" or "I am [name]"
           nameMatch = line.match(/i'?m ([^,.]+)/i) || line.match(/i am ([^,.]+)/i);
           if (nameMatch) {
             provider_interviewee_name = nameMatch[1].trim();
@@ -107,7 +105,6 @@ async function fetchProviderTranscript(token) {
             break;
           }
           
-          // Pattern 3: Just a name after "USER:" (for cases like "USER: Lajda.")
           nameMatch = line.match(/^USER:\s*([A-Za-z]+)/);
           if (nameMatch && !line.toLowerCase().includes('work') && !line.toLowerCase().includes('company')) {
             provider_interviewee_name = nameMatch[1].trim();
@@ -118,20 +115,18 @@ async function fetchProviderTranscript(token) {
       }
       
       if (provider_interviewee_name && provider_interviewee_name.trim() !== "") {
-        console.log("✅ Regex successfully extracted provider name:", provider_interviewee_name);
-        console.log("✅ Method used:", regexMethodUsed);
+        console.log("Regex successfully extracted provider name:", provider_interviewee_name);
+        console.log("Method used:", regexMethodUsed);
       } else {
-        console.warn("⚠️ No name found with any extraction method");
-        console.log("❌ Both LLM and regex extraction failed");
+        console.warn("No name found with any extraction method");
+        console.log("Both LLM and regex extraction failed");
       }
     }
   } catch (err) {
-    console.error("❌ Failed to fetch provider transcript:", err);
+    console.error("Failed to fetch provider transcript:", err);
   }
 }
 
-// ✅ This is the new logic to be added to the CLIENT interview JS for saving transcript and generating summary
-// This mirrors the logic from the solution provider interview
 
 async function endConversation(reason) {
   if (hasEnded) return;
@@ -141,7 +136,7 @@ async function endConversation(reason) {
   console.log("Conversation ended:", reason);
   statusEl.textContent = "Interview complete";
 
-  // ✅ Save CLIENT transcript
+  // Save CLIENT transcript
   fetch(`/save_client_transcript?token=${getClientTokenFromURL()}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -149,9 +144,9 @@ async function endConversation(reason) {
   })
   .then(res => res.json())
   .then(async (data) => {
-    console.log("✅ Client transcript saved:", data.file);
+    console.log("Client transcript saved:", data.file);
 
-    // ✅ Generate CLIENT summary
+    // Generate CLIENT summary
     const formattedTranscript = transcriptLog
       .map(e => `${e.speaker.toUpperCase()}: ${e.text}`)
       .join("\n");
@@ -184,11 +179,10 @@ async function endConversation(reason) {
         if (caseStudyRes.ok) {
           const caseStudyData = await caseStudyRes.json();
           if (caseStudyData.success && caseStudyData.case_study) {
-            // Extract names from the FINAL SUMMARY (not title) to get updated names
             const finalSummary = caseStudyData.case_study.final_summary || "";
             if (finalSummary) {
               try {
-                console.log("🔍 Extracting names from final summary for client interview...");
+                console.log("Extracting names from final summary for client interview...");
                 const extractRes = await fetch('/api/extract_names', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -200,13 +194,12 @@ async function endConversation(reason) {
                   solution_provider = extractData.names.lead_entity || provider_name;
                   client_name_updated = extractData.names.partner_entity || client_name;
                   project_name_updated = extractData.names.project_title || project_name;
-                  console.log("✅ Extracted updated names from final summary:", extractData.names);
+                  console.log("Extracted updated names from final summary:", extractData.names);
                 } else {
-                  console.warn("⚠️ Failed to extract names from final summary, using current names");
+                  console.warn("Failed to extract names from final summary, using current names");
                 }
               } catch (extractErr) {
-                console.warn("⚠️ Error extracting names from final summary:", extractErr);
-                // Fallback to title parsing if extraction fails
+                                  console.warn("Error extracting names from final summary:", extractErr);
                 const title = caseStudyData.case_study.title || "";
                 if (title && title.includes(" x ")) {
                   const parts = title.split(" x ");
@@ -224,12 +217,12 @@ async function endConversation(reason) {
                 }
               }
             } else {
-              console.warn("⚠️ No final summary found, using current names");
+              console.warn("No final summary found, using current names");
             }
           }
         }
         
-        console.log("✅ Using updated names for final case study:", {
+        console.log("Using updated names for final case study:", {
           solution_provider,
           client_name: client_name_updated,
           project_name: project_name_updated
@@ -248,12 +241,12 @@ async function endConversation(reason) {
 
         const fullResData = await fullRes.json();
         if (fullResData.status === "success") {
-          console.log("✅ Full merged case study generated with updated names.");
+          console.log("Full merged case study generated with updated names.");
         } else {
-          console.warn("⚠️ Failed to generate full case study:", fullResData.message);
+          console.warn("Failed to generate full case study:", fullResData.message);
         }
       } catch (error) {
-        console.warn("⚠️ Could not get updated names, using original names:", error);
+        console.warn("Could not get updated names, using original names:", error);
         // Fallback to original call without updated names
         const fullRes = await fetch("/api/generate_full_case_study", {
           method: "POST",
@@ -263,27 +256,27 @@ async function endConversation(reason) {
 
         const fullResData = await fullRes.json();
         if (fullResData.status === "success") {
-          console.log("✅ Full merged case study generated.");
+          console.log("Full merged case study generated.");
         } else {
-          console.warn("⚠️ Failed to generate full case study:", fullResData.message);
+          console.warn("Failed to generate full case study:", fullResData.message);
         }
       }
 
   } else {
-    console.error("❌ Failed to generate client summary:", summaryData.message);
+    console.error("Failed to generate client summary:", summaryData.message);
   }
 
 
   })
-  .catch(err => console.error("❌ Failed to save client transcript", err));
+  .catch(err => console.error("Failed to save client transcript", err));
   
-  // ✅ IMMEDIATELY stop all audio and connections
+  // IMMEDIATELY stop all audio and connections
   try {
     // Stop all audio tracks immediately
     if (window.localStream) {
       window.localStream.getTracks().forEach(track => {
         track.stop();
-        console.log("🔇 Stopped audio track:", track.kind);
+        console.log("Stopped audio track:", track.kind);
       });
       window.localStream = null;
     }
@@ -291,36 +284,36 @@ async function endConversation(reason) {
     // Close data channel immediately
     if (dataChannel) {
       dataChannel.close();
-      console.log("🔌 Data channel closed");
+      console.log("Data channel closed");
     }
 
     // Close peer connection immediately
     if (peerConnection) {
       peerConnection.close();
-      console.log("🔌 Peer connection closed");
+      console.log("Peer connection closed");
     }
 
     // Set session as not ready
     isSessionReady = false;
-    console.log("❌ Session marked as not ready");
+    console.log("Session marked as not ready");
 
   } catch (err) {
-    console.error("❌ Error during connection cleanup:", err);
+    console.error("Error during connection cleanup:", err);
   }
 
   const endBtn = document.getElementById("endBtn");
   if (endBtn) {
     endBtn.disabled = true;
-    endBtn.textContent = "Interview Ended"; // ✅ Correctly referenced
+    endBtn.textContent = "Interview Ended"; // Correctly referenced
   }
 }
 
-// ✅ Triggered from End button for client interview
+// Triggered from End button for client interview
 document.addEventListener("DOMContentLoaded", () => {
   const endBtn = document.getElementById("endBtn");
   if (endBtn) {
     endBtn.addEventListener("click", () => {
-      endConversation("🛑 Manual end by client user.");
+      endConversation("Manual end by client user.");
     });
   }
 });
@@ -374,6 +367,7 @@ async function initConnection(clientGreeting) {
       - Directly reference ${provider_name} by name, and address "you at ${client_name}" naturally.
       - Clearly mention the project "${project_name}" and include a brief context (company overview, industry, mission, or specific challenge described by ${provider_name}).
       
+      
 
       [5. ACCURACY CHECK-IN]
       - Ask: "Does this summary of the story "${project_name}" sound right to you, or is there anything you'd like to correct or add before we go on?"
@@ -414,6 +408,9 @@ async function initConnection(clientGreeting) {
       
       GOAL:
       Ensure the conversation feels authentically human, engaging, and personalized. Structure it to validate, enhance, and deepen the narrative provided by ${provider_name}, ultimately enriching the final story about the project "${project_name}".
+
+      PROVIDER INTERVIEW CONTENT:
+      ${provider_summary || 'No provider interview content available.'}
       `;
 
       const res = await fetch("/session");
@@ -457,10 +454,10 @@ async function initConnection(clientGreeting) {
         const msg = JSON.parse(event.data);
         handleMessage(event);
   
-        // ✅ Only greet after instructions are applied
+        // Only greet after instructions are applied
         if (msg.type === "session.updated" && !isInstructionsApplied) {
           isInstructionsApplied = true;
-          statusEl.textContent = "✅ Instructions loaded. AI is ready.";
+          statusEl.textContent = "Instructions loaded. AI is ready.";
   
           dataChannel.send(JSON.stringify({
             type: "response.create",
@@ -479,7 +476,7 @@ async function initConnection(clientGreeting) {
           }));
   
           sessionTimeout = setTimeout(() => {
-            endConversation("⏱️ 10-minute limit reached.");
+            endConversation("10-minute limit reached.");
           }, 10 * 60 * 1000);
         }
       };
@@ -500,20 +497,20 @@ async function initConnection(clientGreeting) {
       await peerConnection.setRemoteDescription({ type: "answer", sdp: answer });
   
       isSessionReady = true;
-      statusEl.textContent = "🔄 Connecting to AI...";
+      statusEl.textContent = "Connecting to AI...";
       document.getElementById("endBtn").classList.remove("hidden");
 
   
     } catch (err) {
-      statusEl.textContent = "❌ Failed to start session.";
+      statusEl.textContent = "Failed to start session.";
       console.error(err);
     }
   }
   
 function handleMessage(event) {
-  // ✅ Don't process messages if conversation has ended
+  // Don't process messages if conversation has ended
   if (hasEnded) {
-    console.log("🚫 Message ignored - conversation ended");
+    console.log("Message ignored - conversation ended");
     return;
   }
 
@@ -534,8 +531,8 @@ function handleMessage(event) {
         userBuffer = "";
 
         if (isFarewell(cleanedText)) {
-          console.log("👋 Detected farewell from user.");
-          endConversation("👋 User said farewell.");
+          console.log("Detected farewell from user.");
+          endConversation("User said farewell.");
         }
       }
       break;
@@ -553,6 +550,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   provider_name = sessionData.provider_name;
   client_name = sessionData.client_name;
   project_name = sessionData.project_name;
+  provider_summary = sessionData.provider_summary; // Get the provider summary from backend
 
   // Fetch provider transcript to get interviewee name
   await fetchProviderTranscript(token);
@@ -560,5 +558,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   const greeting = `Hi there! Thanks for joining to chat about "${project_name}" today.`;
 
   document.getElementById("startBtn").addEventListener("click", () => initConnection(greeting));
-  document.getElementById("endBtn").addEventListener("click", () => endConversation("🛑 Manual end by client user."));
+  document.getElementById("endBtn").addEventListener("click", () => endConversation("Manual end by client user."));
 });

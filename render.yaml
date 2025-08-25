@@ -7,6 +7,8 @@ services:
       pip install -r requirements.txt
       python init_db.py
       python -m flask db upgrade
+      # Ensure static files are copied during build
+      cp -r static/* /tmp/static/ || true
     startCommand: gunicorn run:app --config gunicorn.conf.py
     envVars:
       - key: PYTHON_VERSION
