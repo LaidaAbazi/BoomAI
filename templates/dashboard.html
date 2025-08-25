@@ -263,6 +263,47 @@
       color: #312E81;
       margin-bottom: 8px;
       letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title-container {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    .title-display {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #312E81;
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
+    .title-display:hover {
+      color: #06B6D4;
+    }
+    .title-input {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #312E81;
+      letter-spacing: 0.01em;
+      background: transparent;
+      border: 2px solid #06B6D4;
+      border-radius: 8px;
+      padding: 4px 8px;
+      outline: none;
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      width: 100%;
+      max-width: 400px;
+    }
+    .title-input:focus {
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+    }
+    .edit-title-icon {
+      transition: color 0.2s;
+    }
+    .edit-title-icon:hover {
+      color: #06B6D4 !important;
     }
     .story-tabs {
       display: flex;
@@ -966,6 +1007,7 @@
       filtered.forEach(story => {
         const item = document.createElement('div');
         item.className = 'story-item' + (story.id === selectedStoryId ? ' selected' : '');
+        item.setAttribute('data-story-id', story.id);
         item.onclick = async () => { 
           selectedStoryId = story.id; 
           // Fetch fresh data before rendering
@@ -1000,10 +1042,110 @@
       main.innerHTML = '';
       const card = document.createElement('div');
       card.className = 'story-card';
-      // Title as header
+      // Title as header with edit functionality
       const header = document.createElement('div');
       header.className = 'story-card-header';
-      header.textContent = story.title || 'Untitled';
+      
+      // Create title container
+      const titleContainer = document.createElement('div');
+      titleContainer.className = 'title-container';
+      
+      // Create editable title input
+      const titleInput = document.createElement('input');
+      titleInput.className = 'title-input';
+      titleInput.value = story.title || 'Untitled';
+      titleInput.style.display = 'none';
+      
+      // Create title display span
+      const titleDisplay = document.createElement('span');
+      titleDisplay.className = 'title-display';
+      titleDisplay.textContent = story.title || 'Untitled';
+      titleDisplay.style.cursor = 'pointer';
+      
+      // Add edit icon
+      const editIcon = document.createElement('i');
+      editIcon.className = 'fas fa-edit edit-title-icon';
+      editIcon.style.marginLeft = '8px';
+      editIcon.style.fontSize = '14px';
+      editIcon.style.color = '#666';
+      editIcon.style.cursor = 'pointer';
+      
+      titleContainer.appendChild(titleDisplay);
+      titleContainer.appendChild(editIcon);
+      titleContainer.appendChild(titleInput);
+      
+      // Edit title functionality
+      let isEditing = false;
+      
+      function startEditing() {
+        isEditing = true;
+        titleDisplay.style.display = 'none';
+        editIcon.style.display = 'none';
+        titleInput.style.display = 'inline-block';
+        titleInput.focus();
+        titleInput.select();
+      }
+      
+      function saveTitle() {
+        const newTitle = titleInput.value.trim();
+        if (newTitle && newTitle !== story.title) {
+          // Update title via API
+          fetch(`/api/case_studies/${story.id}/title`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: newTitle })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              story.title = newTitle;
+              titleDisplay.textContent = newTitle;
+              // Update the title in the sidebar as well
+              const sidebarTitle = document.querySelector(`[data-story-id="${story.id}"] .story-title`);
+              if (sidebarTitle) {
+                sidebarTitle.textContent = newTitle;
+              }
+            } else {
+              alert('Failed to update title: ' + data.message);
+              titleInput.value = story.title || 'Untitled';
+            }
+          })
+          .catch(error => {
+            console.error('Error updating title:', error);
+            alert('Failed to update title');
+            titleInput.value = story.title || 'Untitled';
+          });
+        }
+        
+        isEditing = false;
+        titleDisplay.style.display = 'inline';
+        editIcon.style.display = 'inline';
+        titleInput.style.display = 'none';
+      }
+      
+      function cancelEditing() {
+        isEditing = false;
+        titleInput.value = story.title || 'Untitled';
+        titleDisplay.style.display = 'inline';
+        editIcon.style.display = 'inline';
+        titleInput.style.display = 'none';
+      }
+      
+      // Event listeners
+      titleDisplay.onclick = startEditing;
+      editIcon.onclick = startEditing;
+      
+      titleInput.onblur = saveTitle;
+      titleInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          saveTitle();
+        } else if (e.key === 'Escape') {
+          cancelEditing();
+        }
+      };
+      
+      header.appendChild(titleContainer);
+      
       const metaDataBtn = document.createElement('button');
       metaDataBtn.className = 'meta-data-btn';
       metaDataBtn.innerHTML = '<i class="fas fa-lightbulb"></i>';

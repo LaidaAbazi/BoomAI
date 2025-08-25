@@ -1116,4 +1116,93 @@ def generate_pdf():
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@bp.route('/case_studies/<int:case_study_id>/title', methods=['PUT'])
+@login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Update case study title',
+    'description': 'Update the title of a specific case study',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study'
+        }
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['title'],
+                    'properties': {
+                        'title': {
+                            'type': 'string',
+                            'description': 'New title for the case study',
+                            'maxLength': 200
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Title updated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'},
+                            'title': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Invalid title or missing data'},
+        404: {'description': 'Case study not found'},
+        403: {'description': 'Not authorized to update this case study'}
+    }
+})
+def update_case_study_title(case_study_id):
+    """Update the title of a case study"""
+    try:
+        user_id = get_current_user_id()
+        data = request.get_json()
+        
+        if not data or 'title' not in data:
+            return jsonify({"status": "error", "message": "Title is required"}), 400
+        
+        title = data['title'].strip()
+        if not title:
+            return jsonify({"status": "error", "message": "Title cannot be empty"}), 400
+        
+        if len(title) > 200:
+            return jsonify({"status": "error", "message": "Title must be 200 characters or less"}), 400
+        
+        # Get the case study and verify ownership
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Update the title
+        case_study.title = title
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Title updated successfully",
+            "title": title
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
  
