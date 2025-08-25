@@ -247,7 +247,52 @@ class CaseStudyService:
                 IMPORTANT: Write the entire case study in {detected_language}. This includes all sections, quotes, and any additional content.
  
                 Your task is to read the full Solution Provider and Client summaries below and merge them into a single, rich, multi-perspective case study. You must synthesize the insights, stories, and data into one engaging narrative.
- 
+                
+                🚨 CRITICAL TITLE RULE: NEVER start your case study with "Title:" or "**Title:**" - just write the title directly on the first line!
+                
+                🎯 TITLE QUALITY REQUIREMENTS:
+                Your title MUST be:
+                - SPECIFIC to this exact case study (not generic)
+                - ATTRACTIVE and compelling for business readers
+                - 6-10 words maximum
+                - Based on the ACTUAL solution and results described in the summaries
+                - Professional yet engaging
+                
+                🚫 FORBIDDEN TITLE PATTERNS:
+                - "Revolutionizing" anything ❌
+                - "Transforming" everything ❌
+                - "The Future of" anything ❌
+                - Generic buzzwords like "Innovation," "Breakthrough," "Game-changer" ❌
+                - Company x Client: Project Name ❌
+                - Title: Your Title Here ❌
+                
+                ✅ EXCELLENT TITLE EXAMPLES (study these patterns):
+                - "From 3 Hours to 15 Minutes: How AI Streamlined Our Onboarding"
+                - "The Chatbot That Reduced Support Tickets by 70%"
+                - "How We Built a System That Handles 10,000 Users Daily"
+                - "The Automation That Saved Our Team 20 Hours Every Week"
+                - "How Data Analytics Unlocked 40% More Revenue"
+                - "The Integration That Connected 5 Systems Seamlessly"
+                - "How We Scaled from 100 to 10,000 Customers in 6 Months"
+                - "The Solution That Cut Processing Time from Days to Minutes"
+                
+                🧠 TITLE CREATION STRATEGY:
+                1. Identify the SPECIFIC problem solved from the summaries
+                2. Find the CONCRETE results or metrics mentioned
+                3. Use ACTION words that describe what actually happened
+                4. Make it SPECIFIC to this client's industry or challenge
+                5. Focus on TANGIBLE outcomes, not abstract concepts
+                
+                💡 TITLE PATTERNS TO USE:
+                - "How [Specific Solution] [Specific Result]"
+                - "The [Solution Type] That [Specific Outcome]"
+                - "From [Before] to [After]: How [Solution] [Result]"
+                - "[Specific Metric] Improvement Through [Solution]"
+                - "How [Solution] [Specific Action] [Specific Result]"
+                
+                CRITICAL: The first line should be ONLY the title, no prefixes, no formatting!
+                Make this title so good that a business executive would want to read the case study!
+
                 ---
 
                 **Instructions:**
@@ -321,6 +366,49 @@ class CaseStudyService:
                 Only use the Solution Provider's summary below to write a complete case study. The client did not provide input. Do not label any section with "Provider Summary" or "Title". Do not include markdown (like ** or *). Just write the case study using ALL CAPS section headers and clear business English.
                 
                 🚨 CRITICAL TITLE RULE: NEVER start your case study with "Title:" or "**Title:**" - just write the title directly on the first line!
+                
+                🎯 TITLE QUALITY REQUIREMENTS:
+                Your title MUST be:
+                - SPECIFIC to this exact case study (not generic)
+                - ATTRACTIVE and compelling for business readers
+                - 6-10 words maximum
+                - Based on the ACTUAL solution and results described in the summary
+                - Professional yet engaging
+                
+                🚫 FORBIDDEN TITLE PATTERNS:
+                - "Revolutionizing" anything ❌
+                - "Transforming" everything ❌
+                - "The Future of" anything ❌
+                - Generic buzzwords like "Innovation," "Breakthrough," "Game-changer" ❌
+                - Company x Client: Project Name ❌
+                - Title: Your Title Here ❌
+                
+                ✅ EXCELLENT TITLE EXAMPLES (study these patterns):
+                - "From 3 Hours to 15 Minutes: How AI Streamlined Our Onboarding"
+                - "The Chatbot That Reduced Support Tickets by 70%"
+                - "How We Built a System That Handles 10,000 Users Daily"
+                - "The Automation That Saved Our Team 20 Hours Every Week"
+                - "How Data Analytics Unlocked 40% More Revenue"
+                - "The Integration That Connected 5 Systems Seamlessly"
+                - "How We Scaled from 100 to 10,000 Customers in 6 Months"
+                - "The Solution That Cut Processing Time from Days to Minutes"
+                
+                🧠 TITLE CREATION STRATEGY:
+                1. Identify the SPECIFIC problem solved from the summary
+                2. Find the CONCRETE results or metrics mentioned
+                3. Use ACTION words that describe what actually happened
+                4. Make it SPECIFIC to this client's industry or challenge
+                5. Focus on TANGIBLE outcomes, not abstract concepts
+                
+                💡 TITLE PATTERNS TO USE:
+                - "How [Specific Solution] [Specific Result]"
+                - "The [Solution Type] That [Specific Outcome]"
+                - "From [Before] to [After]: How [Solution] [Result]"
+                - "[Specific Metric] Improvement Through [Solution]"
+                - "How [Solution] [Specific Action] [Specific Result]"
+                
+                CRITICAL: The first line should be ONLY the title, no prefixes, no formatting!
+                Make this title so good that a business executive would want to read the case study!
  
                 STRUCTURE:
  
@@ -331,7 +419,6 @@ class CaseStudyService:
                 THE SOLUTION
                 IMPLEMENTATION & COLLABORATION
                 RESULTS & IMPACT
-                CUSTOMER/CLIENT REFLECTION (create a realistic client quote based on the provider's input)
                 TESTIMONIAL/PROVIDER REFLECTION (one quote from the provider)
                 CALL TO ACTION
  

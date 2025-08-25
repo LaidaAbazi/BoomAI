@@ -395,24 +395,49 @@ def generate_summary():
         ### ✍️ CASE STUDY STRUCTURE (MANDATORY)
 
         Title (first line only—no extra formatting): 
-        CRITICAL: Your title MUST be a short hook like these examples:
-        - How AI Transformed Customer Service
-        - The Chatbot That Changed Everything
-        - Automation That Saved the Day
-        - The Solution That Locked Success
         
-        FORBIDDEN FORMATS:
+        🎯 TITLE QUALITY REQUIREMENTS:
+        Your title MUST be:
+        - SPECIFIC to this exact case study (not generic)
+        - ATTRACTIVE and compelling for business readers
+        - 6-10 words maximum
+        - Based on the ACTUAL solution and results described in the transcript
+        - Professional yet engaging
+        
+        🚫 FORBIDDEN TITLE PATTERNS:
+        - "Revolutionizing" anything ❌
+        - "Transforming" everything ❌
+        - "The Future of" anything ❌
+        - Generic buzzwords like "Innovation," "Breakthrough," "Game-changer" ❌
         - Company x Client: Project Name ❌
-        - Provider x Partner: Solution ❌  
-        - TechYard x Vostro: Lock it up ❌
-        - Title: Your Title Here ❌
-        - **Title:** Your Title Here ❌
         - Title: Your Title Here ❌
         
-        Your title must be 5-8 words, no company names, just a catchy hook!
-        DO NOT write "Title:" before your title - just write the title directly!
-        NEVER start with "Title:" or "**Title:**" - just write the title!
+        ✅ EXCELLENT TITLE EXAMPLES (study these patterns):
+        - "From 3 Hours to 15 Minutes: How AI Streamlined Our Onboarding"
+        - "The Chatbot That Reduced Support Tickets by 70%"
+        - "How We Built a System That Handles 10,000 Users Daily"
+        - "The Automation That Saved Our Team 20 Hours Every Week"
+        - "How Data Analytics Unlocked 40% More Revenue"
+        - "The Integration That Connected 5 Systems Seamlessly"
+        - "How We Scaled from 100 to 10,000 Customers in 6 Months"
+        - "The Solution That Cut Processing Time from Days to Minutes"
+        
+        🧠 TITLE CREATION STRATEGY:
+        1. Identify the SPECIFIC problem solved from the transcript
+        2. Find the CONCRETE results or metrics mentioned
+        3. Use ACTION words that describe what actually happened
+        4. Make it SPECIFIC to this client's industry or challenge
+        5. Focus on TANGIBLE outcomes, not abstract concepts
+        
+        💡 TITLE PATTERNS TO USE:
+        - "How [Specific Solution] [Specific Result]"
+        - "The [Solution Type] That [Specific Outcome]"
+        - "From [Before] to [After]: How [Solution] [Result]"
+        - "[Specific Metric] Improvement Through [Solution]"
+        - "How [Solution] [Specific Action] [Specific Result]"
+        
         CRITICAL: The first line should be ONLY the title, no prefixes, no formatting!
+        Make this title so good that a business executive would want to read the case study!
 
         --- 
 
@@ -448,9 +473,9 @@ def generate_summary():
 
         --- 
 
-        CLIENT QUOTE  
-        - If the transcript contains a direct, verbatim quote from the client or solution provider, include it as spoken.  
-        - If no direct quote is present, compose one elegant sentence from the client's or provider's perspective. Use only language, tone, and key points found in the transcript to craft a testimonial that feels genuine, highlights the solution's impact, and reads like a professional endorsement.
+        QUOTE  
+        - If the transcript contains a direct, verbatim quote from the solution provider, include it as spoken.  
+        - If no direct quote is present, compose one elegant sentence from the provider's perspective. Use only language, tone, and key points found in the transcript to craft a testimonial that feels genuine, highlights the solution's impact, and reads like a professional endorsement.
 
         --- 
 
