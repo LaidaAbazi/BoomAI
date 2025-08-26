@@ -324,6 +324,48 @@ def generate_client_summary():
 
 @bp.route("/generate_full_case_study", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Interviews'],
+    'summary': 'Generate full case study',
+    'description': 'Generate complete case study from provider and client summaries',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer', 'description': 'ID of the case study'},
+                        'solution_provider': {'type': 'string', 'description': 'Name of the solution provider (optional)'},
+                        'client_name': {'type': 'string', 'description': 'Name of the client (optional)'},
+                        'project_name': {'type': 'string', 'description': 'Name of the project (optional)'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Full case study generated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'full_case_study': {'type': 'string', 'description': 'Generated case study content'},
+                            'status': {'type': 'string', 'description': 'Success status'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request - Missing case_study_id or provider interview not found'},
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Case study not found'},
+        500: {'description': 'Internal server error - Failed to generate case study'}
+    }
+})
 def generate_full_case_study():
     """Generate complete case study from provider and client summaries"""
     try:

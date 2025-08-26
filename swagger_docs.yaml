@@ -791,6 +791,72 @@ paths:
                     type: string
                   status:
                     type: string
+
+  /api/generate_full_case_study:
+    post:
+      tags:
+        - Interviews
+      summary: Generate full case study
+      description: Generate complete case study from provider and client summaries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - case_study_id
+              properties:
+                case_study_id:
+                  type: integer
+                  description: ID of the case study
+                solution_provider:
+                  type: string
+                  description: Name of the solution provider (optional)
+                client_name:
+                  type: string
+                  description: Name of the client (optional)
+                project_name:
+                  type: string
+                  description: Name of the project (optional)
+      responses:
+        '200':
+          description: Full case study generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  full_case_study:
+                    type: string
+                    description: Generated case study content
+                  status:
+                    type: string
+                    description: Success status
+        '400':
+          description: Bad Request - Missing case_study_id or provider interview not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Case study not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error - Failed to generate case study
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   
   # Media generation endpoints
   /api/generate_video:
