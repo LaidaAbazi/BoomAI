@@ -486,7 +486,7 @@ class CaseStudyService:
                 "top_p": 0.9
             }
 
-            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload,timeout=30)
             result = response.json()
             case_study_text = result["choices"][0]["message"]["content"]
             cleaned = clean_text(case_study_text)
@@ -589,7 +589,7 @@ class CaseStudyService:
                 "max_tokens": 500
             }
             
-            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload,timeout=30)
             result = response.json()
             
             if "choices" in result and len(result["choices"]) > 0:
