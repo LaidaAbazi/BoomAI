@@ -232,13 +232,17 @@ def generate_client_summary():
             # Check if provider interview exists
             if case_study.solution_provider_interview:
                 provider_interview = case_study.solution_provider_interview
-                provider_summary = provider_interview.summary or ""
-                detected_language = detect_language(provider_summary)
+                # Use the corrected final summary instead of the raw provider interview summary
+                # This ensures we use the corrected names that were already processed
+                corrected_provider_summary = case_study.final_summary or provider_interview.summary or ""
+                detected_language = detect_language(corrected_provider_summary)
                 
                 # Generate full case study using the advanced service
+                # FIXED: Now using corrected_provider_summary (which contains corrected names from final_summary)
+                # instead of the raw provider_interview.summary (which had incorrect names)
                 case_study_service = CaseStudyService()
                 main_story, meta_data = case_study_service.generate_full_case_study(
-                    provider_summary, client_summary, detected_language, True  # has_client_story = True
+                    corrected_provider_summary, client_summary, detected_language, True  # has_client_story = True
                 )
                 
                 if main_story and main_story.strip():
@@ -304,6 +308,7 @@ def generate_client_summary():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # @bp.route("/extract_names", methods=["POST"])
 # @login_required
@@ -392,18 +397,22 @@ def generate_full_case_study():
         provider_interview = case_study.solution_provider_interview
         client_interview = case_study.client_interview
         
-        provider_summary = provider_interview.summary or ""
+        # FIXED: Use corrected final_summary when available instead of raw provider_interview.summary
+        # This ensures we use the corrected names that were already processed
+        corrected_provider_summary = case_study.final_summary or provider_interview.summary or ""
         client_summary = client_interview.summary if client_interview else ""
-        detected_language = detect_language(provider_summary)
+        detected_language = detect_language(corrected_provider_summary)
         print(detected_language)
         
         # Check if client story exists
         has_client_story = bool(client_interview and client_summary.strip())
         
         # Generate full case study using the advanced service
+        # FIXED: Now using corrected_provider_summary (which contains corrected names from final_summary)
+        # instead of the raw provider_interview.summary (which had incorrect names)
         case_study_service = CaseStudyService()
         main_story, meta_data = case_study_service.generate_full_case_study(
-            provider_summary, client_summary, detected_language, has_client_story
+            corrected_provider_summary, client_summary, detected_language, has_client_story
         )
         
         if not main_story or main_story.strip() == "":
