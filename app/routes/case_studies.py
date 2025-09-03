@@ -1205,4 +1205,85 @@ def update_case_study_title(case_study_id):
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@bp.route("/case_study_status/<int:case_study_id>", methods=["GET"])
+@login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Check case study completion status',
+    'description': 'Check if case study has been completed with client interview',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Case study status retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string', 'description': 'completion status'},
+                            'has_client_interview': {'type': 'boolean'},
+                            'has_full_case_study': {'type': 'boolean'},
+                            'updated_at': {'type': 'string'},
+                            'client_summary': {'type': 'string'},
+                            'final_summary': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Case study not found'}
+    }
+})
+def check_case_study_status(case_study_id):
+    """Check if case study has been completed with client interview"""
+    try:
+        user_id = get_current_user_id()
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        
+        if not case_study:
+            return jsonify({"error": "Case study not found"}), 404
+        
+        # Check if client interview exists and has summary
+        has_client_interview = bool(
+            case_study.client_interview and 
+            case_study.client_interview.summary and 
+            case_study.client_interview.summary.strip()
+        )
+        
+        # Check if full case study has been generated (has final_summary)
+        has_full_case_study = bool(
+            case_study.final_summary and 
+            case_study.final_summary.strip()
+        )
+        
+        # Determine overall status
+        if has_client_interview and has_full_case_study:
+            status = "completed"
+        elif has_client_interview:
+            status = "client_completed"
+        else:
+            status = "pending"
+        
+        return jsonify({
+            "status": status,
+            "has_client_interview": has_client_interview,
+            "has_full_case_study": has_full_case_study,
+            "updated_at": case_study.updated_at.isoformat() if case_study.updated_at else None,
+            "client_summary": case_study.client_interview.summary if case_study.client_interview else None,
+            "final_summary": case_study.final_summary
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
  
