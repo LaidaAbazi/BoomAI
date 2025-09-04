@@ -704,7 +704,8 @@ def save_as_word():
         data = request.get_json()
         case_study_id = data.get("case_study_id")
         final_summary = data.get("final_summary")
-        title = data.get("title")
+        title = data.get("title", "Case Study")
+
 
         if not case_study_id or not final_summary:
             return jsonify({"status": "error", "message": "Missing case_study_id or final_summary"}), 400
