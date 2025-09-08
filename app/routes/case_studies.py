@@ -105,7 +105,7 @@ def get_case_studies():
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/case_studies/<int:case_study_id>', methods=['GET'])
-@login_required
+@login_or_token_required
 @swag_from({
     'tags': ['Case Studies'],
     'summary': 'Get case study by ID',
@@ -116,6 +116,13 @@ def get_case_studies():
             'in': 'path',
             'required': True,
             'schema': {'type': 'integer'}
+        },
+        {
+            'name': 'token',
+            'in': 'query',
+            'required': False,
+            'schema': {'type': 'string'},
+            'description': 'Client interview token (optional, for client-side calls)'
         }
     ],
     'responses': {
