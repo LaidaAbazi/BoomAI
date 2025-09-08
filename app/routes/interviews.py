@@ -345,6 +345,7 @@ def generate_client_summary():
                         'solution_provider': {'type': 'string', 'description': 'Name of the solution provider (optional)'},
                         'client_name': {'type': 'string', 'description': 'Name of the client (optional)'},
                         'project_name': {'type': 'string', 'description': 'Name of the project (optional)'}
+                        'token': {'type': 'string', 'description': 'Client interview token (optional, for client-side calls)'}
                     }
                 }
             }
