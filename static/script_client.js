@@ -252,7 +252,10 @@ async function endConversation(reason) {
         const fullRes = await fetch("/api/generate_full_case_study", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ case_study_id: summaryData.case_study_id })
+          body: JSON.stringify({ 
+            case_study_id: summaryData.case_study_id,
+            token: token  // Add the token here too
+          })
         });
 
         const fullResData = await fullRes.json();
