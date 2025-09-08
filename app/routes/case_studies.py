@@ -9,7 +9,7 @@ from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label
-from app.utils.auth_helpers import get_current_user_id, login_required
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
