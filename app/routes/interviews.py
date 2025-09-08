@@ -4,7 +4,7 @@ import os
 import json
 from datetime import datetime
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken
-from app.utils.auth_helpers import get_current_user_id, login_required
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
@@ -328,7 +328,7 @@ def generate_client_summary():
 #         return jsonify({"error": str(e)}), 500
 
 @bp.route("/generate_full_case_study", methods=["POST"])
-@login_required
+@login_or_token_required
 @swag_from({
     'tags': ['Interviews'],
     'summary': 'Generate full case study',
