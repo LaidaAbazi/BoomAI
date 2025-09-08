@@ -167,7 +167,7 @@ async function endConversation(reason) {
     if (summaryData.status === "success") {
       // Get the current case study data to extract the updated names
       try {
-        const caseStudyRes = await fetch(`/api/case_studies/${summaryData.case_study_id}`, {
+        const caseStudyRes = await fetch(`/api/case_studies/${summaryData.case_study_id}?token=${token}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
         });
@@ -235,7 +235,8 @@ async function endConversation(reason) {
             case_study_id: summaryData.case_study_id,
             solution_provider: solution_provider,
             client_name: client_name_updated,
-            project_name: project_name_updated
+            project_name: project_name_updated,
+            token: token  // Add the token here
           })
         });
 
