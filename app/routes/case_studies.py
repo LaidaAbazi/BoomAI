@@ -1169,11 +1169,31 @@ def check_case_study_status(case_study_id):
             case_study.client_interview.summary.strip()
         )
         
-        # Check if full case study has been generated (has final_summary)
-        has_full_case_study = bool(
+        # ✅ FIXED: Check if final_summary was generated AFTER client interview
+        # We check for meta_data_text which is only generated when both interviews are complete
+        has_full_case_study_with_client = bool(
             case_study.final_summary and 
-            case_study.final_summary.strip()
+            case_study.final_summary.strip() and
+            case_study.meta_data_text and  # This is only set when both interviews are processed
+            case_study.meta_data_text.strip()
         )
+        
+        # Additional check: Ensure final_summary contains client perspective content
+        # (This is generated only when client interview is included)
+        has_client_content_in_summary = False
+        if has_client_interview and case_study.final_summary:
+            # Check if the final_summary was updated after client interview completion
+            # by looking for metadata or timestamp comparison
+            if case_study.meta_data_text:
+                try:
+                    meta_data = json.loads(case_study.meta_data_text)
+                    # If sentiment data exists, it means the full case study was generated with client data
+                    has_client_content_in_summary = bool(meta_data.get("sentiment"))
+                except:
+                    has_client_content_in_summary = False
+        
+        # Final check: Both conditions must be true for completion
+        has_full_case_study = has_full_case_study_with_client and (has_client_content_in_summary or not has_client_interview)
         
         # Determine overall status
         if has_client_interview and has_full_case_study:
@@ -1194,6 +1214,7 @@ def check_case_study_status(case_study_id):
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
  
