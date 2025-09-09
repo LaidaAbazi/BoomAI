@@ -148,7 +148,20 @@ def get_case_study(case_study_id):
     """Get a single case study by ID"""
     try:
         user_id = get_current_user_id()
-        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        
+        if user_id:
+            # Session-based authentication - filter by user_id
+            case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        else:
+            # Token-based authentication - just get the case study directly
+            case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+            
+            # Verify the token corresponds to this case study
+            token = request.args.get('token')
+            if token:
+                invite_token = InviteToken.query.filter_by(token=token).first()
+                if not invite_token or invite_token.case_study_id != case_study_id:
+                    return jsonify({'error': 'Invalid token for this case study'}), 403
         
         if not case_study:
             return jsonify({'error': 'Case study not found'}), 404
@@ -184,7 +197,7 @@ def get_case_study(case_study_id):
         return jsonify({'success': True, 'case_study': case_study_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+        
 @bp.route('/labels', methods=['GET'])
 @login_required
 @swag_from({
