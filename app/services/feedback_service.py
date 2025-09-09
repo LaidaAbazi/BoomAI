@@ -16,24 +16,32 @@ class FeedbackService:
             if not self.ai_service.openai_api_key:
                 return "AI analysis not available. Manual review required."
             
-            # Create context for the AI
-            context = f"Feedback Type: {feedback_type}\n"
-            if rating:
-                context += f"Rating: {rating}/5\n"
-            context += f"Feedback Content: {feedback_content}\n"
+            # Validate input
+            if not feedback_content or not feedback_content.strip():
+                return "No feedback content provided for analysis."
             
-            prompt = f"""Analyze this user feedback and provide a concise summary that captures:
+            # Create context for the AI
+            context_parts = []
+            if feedback_type and feedback_type != "general":
+                context_parts.append(f"Type: {feedback_type}")
+            if rating is not None:
+                context_parts.append(f"Rating: {rating}/5")
+            
+            context = "\n".join(context_parts) if context_parts else "General feedback"
+            context += f"\nFeedback: {feedback_content.strip()}"
+            
+            # Simplified, more natural prompt
+            prompt = f"""You are analyzing user feedback for a business application. Here's the feedback:
 
-1. **Main Points**: Key issues, suggestions, or positive feedback mentioned
-2. **Sentiment**: Overall tone (positive, negative, neutral, mixed)
-3. **Actionability**: Whether the feedback is actionable and specific
-4. **Priority**: High, medium, or low priority based on content and rating
-5. **Category**: What aspect of the product/service this feedback relates to
-
-Context:
 {context}
 
-Provide a clear, concise summary in 2-3 sentences that captures the essence of this feedback for quick review and action planning."""
+Please provide a brief, helpful summary that captures:
+- What the user is saying (main points)
+- How they feel about it (sentiment)
+- Whether it's something actionable
+- What area of the product this relates to
+
+Write this as a natural paragraph, not a structured list. Be specific and reference the actual content the user provided. If the feedback is unclear or minimal, say so directly."""
 
             headers = {
                 "Authorization": f"Bearer {self.ai_service.openai_api_key}",
@@ -42,14 +50,15 @@ Provide a clear, concise summary in 2-3 sentences that captures the essence of t
 
             payload = {
                 "model": self.ai_service.openai_config["model"],
-                "messages": [{"role": "system", "content": prompt}],
+                "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.3,
-                "max_tokens": 200
+                "max_tokens": 300
             }
 
             response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
             
             if response.status_code != 200:
+                print(f"OpenAI API error in single feedback analysis: {response.status_code} - {response.text}")
                 return "Failed to analyze feedback. Please review manually."
             
             result = response.json()
@@ -71,57 +80,35 @@ Provide a clear, concise summary in 2-3 sentences that captures the essence of t
             if not self.ai_service.openai_api_key:
                 return "AI analysis not available. Manual review required."
             
-            # Prepare feedback data for analysis
-            feedback_data = []
-            for feedback in all_feedbacks:
-                feedback_data.append({
-                    'content': feedback.content,
-                    'rating': feedback.rating,
-                    'type': feedback.feedback_type,
-                    'date': feedback.created_at.strftime('%Y-%m-%d'),
-                    'summary': feedback.feedback_summary or "No summary available"
-                })
+            # Prepare feedback data for analysis - focus on content, not structure
+            feedback_texts = []
+            for i, feedback in enumerate(all_feedbacks, 1):
+                feedback_text = f"Feedback #{i}:\n"
+                if feedback.rating:
+                    feedback_text += f"Rating: {feedback.rating}/5\n"
+                if feedback.feedback_type and feedback.feedback_type != "general":
+                    feedback_text += f"Type: {feedback.feedback_type}\n"
+                feedback_text += f"Content: {feedback.content}\n"
+                feedback_text += f"Date: {feedback.created_at.strftime('%Y-%m-%d')}\n"
+                feedback_texts.append(feedback_text)
             
-            # Create comprehensive analysis prompt
-            prompt = f"""Analyze all the collected feedback and provide a comprehensive summary report. 
+            # Combine all feedback into a single text block
+            all_feedback_text = "\n---\n".join(feedback_texts)
+            
+            # Simplified, more conversational prompt
+            prompt = f"""You are analyzing user feedback for a business application. Here are {len(all_feedbacks)} pieces of feedback from users:
 
-Total feedback entries: {len(feedback_data)}
+{all_feedback_text}
 
-Feedback Data:
-{json.dumps(feedback_data, indent=2, default=str)}
+Please analyze this feedback and provide a comprehensive summary that covers:
 
-Please provide a detailed analysis covering:
+1. What users are saying overall - what are the main themes and patterns?
+2. What are users happy about or what's working well?
+3. What problems or issues are users reporting?
+4. What suggestions or requests are users making?
+5. What should be prioritized based on the feedback?
 
-**EXECUTIVE SUMMARY**
-- Overall sentiment across all feedback
-- Key themes and patterns identified
-- Most common issues or positive points
-
-**DETAILED ANALYSIS**
-1. **Positive Feedback**: What users like and appreciate
-2. **Negative Feedback**: Issues, problems, and pain points
-3. **Suggestions & Improvements**: User recommendations and ideas
-4. **Feature Requests**: New functionality users want
-5. **Usability Issues**: Interface, workflow, or user experience problems
-
-**PATTERNS & TRENDS**
-- Recurring themes across multiple users
-- Rating patterns and correlations
-- Feedback type distribution
-- Time-based patterns if any
-
-**ACTIONABLE INSIGHTS**
-- High-priority issues that need immediate attention
-- Quick wins that can be implemented easily
-- Long-term improvements to consider
-- User satisfaction drivers
-
-**RECOMMENDATIONS**
-- Immediate actions (next 1-2 weeks)
-- Short-term improvements (next 1-2 months)
-- Long-term considerations (next 3-6 months)
-
-Provide a comprehensive, actionable report that helps prioritize development and improvement efforts."""
+Write this as a clear, actionable summary that helps the development team understand what users need. Be specific and reference actual feedback when possible. If there are conflicting opinions or mixed signals, mention that."""
 
             headers = {
                 "Authorization": f"Bearer {self.ai_service.openai_api_key}",
@@ -130,14 +117,15 @@ Provide a comprehensive, actionable report that helps prioritize development and
 
             payload = {
                 "model": self.ai_service.openai_config["model"],
-                "messages": [{"role": "system", "content": prompt}],
+                "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.3,
-                "max_tokens": 2000
+                "max_tokens": 1500
             }
 
             response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
             
             if response.status_code != 200:
+                print(f"OpenAI API error in comprehensive analysis: {response.status_code} - {response.text}")
                 return "Failed to generate comprehensive feedback summary. Please review feedback manually."
             
             result = response.json()
