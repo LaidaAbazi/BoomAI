@@ -509,7 +509,7 @@ def generate_summary():
             "frequency_penalty": openai_config["frequency_penalty"]
         }
 
-        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=120)
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=180)
         result = response.json()
         case_study = result["choices"][0]["message"]["content"]
         cleaned = clean_text(case_study)
@@ -743,7 +743,7 @@ Transcript:
             "frequency_penalty": openai_config["frequency_penalty"]
         }
 
-        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=120)
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=180)
         result = response.json()
         summary = result["choices"][0]["message"]["content"]
         cleaned = clean_text(summary)
