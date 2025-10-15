@@ -490,7 +490,6 @@ def save_final_summary():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-<<<<<<< HEAD
 @bp.route('/stripe/webhook', methods=['POST'])
 @swag_from({
     'tags': ['Stripe'],
@@ -836,5 +835,3 @@ def test_add_extra_credits():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-=======
->>>>>>> origin/master
