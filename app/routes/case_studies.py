@@ -9,7 +9,11 @@ from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label
+<<<<<<< HEAD
 from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required, subscription_required
+=======
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required
+>>>>>>> origin/master
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
@@ -198,7 +202,7 @@ def get_case_study(case_study_id):
         return jsonify({'success': True, 'case_study': case_study_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+        
 @bp.route('/labels', methods=['GET'])
 @login_required
 @swag_from({
@@ -1216,4 +1220,10 @@ def check_case_study_status(case_study_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+<<<<<<< HEAD
  
+=======
+
+
+ 
+>>>>>>> origin/master

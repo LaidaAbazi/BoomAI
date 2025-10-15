@@ -3,7 +3,11 @@ import uuid
 import os
 import json
 from datetime import datetime
+<<<<<<< HEAD
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, User
+=======
+from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken
+>>>>>>> origin/master
 from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
@@ -309,6 +313,7 @@ def generate_client_summary():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # @bp.route("/extract_names", methods=["POST"])
 # @login_required
@@ -682,6 +687,7 @@ def extract_interviewee_name():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # REMOVED: Duplicate client-interview route - this is handled in main.py 
+<<<<<<< HEAD
 
 @bp.route("/get_email_draft", methods=["POST"])
 @login_required
@@ -811,3 +817,5 @@ def send_email_route():
     except Exception as e:
         print(f"Error sending email: {str(e)}")
         return jsonify({"status": "error", "message": "Failed to send email"}), 500 
+=======
+>>>>>>> origin/master

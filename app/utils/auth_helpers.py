@@ -1,5 +1,9 @@
 from functools import wraps
+<<<<<<< HEAD
 from flask import session, jsonify, request, redirect, url_for
+=======
+from flask import session, jsonify, request
+>>>>>>> origin/master
 from app.models import User, InviteToken
 
 def get_current_user_id():
@@ -27,8 +31,12 @@ def login_required(f):
             return jsonify({"error": "User not found"}), 401
         
         return f(*args, **kwargs)
+<<<<<<< HEAD
     return decorated_function
 
+=======
+    return decorated_function 
+>>>>>>> origin/master
 def login_or_token_required(f):
     """Decorator that accepts either session login OR client interview token"""
     @wraps(f)
@@ -55,6 +63,7 @@ def login_or_token_required(f):
         # If neither session nor valid token, deny access
         return jsonify({"error": "Authentication required"}), 401
     
+<<<<<<< HEAD
     return decorated_function
 
 def subscription_required(f):
@@ -79,3 +88,6 @@ def subscription_required(f):
         
         return f(*args, **kwargs)
     return decorated_function 
+=======
+    return decorated_function 
+>>>>>>> origin/master
