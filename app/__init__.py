@@ -54,6 +54,16 @@ def create_app(config_name=None):
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev_jwt_secret")
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     
+    # Stripe configuration
+    app.config["STRIPE_WEBHOOK_SECRET"] = os.getenv("STRIPE_WEBHOOK_SECRET")
+    app.config["STRIPE_SECRET_KEY"] = os.getenv("STRIPE_SECRET_KEY")
+    
+    # Debug Stripe configuration
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+    secret_key = os.getenv("STRIPE_SECRET_KEY")
+    print(f"DEBUG: STRIPE_WEBHOOK_SECRET loaded: {webhook_secret[:10] if webhook_secret else 'None'}...")
+    print(f"DEBUG: STRIPE_SECRET_KEY loaded: {secret_key[:10] if secret_key else 'None'}...")
+    
     # Flasgger configuration
     app.config['SWAGGER'] = {
         'title': 'StoryBoom AI API',
@@ -310,6 +320,22 @@ def create_app(config_name=None):
     app.register_blueprint(media.bp)
     app.register_blueprint(api.bp)
     app.register_blueprint(metadata.metadata_bp)
+
+    # Register Slack OAuth blueprint
+    try:
+        from app.routes import slack_oauth
+        app.register_blueprint(slack_oauth.bp)
+    except ImportError:
+        # OAuth routes not available, continue without them
+        pass
+    
+    # Register Teams OAuth blueprint
+    try:
+        from app.routes import teams_oauth
+        app.register_blueprint(teams_oauth.bp)
+    except ImportError:
+        # OAuth routes not available, continue without them
+        pass
     
     # Register main routes
     from app.routes import main

@@ -14,8 +14,8 @@ bp = Blueprint('media', __name__, url_prefix='/api')
 # API Configuration
 HEYGEN_API_KEY = os.getenv("HEYGEN_API_KEY")
 HEYGEN_API_BASE_URL = "https://api.heygen.com/v2"
-HEYGEN_AVATAR_ID = "Tuba_Casual_Front_public"
-HEYGEN_VOICE_ID = "ea5493f87c244e0e99414ca6bd4af709"
+HEYGEN_AVATAR_ID = "Annie_Casual_Standing_Front_2_public"
+HEYGEN_VOICE_ID = "4754e1ec667544b0bd18cdf4bec7d6a7"
 
 PICTORY_CLIENT_ID = os.getenv("PICTORY_CLIENT_ID")
 PICTORY_CLIENT_SECRET = os.getenv("PICTORY_CLIENT_SECRET")
@@ -127,7 +127,8 @@ def generate_video():
                         "voice_id": HEYGEN_VOICE_ID,
                         "input_text": input_text,
                         "speed": 1.0,
-                        "pitch": 0
+                        "pitch": 35,
+                        "emotion": "Excited"
                     },
                     "background": {
                         "type": "image",
@@ -551,8 +552,8 @@ def generate_podcast():
         payload = {
             "prompt": podcast_prompt,
             "voice_ids": [
-                "f79709a9-6b2c-4333-9bdf-dd5973a1d55b",
-                "3b650d7d-4918-402d-a9fe-b28b50cc5bee"
+                "5acfb17c-dd70-4af3-b17e-750a8a312ef8",
+                "331fbe9e-8efb-48f2-99d2-e81f3f7ccf84"
             ]
         }
         
@@ -716,6 +717,18 @@ def check_podcast_status(job_id):
                 case_study.podcast_status = 'completed'
                 case_study.podcast_url = url
                 case_study.podcast_script = script
+
+                # Attempt to fetch and persist audio bytes
+                try:
+                    audio_resp = requests.get(url, timeout=60)
+                    if audio_resp.status_code == 200 and audio_resp.content:
+                        case_study.podcast_audio_data = audio_resp.content
+                        case_study.podcast_audio_mime = audio_resp.headers.get('Content-Type', 'audio/mpeg')
+                        case_study.podcast_audio_size = len(audio_resp.content)
+                except Exception:
+                    # If fetch fails, keep URL fallback
+                    pass
+
                 db.session.commit()
                 
                 return jsonify({
@@ -723,25 +736,6 @@ def check_podcast_status(job_id):
                     "url": url,
                     "script": script,
                     "message": "Podcast generation completed"
-                })
-            elif status and error:
-                # Podcast generation failed
-                case_study.podcast_status = 'failed'
-                db.session.commit()
-                
-                return jsonify({
-                    "status": "failed",
-                    "message": "Podcast generation failed",
-                    "details": podcast_data
-                })
-            else:
-                # Still processing
-                case_study.podcast_status = 'processing'
-                db.session.commit()
-                
-                return jsonify({
-                    "status": "processing",
-                    "message": "Podcast is being generated"
                 })
         
         return jsonify(podcast_data)
@@ -766,7 +760,25 @@ def serve_podcast_audio(case_study_id):
     try:
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         
-        if not case_study or not case_study.podcast_url:
+        if not case_study:
+            return jsonify({"error": "Podcast not found"}), 404
+
+        # Serve from DB if stored
+        if getattr(case_study, 'podcast_audio_data', None):
+            return Response(
+                case_study.podcast_audio_data,
+                content_type=(case_study.podcast_audio_mime or 'audio/mpeg'),
+                headers={
+                    'Content-Length': str(case_study.podcast_audio_size or len(case_study.podcast_audio_data)),
+                    'Accept-Ranges': 'bytes',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Range, Content-Type',
+                    'Cache-Control': 'public, max-age=3600'
+                }
+            )
+        
+        if not case_study.podcast_url:
             return jsonify({"error": "Podcast not found"}), 404
         
         # Fetch the audio file from the external URL
@@ -795,6 +807,7 @@ def serve_podcast_audio(case_study_id):
         
     except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
+        
 
 @bp.route("/download/<filename>")
 @swag_from({

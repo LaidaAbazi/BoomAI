@@ -3,11 +3,12 @@ import uuid
 import os
 import json
 from datetime import datetime
-from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken
-from app.utils.auth_helpers import get_current_user_id, login_required
+from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, User
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
+from app.services.email_service import EmailService
 from io import BytesIO
 from fpdf import FPDF
 import requests
@@ -232,13 +233,17 @@ def generate_client_summary():
             # Check if provider interview exists
             if case_study.solution_provider_interview:
                 provider_interview = case_study.solution_provider_interview
-                provider_summary = provider_interview.summary or ""
-                detected_language = detect_language(provider_summary)
+                # Use the corrected final summary instead of the raw provider interview summary
+                # This ensures we use the corrected names that were already processed
+                corrected_provider_summary = case_study.final_summary or provider_interview.summary or ""
+                detected_language = detect_language(corrected_provider_summary)
                 
                 # Generate full case study using the advanced service
+                # FIXED: Now using corrected_provider_summary (which contains corrected names from final_summary)
+                # instead of the raw provider_interview.summary (which had incorrect names)
                 case_study_service = CaseStudyService()
                 main_story, meta_data = case_study_service.generate_full_case_study(
-                    provider_summary, client_summary, detected_language, True  # has_client_story = True
+                    corrected_provider_summary, client_summary, detected_language, True  # has_client_story = True
                 )
                 
                 if main_story and main_story.strip():
@@ -323,7 +328,7 @@ def generate_client_summary():
 #         return jsonify({"error": str(e)}), 500
 
 @bp.route("/generate_full_case_study", methods=["POST"])
-@login_required
+@login_or_token_required
 @swag_from({
     'tags': ['Interviews'],
     'summary': 'Generate full case study',
@@ -339,7 +344,8 @@ def generate_client_summary():
                         'case_study_id': {'type': 'integer', 'description': 'ID of the case study'},
                         'solution_provider': {'type': 'string', 'description': 'Name of the solution provider (optional)'},
                         'client_name': {'type': 'string', 'description': 'Name of the client (optional)'},
-                        'project_name': {'type': 'string', 'description': 'Name of the project (optional)'}
+                        'project_name': {'type': 'string', 'description': 'Name of the project (optional)'},
+                        'token': {'type': 'string', 'description': 'Client interview token (optional, for client-side calls)'}
                     }
                 }
             }
@@ -392,18 +398,22 @@ def generate_full_case_study():
         provider_interview = case_study.solution_provider_interview
         client_interview = case_study.client_interview
         
-        provider_summary = provider_interview.summary or ""
+        # FIXED: Use corrected final_summary when available instead of raw provider_interview.summary
+        # This ensures we use the corrected names that were already processed
+        corrected_provider_summary = case_study.final_summary or provider_interview.summary or ""
         client_summary = client_interview.summary if client_interview else ""
-        detected_language = detect_language(provider_summary)
+        detected_language = detect_language(corrected_provider_summary)
         print(detected_language)
         
         # Check if client story exists
         has_client_story = bool(client_interview and client_summary.strip())
         
         # Generate full case study using the advanced service
+        # FIXED: Now using corrected_provider_summary (which contains corrected names from final_summary)
+        # instead of the raw provider_interview.summary (which had incorrect names)
         case_study_service = CaseStudyService()
         main_story, meta_data = case_study_service.generate_full_case_study(
-            provider_summary, client_summary, detected_language, has_client_story
+            corrected_provider_summary, client_summary, detected_language, has_client_story
         )
         
         if not main_story or main_story.strip() == "":
@@ -462,6 +472,22 @@ def generate_full_case_study():
         case_study.provider_name = lead_entity
         case_study.client_name = partner_entity
         case_study.project_name = project_title
+        
+        # Record story creation and update user credits (this is when the story is actually completed)
+        # Only count the story once per case study, not on every call to generate_full_case_study
+        from app.models import User
+        user = User.query.get(user_id)
+        if user and not case_study.story_counted:
+            # Check if user can create a story (has active subscription and credits)
+            if not user.can_create_story():
+                return jsonify({"error": "No credits left. Please purchase extra credits to continue."}), 400
+            
+            # Record the story creation
+            user.record_story_creation()
+            case_study.story_counted = True  # Mark this case study as counted
+            print(f"✅ Story creation recorded for user {user_id}. Stories used this month: {user.stories_used_this_month}")
+        elif case_study.story_counted:
+            print(f"ℹ️ Story already counted for case study {case_study_id}, skipping credit deduction")
         
         # Generate PDF and store in DB
         try:
@@ -656,3 +682,132 @@ def extract_interviewee_name():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # REMOVED: Duplicate client-interview route - this is handled in main.py 
+
+@bp.route("/get_email_draft", methods=["POST"])
+@login_required
+def get_email_draft_route():
+    """Get a pre-filled email draft for sharing success story"""
+    try:
+        data = request.get_json()
+        case_study_id = data.get('case_study_id')
+        recipient_email = data.get('recipient_email', '')
+        
+        if not case_study_id:
+            return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
+        
+        user_id = get_current_user_id()
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Get user info
+        user = User.query.get(user_id)
+        user_name = f"{user.first_name} {user.last_name}" if user else None
+        
+        # Generate the email draft
+        from app.services.email_service import EmailService
+        email_service = EmailService()
+        email_draft = email_service.generate_email_draft(case_study, user_name, recipient_email)
+        
+        if not email_draft:
+            return jsonify({"status": "error", "message": "Failed to generate email draft"}), 500
+        
+        # Debug: Log the email draft data being returned
+        print(f"📧 API returning email draft with subject: '{email_draft.get('subject', 'NO SUBJECT')}'")
+        print(f"📧 Full email draft: {email_draft}")
+        
+        # Generate public PDF URL (no authentication required)
+        base_url = request.host_url.rstrip('/')
+        pdf_url = f"{base_url}/api/public/pdf/{case_study.id}"
+        email_draft["pdf_url"] = pdf_url
+        
+        # Generate mailto URL
+        mailto_url = email_service.get_mailto_url(email_draft)
+        email_draft["mailto_url"] = mailto_url
+        
+        return jsonify({
+            "status": "success",
+            "email_draft": email_draft
+        })
+        
+    except Exception as e:
+        print(f"Error getting email draft: {str(e)}")
+        return jsonify({"status": "error", "message": "Failed to generate email draft"}), 500
+
+@bp.route("/send_email", methods=["POST"])
+@login_required
+def send_email_route():
+    """Send email automatically from the logged-in user's email for sharing success story"""
+    try:
+        data = request.get_json()
+        case_study_id = data.get('case_study_id')
+        recipient_email = data.get('recipient_email', '')
+        email_draft_data = data.get('email_draft', {})
+        
+        if not case_study_id:
+            return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
+        
+        if not recipient_email:
+            return jsonify({"status": "error", "message": "Recipient email is required"}), 400
+        
+        user_id = get_current_user_id()
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Get user info
+        user = User.query.get(user_id)
+        user_name = f"{user.first_name} {user.last_name}" if user else None
+        user_email = user.email
+        
+        # Import email service first
+        from app.services.email_service import EmailService
+        email_service = EmailService()
+        
+        # Check if we should use edited content from frontend
+        email_draft_data = data.get('email_draft', {})
+        
+        if email_draft_data.get('use_edited_content') and email_draft_data.get('subject') and email_draft_data.get('body'):
+            # Use the edited content from the modal - NO NEW GENERATION
+            email_draft = {
+                "subject": email_draft_data.get('subject'),
+                "body": email_draft_data.get('body'),
+                "recipient": recipient_email,
+                "use_edited_content": True  # Pass this flag to email service
+            }
+            print(f"📧 ✅ USING EDITED CONTENT FROM MODAL - NO NEW GENERATION")
+            print(f"📧 Subject: '{email_draft['subject']}'")
+            print(f"📧 Body length: {len(email_draft['body'])}")
+            print(f"📧 Body preview: {email_draft['body'][:300]}...")
+        else:
+            # Generate new email draft
+            email_draft = email_service.generate_email_draft(case_study, user_name, recipient_email)
+            
+            if not email_draft:
+                return jsonify({"status": "error", "message": "Failed to generate email draft"}), 500
+            
+            print(f"📧 Generated NEW email draft: Subject='{email_draft['subject']}', Body length={len(email_draft['body'])}")
+            print(f"📧 Email body preview: {email_draft['body'][:200]}...")
+        
+        # Send the email automatically
+        send_result = email_service.send_email_automatically(email_draft, user_email, user_name, case_study)
+        
+        if send_result["success"]:
+            return jsonify({
+                "status": "success",
+                "message": send_result["message"],
+                "sender": send_result["sender"],
+                "recipient": send_result["recipient"],
+                "subject": send_result["subject"]
+            })
+        else:
+            return jsonify({
+                "status": "error", 
+                "message": send_result["message"]
+            }), 500
+        
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return jsonify({"status": "error", "message": "Failed to send email"}), 500 

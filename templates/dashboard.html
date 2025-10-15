@@ -805,6 +805,183 @@
       color: #9ca3af;
       font-style: italic;
     }
+    
+    /* Slack Integration Styles */
+    .slack-sidebar-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #4F46E5 0%, #6366F1 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    }
+    
+    .slack-sidebar-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    
+    .slack-integration-section {
+      padding: 0 24px;
+      margin-top: 16px;
+    }
+    
+    #slackStatus {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    #slackStatusIcon {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #dc3545;
+      transition: background 0.2s;
+    }
+    
+    #slackStatusText {
+      color: #F8FAFC;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    #slackWorkspaces {
+      margin-top: 12px;
+    }
+    
+    #workspacesList {
+      font-size: 0.8rem;
+      color: #CBD5E1;
+      margin-bottom: 8px;
+    }
+    
+    /* Slack Button Styles */
+    .slack-btn {
+      background: linear-gradient(90deg, #4F46E5 0%, #6366F1 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    }
+    
+    .slack-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    
+    .slack-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .slack-disconnect-btn {
+      background: linear-gradient(90deg, #EF4444 0%, #DC2626 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    }
+    
+    .slack-disconnect-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    /* Teams Integration Styles */
+    .teams-btn {
+      background: linear-gradient(90deg, #0078D4 0%, #106EBE 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 120, 212, 0.15);
+      margin-left: 12px;
+    }
+    
+    .teams-btn:hover {
+      background: linear-gradient(90deg, #106EBE 0%, #0078D4 100%);
+      box-shadow: 0 4px 12px rgba(0, 120, 212, 0.2);
+    }
+    
+    .teams-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* User Dropdown Payment Buttons */
+    .dropdown-section {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .dropdown-payment-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      margin: 6px 0;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    
+    .dropdown-payment-btn.monthly-btn {
+      background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .dropdown-payment-btn.monthly-btn:hover {
+      background: linear-gradient(90deg, #059669 0%, #047857 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    
+    .dropdown-payment-btn.extra-btn {
+      background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+    }
+    
+    .dropdown-payment-btn.extra-btn:hover {
+      background: linear-gradient(90deg, #2563EB 0%, #1D4ED8 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    
+    .dropdown-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 0;
+    }
   </style>
 </head>
 <body>
@@ -816,13 +993,32 @@
         <i class="fa fa-user-circle" style="font-size:2rem;"></i>
       </button>
       <div id="userDropdownMenu" class="user-dropdown-menu hidden">
+        <div class="dropdown-section">
+          <h4 style="margin: 0 0 8px 0; color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Subscription</h4>
+                <a href="#" onclick="openMonthlySubscription()" class="dropdown-payment-btn monthly-btn">
+                  <i class="fas fa-crown" style="margin-right: 8px;"></i>
+                  Monthly Plan - $99/month
+                </a>
+                <a href="#" onclick="openExtraCredits()" class="dropdown-payment-btn extra-btn">
+                  <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
+                  Buy Extra Stories - $6.90
+                </a>
+        </div>
+        <div class="dropdown-divider"></div>
         <button class="logout-btn-oval" onclick="logout()">Log out</button>
       </div>
     </div>
   </div>
-  <div class="dashboard-container">
+  <div class="dashboard-container" data-user-id="{{ user_id|tojson|safe if user_id else 'null' }}">
     <div class="sidebar">
       <button id="tellStoryBtn" class="tell-story-btn"><span>TELL THE STORY</span> <span><i class="fas fa-sparkles"></i></span></button>
+      
+      <!-- Credit Status Banner -->
+      <div id="creditStatusBanner" class="credit-status-banner" style="display: none; margin: 16px 24px; padding: 12px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid #F59E0B; border-radius: 8px; color: #92400E; font-size: 0.9rem; text-align: center;">
+        <div id="creditStatusText"></div>
+        <a id="buyCreditsLink" href="#" target="_blank" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #F59E0B; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">Buy Extra Stories for $6.90</a>
+      </div>
+      
       <div class="sidebar-header">STORIES</div>
       <div class="search-bar" style="position: relative;">
         <input type="text" id="searchInput" placeholder="Search stories..." />
@@ -834,12 +1030,60 @@
           <!-- label chips will be rendered here -->
         </div>
       </div>
+      
+      <!-- Slack Integration Section -->
+      <div class="sidebar-header" style="margin-top: 24px;">INTEGRATIONS</div>
+      <div class="slack-integration-section" style="padding: 0 24px; margin-top: 16px;">
+        <div id="slackStatus" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <div id="slackStatusIcon" style="width: 12px; height: 12px; border-radius: 50%; background: #dc3545;"></div>
+          <span id="slackStatusText" style="color: #F8FAFC; font-size: 0.9rem; font-weight: 500;">Slack: Checking...</span>
+        </div>
+        <button id="connectSlackBtn" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #4F46E5 0%, #6366F1 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 8px;">
+          📱 Connect to Slack
+        </button>
+        <button id="addWorkspaceBtn" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #10B981 0%, #059669 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; display: none;">
+          ➕ Install in Another Workspace
+        </button>
+        <button id="disconnectSlackBtn" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #dc3545 0%, #b91c1c 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: none;">
+          ❌ Disconnect Slack
+        </button>
+        <div id="slackWorkspaces" style="display: none; margin-top: 12px;">
+          <div style="font-size: 0.9rem; font-weight: 600; color: #F8FAFC; margin-bottom: 8px;">Connected Workspaces</div>
+          <div id="workspacesList" style="font-size: 0.8rem; color: #CBD5E1; margin-bottom: 8px;"></div>
+        </div>
+        <a href="/api/slack/oauth/" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; text-align: center; display: block;">
+          🚀 Multi-Workspace Slack Page
+        </a>
+      </div>
+
+      <!-- Teams Integration Section -->
+      <div class="slack-integration-section" style="padding: 0 24px; margin-top: 16px;">
+        <div id="teamsStatus" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <div id="teamsStatusIcon" style="width: 12px; height: 12px; border-radius: 50%; background: #dc3545;"></div>
+          <span id="teamsStatusText" style="color: #F8FAFC; font-size: 0.9rem; font-weight: 500;">Teams: Not connected</span>
+        </div>
+        <button id="connectTeamsBtn" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #0EA5E9 0%, #0284C7 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 8px;">
+          📱 Connect to Teams
+        </button>
+        <button id="disconnectTeamsBtn" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #dc3545 0%, #b91c1c 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: none;">
+          ❌ Disconnect Teams (all tenants)
+        </button>
+        <div id="teamsTenants" style="display: none; margin-top: 12px;">
+          <div style="font-size: 0.9rem; font-weight: 600; color: #F8FAFC; margin-bottom: 8px;">Connected Tenants</div>
+          <div id="tenantsList" style="font-size: 0.8rem; color: #CBD5E1; margin-bottom: 8px;"></div>
+        </div>
+        <a href="/api/teams/oauth/" class="slack-sidebar-btn" style="width: 100%; background: linear-gradient(90deg, #1E293B 0%, #0F172A 100%); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; text-align: center; display: block;">
+          🚀 Multi-Workspace Teams Page
+        </a>
+      </div>
+      
       <div class="stories-list" id="storiesList"></div>
     </div>
     <div class="main-content" id="mainContent">
       <div style="color:#888; font-size:1.1rem; text-align:center; margin-top:80px;">Select a story from the left to view details.</div>
     </div>
   </div>
+  
 
   <div class="meta-data-popup hidden">
     <div class="meta-data-content">
@@ -879,6 +1123,7 @@
         </div>
     </div>
   </div>
+  
 
   <script>
     // Early auth check and redirect
@@ -1528,6 +1773,10 @@
 
           // Add input event listener for auto-save
           richTextDisplay.addEventListener('input', () => {
+            // Update rawText with the current content
+            rawText = richTextDisplay.innerText;
+            // Update the hidden textarea
+            textarea.value = rawText;
             scheduleAutoSave();
           });
 
@@ -1633,10 +1882,11 @@
 
           // Check if podcast URL exists and is valid
           const hasPodcastUrl = story.podcast_url && story.podcast_url.trim() !== '';
+          const hasPodcastAvailable = hasPodcastUrl || story.podcast_status === 'completed';
           console.log('Has podcast URL:', hasPodcastUrl, 'URL:', story.podcast_url);
 
-          if (hasPodcastUrl) {
-            console.log('Rendering podcast audio player for URL:', story.podcast_url);
+          if (hasPodcastAvailable) {
+            console.log('Rendering podcast audio player for story:', story.id);
             
             // Create success indicator
             const successIndicator = document.createElement('div');
@@ -1782,7 +2032,7 @@
               errorContainer.appendChild(retryButton);
 
               const proxyButton = document.createElement('button');
-              proxyButton.textContent = '🔗 Try Direct URL';
+              proxyButton.textContent = '🔗 Retry Proxy';
               proxyButton.style.backgroundColor = '#8B5CF6';
               proxyButton.style.color = '#fff';
               proxyButton.style.border = 'none';
@@ -1797,10 +2047,11 @@
                 loadingIndicator.style.display = 'block';
                 audioLoadAttempted = false;
                 audioLoadFailed = false;
-                // Try the original URL as fallback
-                audioElement.src = `/api/podcast_audio/${story.id}`;;
+                // Always retry proxy which serves from DB when available
+                audioElement.src = `/api/podcast_audio/${story.id}`;
               };
               errorContainer.appendChild(proxyButton);
+              
 
               const directPlayButton = document.createElement('button');
               directPlayButton.textContent = '🎵 Play in New Tab';
@@ -1812,11 +2063,15 @@
               directPlayButton.style.fontSize = '0.9rem';
               directPlayButton.style.cursor = 'pointer';
               directPlayButton.onclick = () => {
-                window.open(story.podcast_url, '_blank');
+                const href = `/api/podcast_audio/${story.id}`;
+                window.open(href, '_blank');
               };
               errorContainer.appendChild(directPlayButton);
+              
+              
 
-              podcastContainer.appendChild(errorContainer);
+                          // Set the audio source after setting up all event handlers
+            audioElement.src = `/api/podcast_audio/${story.id}`;
             }
 
             // Set the audio source after setting up all event handlers
@@ -1877,20 +2132,14 @@
             downloadBtn.style.boxShadow = '0 2px 6px rgba(59, 130, 246, 0.15)';
             downloadBtn.onclick = async () => {
               try {
-                // Test if the URL is accessible
-                const response = await fetch(story.podcast_url, { method: 'HEAD' });
-                if (!response.ok) {
-                  alert('Download failed: Audio file is not accessible. Please try the "Open in New Tab" option instead.');
-                  return;
-                }
-                
-              const link = document.createElement('a');
-              link.href = story.podcast_url;
-              link.download = `podcast-${story.id}.mp3`;
-              link.target = '_blank';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
+                const proxyUrl = `/api/podcast_audio/${story.id}`;
+                const link = document.createElement('a');
+                link.href = proxyUrl;
+                link.download = `podcast-${story.id}.mp3`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
               } catch (error) {
                 console.error('Download error:', error);
                 alert('Download failed. Please try the "Open in New Tab" option instead.');
@@ -1898,7 +2147,7 @@
             };
 
             const directLink = document.createElement('a');
-            directLink.href = story.podcast_url;
+            directLink.href = `/api/podcast_audio/${story.id}`;
             directLink.target = '_blank';
             directLink.textContent = '🎵 Open in New Tab';
             directLink.style.color = '#3B82F6';
@@ -2349,6 +2598,351 @@
             };
             btnRow.appendChild(downloadBtn);
           }
+          // Add Email Send button
+          const emailBtn = document.createElement('button');
+            emailBtn.className = 'email-btn';
+            emailBtn.textContent = '📧 Send Email';
+            emailBtn.title = 'Send success story via email automatically';
+            emailBtn.style.background = 'linear-gradient(90deg, #10B981 0%, #059669 100%)';
+            emailBtn.style.color = '#fff';
+            emailBtn.style.border = 'none';
+            emailBtn.style.borderRadius = '10px';
+            emailBtn.style.padding = '12px 24px';
+            emailBtn.style.fontSize = '1rem';
+            emailBtn.style.fontWeight = '600';
+            emailBtn.style.cursor = 'pointer';
+            emailBtn.style.transition = 'all 0.2s';
+            emailBtn.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.15)';
+            emailBtn.style.marginLeft = '12px';
+            emailBtn.onclick = async () => {
+              try {
+                emailBtn.disabled = true;
+                emailBtn.textContent = '📧 Preparing...';
+                
+                // Generate email draft first
+                const response = await fetch('/api/get_email_draft', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    case_study_id: story.id,
+                    recipient_email: ''
+                  })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                  const emailDraft = data.email_draft;
+                  
+                  // Debug: Log email draft data
+                  console.log('Email Draft Data:', emailDraft);
+                  console.log('Subject:', emailDraft.subject);
+                  
+                  // Ensure we have a subject
+                  if (!emailDraft.subject) {
+                    emailDraft.subject = `Success Story: ${story.title}`;
+                    console.log('Using fallback subject:', emailDraft.subject);
+                  }
+                  
+                  // Escape special characters in subject for HTML template
+                  const escapedSubject = (emailDraft.subject || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/`/g, '&#96;');
+                  console.log('Original subject:', emailDraft.subject);
+                  console.log('Escaped subject:', escapedSubject);
+                  
+                  // Show email modal with send options
+                  const modal = document.createElement('div');
+                  modal.style.position = 'fixed';
+                  modal.style.top = '0';
+                  modal.style.left = '0';
+                  modal.style.width = '100%';
+                  modal.style.height = '100%';
+                  modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                  modal.style.zIndex = '1000';
+                  modal.style.display = 'flex';
+                  modal.style.justifyContent = 'center';
+                  modal.style.alignItems = 'center';
+                  
+                  const modalContent = document.createElement('div');
+                  modalContent.style.backgroundColor = '#fff';
+                  modalContent.style.padding = '30px';
+                  modalContent.style.borderRadius = '12px';
+                  modalContent.style.maxWidth = '600px';
+                  modalContent.style.width = '90%';
+                  modalContent.style.maxHeight = '80vh';
+                  modalContent.style.overflowY = 'auto';
+                  
+                  modalContent.innerHTML = `
+                    <h2 style="margin: 0 0 20px 0; color: #1F2937;">📧 Send Success Story Email</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">To: <span style="color: #EF4444;">*</span></label>
+                      <input type="email" id="recipient-email" value="${emailDraft.recipient || ''}" placeholder="Enter recipient email" style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Subject:</label>
+                      <input type="text" id="email-subject" value="${escapedSubject}" style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Message:</label>
+                      <textarea id="email-body" rows="12" style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; resize: vertical;">${emailDraft.body}</textarea>
+                    </div>
+                    
+                    
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+                      <button id="copy-email" style="padding: 10px 20px; background: #6B7280; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; min-width: 120px;">📋 Copy Email</button>
+                      <button id="open-email-client" style="padding: 10px 20px; background: #3B82F6; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; min-width: 120px;">📧 Open in Email Client</button>
+                      <button id="send-email-auto" style="padding: 10px 20px; background: #10B981; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; min-width: 120px;">🚀 Send Automatically</button>
+                      <button id="close-modal" style="padding: 10px 20px; background: #EF4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; min-width: 120px;">Close</button>
+                    </div>
+                  `;
+                  
+                  modal.appendChild(modalContent);
+                  document.body.appendChild(modal);
+                  
+                  // Add event listeners
+                  document.getElementById('copy-email').onclick = () => {
+                    const emailText = `To: ${document.getElementById('recipient-email').value}\nSubject: ${document.getElementById('email-subject').value}\n\n${document.getElementById('email-body').value}`;
+                    navigator.clipboard.writeText(emailText).then(() => {
+                      alert('✅ Email copied to clipboard!');
+                    }).catch(() => {
+                      alert('❌ Failed to copy email. Please copy manually.');
+                    });
+                  };
+                  
+                  document.getElementById('open-email-client').onclick = () => {
+                    const recipient = document.getElementById('recipient-email').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    
+                    if (!recipient) {
+                      alert('❌ Please enter a recipient email address first.');
+                      return;
+                    }
+                    
+                    const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    window.open(mailtoUrl, '_blank');
+                  };
+                  
+                  document.getElementById('send-email-auto').onclick = async () => {
+                    const recipient = document.getElementById('recipient-email').value;
+                    
+                    if (!recipient) {
+                      alert('❌ Please enter a recipient email address.');
+                      return;
+                    }
+                    
+                    // Validate email format
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(recipient)) {
+                      alert('❌ Please enter a valid email address.');
+                      return;
+                    }
+                    
+                    const sendBtn = document.getElementById('send-email-auto');
+                    sendBtn.disabled = true;
+                    sendBtn.textContent = '🚀 Sending...';
+                    
+                    try {
+                      // Send the email with the edited content from the modal
+                      const subject = document.getElementById('email-subject').value;
+                      const body = document.getElementById('email-body').value;
+                      
+                      const sendResponse = await fetch('/api/send_email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          case_study_id: story.id,
+                          recipient_email: recipient,
+                          email_draft: {
+                            subject: subject,
+                            body: body,
+                            use_edited_content: true
+                          }
+                        })
+                      });
+                      
+                      const sendData = await sendResponse.json();
+                      
+                      if (sendData.status === 'success') {
+                        alert(`✅ Success story email sent successfully!
+
+From: ${sendData.sender}
+To: ${sendData.recipient}
+Subject: ${sendData.subject}
+
+The email has been sent automatically from your account with PDF attachment.`);
+                        document.body.removeChild(modal);
+                      } else {
+                        alert('❌ Failed to send email: ' + (sendData.message || 'Unknown error'));
+                      }
+                    } catch (error) {
+                      console.error('Email sending error:', error);
+                      alert('❌ Failed to send email. Please try again.');
+                    } finally {
+                      sendBtn.disabled = false;
+                      sendBtn.textContent = '🚀 Send Automatically';
+                    }
+                  };
+                  
+                  document.getElementById('close-modal').onclick = () => {
+                    document.body.removeChild(modal);
+                  };
+                  
+                  // Close modal when clicking outside
+                  modal.onclick = (e) => {
+                    if (e.target === modal) {
+                      document.body.removeChild(modal);
+                    }
+                  };
+                  
+                } else {
+                  alert('❌ Failed to generate email draft: ' + (data.message || 'Unknown error'));
+                }
+                
+              } catch (error) {
+                console.error('Email preparation error:', error);
+                alert('❌ Failed to prepare email. Please try again.');
+              } finally {
+                emailBtn.disabled = false;
+                emailBtn.textContent = '📧 Send Email';
+              }
+            };
+            btnRow.appendChild(emailBtn);
+            
+            // Add Email Draft button
+            const emailDraftBtn = document.createElement('button');
+            emailDraftBtn.className = 'email-draft-btn';
+            emailDraftBtn.textContent = '📧 Generate Email Draft';
+            emailDraftBtn.title = 'Generate a professional email draft for sharing your success story';
+            emailDraftBtn.style.background = 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)';
+            emailDraftBtn.style.color = '#fff';
+            emailDraftBtn.style.border = 'none';
+            emailDraftBtn.style.borderRadius = '10px';
+            emailDraftBtn.style.padding = '12px 24px';
+            emailDraftBtn.style.fontSize = '1rem';
+            emailDraftBtn.style.fontWeight = '600';
+            emailDraftBtn.style.cursor = 'pointer';
+            emailDraftBtn.style.transition = 'all 0.2s';
+            emailDraftBtn.style.boxShadow = '0 2px 8px rgba(245, 158, 11, 0.15)';
+            emailDraftBtn.style.marginLeft = '12px';
+            emailDraftBtn.onclick = async () => {
+              try {
+                emailDraftBtn.disabled = true;
+                emailDraftBtn.textContent = '📧 Generating...';
+                
+                // Prompt for recipient email (optional)
+                const recipientEmail = prompt('Enter recipient email address (optional):');
+                
+                // Generate email draft
+                const response = await fetch('/api/get_email_draft', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    case_study_id: story.id,
+                    recipient_email: recipientEmail || ''
+                  })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                  const emailDraft = data.email_draft;
+                  
+                  // Show email draft in a modal
+                  const modal = document.createElement('div');
+                  modal.style.position = 'fixed';
+                  modal.style.top = '0';
+                  modal.style.left = '0';
+                  modal.style.width = '100%';
+                  modal.style.height = '100%';
+                  modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                  modal.style.zIndex = '1000';
+                  modal.style.display = 'flex';
+                  modal.style.justifyContent = 'center';
+                  modal.style.alignItems = 'center';
+                  
+                  const modalContent = document.createElement('div');
+                  modalContent.style.backgroundColor = '#fff';
+                  modalContent.style.padding = '30px';
+                  modalContent.style.borderRadius = '12px';
+                  modalContent.style.maxWidth = '600px';
+                  modalContent.style.width = '90%';
+                  modalContent.style.maxHeight = '80vh';
+                  modalContent.style.overflowY = 'auto';
+                  
+                  modalContent.innerHTML = `
+                    <h2 style="margin: 0 0 20px 0; color: #1F2937;">📧 Email Draft Generated!</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">To:</label>
+                      <input type="email" id="recipient-email" value="${emailDraft.recipient || ''}" placeholder="Enter recipient email" style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Subject:</label>
+                      <input type="text" id="email-subject" value="${emailDraft.subject}" style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Message:</label>
+                      <textarea id="email-body" rows="12" style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; resize: vertical;">${emailDraft.body}</textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                      <button id="copy-email" style="padding: 10px 20px; background: #6B7280; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📋 Copy Email</button>
+                      <button id="open-email-client" style="padding: 10px 20px; background: #10B981; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📧 Open in Email Client</button>
+                      <button id="close-modal" style="padding: 10px 20px; background: #EF4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Close</button>
+                    </div>
+                  `;
+                  
+                  modal.appendChild(modalContent);
+                  document.body.appendChild(modal);
+                  
+                  // Add event listeners
+                  document.getElementById('copy-email').onclick = () => {
+                    const emailText = `To: ${document.getElementById('recipient-email').value}\nSubject: ${document.getElementById('email-subject').value}\n\n${document.getElementById('email-body').value}`;
+                    navigator.clipboard.writeText(emailText).then(() => {
+                      alert('✅ Email copied to clipboard!');
+                    }).catch(() => {
+                      alert('❌ Failed to copy email. Please copy manually.');
+                    });
+                  };
+                  
+                  document.getElementById('open-email-client').onclick = () => {
+                    if (emailDraft.mailto_url) {
+                      window.open(emailDraft.mailto_url, '_blank');
+                    } else {
+                      alert('❌ Mailto URL not available. Please copy the email manually.');
+                    }
+                  };
+                  
+                  document.getElementById('close-modal').onclick = () => {
+                    document.body.removeChild(modal);
+                  };
+                  
+                  // Close modal when clicking outside
+                  modal.onclick = (e) => {
+                    if (e.target === modal) {
+                      document.body.removeChild(modal);
+                    }
+                  };
+                  
+                } else {
+                  alert('❌ Failed to generate email draft: ' + (data.message || 'Unknown error'));
+                }
+                
+              } catch (error) {
+                console.error('Email draft generation error:', error);
+                alert('❌ Failed to generate email draft. Please try again.');
+              } finally {
+                emailDraftBtn.disabled = false;
+                emailDraftBtn.textContent = '📧 Generate Email Draft';
+              }
+            };
+            btnRow.appendChild(emailDraftBtn);
+            
 
           // Add Download Word Document button if available
           if (story.final_summary) {
@@ -2397,6 +2991,237 @@
               }
             };
             btnRow.appendChild(downloadWordBtn);
+          }
+          
+          // Add Slack sharing buttons
+          if (story.final_summary) {
+            // Add Auto-Share to Slack button
+            const slackBtn = document.createElement('button');
+            slackBtn.className = 'slack-btn';
+            slackBtn.textContent = '🚀 Auto-Share to Slack';
+            slackBtn.title = 'Automatically share your success story to Slack using email draft content';
+            slackBtn.style.background = 'linear-gradient(90deg, #4F46E5 0%, #6366F1 100%)';
+            slackBtn.style.color = '#fff';
+            slackBtn.style.border = 'none';
+            slackBtn.style.borderRadius = '10px';
+            slackBtn.style.padding = '12px 24px';
+            slackBtn.style.fontSize = '1rem';
+            slackBtn.style.fontWeight = '600';
+            slackBtn.style.cursor = 'pointer';
+            slackBtn.style.transition = 'all 0.2s';
+            slackBtn.style.boxShadow = '0 2px 8px rgba(79, 70, 229, 0.15)';
+            slackBtn.style.marginLeft = '12px';
+            slackBtn.onclick = async () => {
+              try {
+                slackBtn.disabled = true;
+                slackBtn.textContent = '🚀 Preparing...';
+                
+                // First, check if user is connected to Slack
+                const statusResponse = await fetch('/api/slack/oauth/installations');
+                const statusData = await statusResponse.json();
+                
+                if (!statusData.success || statusData.installations.length === 0) {
+                  // User not connected, redirect to OAuth
+                  const confirmed = confirm('🚀 You need to connect your Slack account first to share success stories.\n\nClick OK to connect to Slack.');
+                  if (confirmed) {
+                    window.location.href = '/api/slack/oauth/authorize';
+                  }
+                  return;
+                }
+                
+                // Get user's available channels
+                const channelsResponse = await fetch('/api/slack/oauth/channels');
+                const channelsData = await channelsResponse.json();
+                
+                if (!channelsData.success || !channelsData.channels.length) {
+                  alert('❌ No channels available. Make sure you\'re a member of at least one channel in your Slack workspace.');
+                  return;
+                }
+                
+                // Show channel selection dialog
+                let channelOptions = channelsData.channels.map(ch => `#${ch.name} (${ch.workspace_name})`).join('\n');
+                const selectedChannel = prompt(`🚀 Select a channel to share to:\n\nAvailable channels:\n${channelOptions}\n\nEnter the channel name (e.g., "general"):`);
+                
+                if (!selectedChannel) {
+                  return; // User cancelled
+                }
+                
+                // Find the selected channel and workspace
+                const selectedChannelData = channelsData.channels.find(ch => 
+                  ch.name === selectedChannel || ch.name === selectedChannel.replace('#', '')
+                );
+                
+                if (!selectedChannelData) {
+                  alert('❌ Channel not found. Please check the channel name and try again.');
+                  return;
+                }
+                
+                // Auto-share to selected channel
+                slackBtn.textContent = '🚀 Sharing...';
+                
+                const autoShareResponse = await fetch('/api/slack/oauth/auto-share-case-study', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    case_study_id: story.id,
+                    channel_id: selectedChannelData.id,
+                    workspace_id: selectedChannelData.workspace_id
+                  })
+                });
+                
+                const autoShareData = await autoShareResponse.json();
+                
+                if (autoShareData.success) {
+                  alert(`✅ ${autoShareData.message}\n\nYour success story has been automatically shared to #${selectedChannelData.name} in ${selectedChannelData.workspace_name}!\n\n📧 The message was generated from your email draft content and posted to Slack.`);
+                } else {
+                  if (autoShareData.install_required) {
+                    const confirmed = confirm(`❌ ${autoShareData.error}\n\nClick OK to install StoryBoom in this workspace.`);
+                    if (confirmed) {
+                      window.location.href = autoShareData.authorize_url;
+                    }
+                  } else {
+                    alert('❌ ' + (autoShareData.error || 'Failed to share to Slack'));
+                  }
+                }
+                
+              } catch (error) {
+                console.error('Slack auto-sharing error:', error);
+                alert('❌ Failed to share to Slack. Please try again.');
+              } finally {
+                slackBtn.disabled = false;
+                slackBtn.textContent = '🚀 Auto-Share to Slack';
+              }
+            };
+            btnRow.appendChild(slackBtn);
+            
+            // Add Slack Disconnect button (only show if connected)
+            const slackDisconnectBtn = document.createElement('button');
+            slackDisconnectBtn.className = 'slack-disconnect-btn';
+            slackDisconnectBtn.textContent = '🔌 Disconnect Slack';
+            slackDisconnectBtn.title = 'Disconnect your Slack account';
+            slackDisconnectBtn.style.background = 'linear-gradient(90deg, #EF4444 0%, #DC2626 100%)';
+            slackDisconnectBtn.style.color = '#fff';
+            slackDisconnectBtn.style.border = 'none';
+            slackDisconnectBtn.style.borderRadius = '10px';
+            slackDisconnectBtn.style.padding = '8px 16px';
+            slackDisconnectBtn.style.fontSize = '0.875rem';
+            slackDisconnectBtn.style.fontWeight = '600';
+            slackDisconnectBtn.style.cursor = 'pointer';
+            slackDisconnectBtn.style.transition = 'all 0.2s';
+            slackDisconnectBtn.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.15)';
+            slackDisconnectBtn.style.marginLeft = '8px';
+            slackDisconnectBtn.style.display = 'none'; // Hidden by default
+            
+            slackDisconnectBtn.onclick = async () => {
+              try {
+                const confirmed = confirm('🔌 Are you sure you want to disconnect your Slack account?\n\nYou will need to reconnect to share case studies again.');
+                if (confirmed) {
+                  const response = await fetch('/api/slack/oauth/disconnect');
+                  const data = await response.json();
+                  
+                  if (data.success) {
+                    alert('✅ Slack account disconnected successfully!');
+                    slackDisconnectBtn.style.display = 'none';
+                    slackBtn.textContent = '📱 Connect to Slack';
+                  } else {
+                    alert('❌ Failed to disconnect: ' + data.error);
+                  }
+                }
+              } catch (error) {
+                console.error('Disconnect error:', error);
+                alert('❌ Failed to disconnect Slack account.');
+              }
+            };
+            
+            btnRow.appendChild(slackDisconnectBtn);
+            
+            // Check Slack status and show/hide disconnect button
+            (async () => {
+              try {
+                const statusResponse = await fetch('/api/slack/oauth/installations');
+                const statusData = await statusResponse.json();
+                
+                if (statusData.success && statusData.installations.length > 0) {
+                  slackDisconnectBtn.style.display = 'inline-block';
+                  slackBtn.textContent = '🚀 Auto-Share to Slack';
+                } else {
+                  slackDisconnectBtn.style.display = 'none';
+                  slackBtn.textContent = '📱 Connect to Slack';
+                }
+              } catch (error) {
+                console.error('Error checking Slack status:', error);
+              }
+            })();
+          }
+
+          // Add Teams sharing buttons
+          if (story.final_summary) {
+            // Add Auto-Share to Teams button
+            const teamsBtn = document.createElement('button');
+            teamsBtn.className = 'teams-btn';
+            teamsBtn.textContent = '🚀 Auto-Share to Teams';
+            teamsBtn.title = 'Automatically share your success story to Microsoft Teams using email draft content';
+            teamsBtn.style.background = 'linear-gradient(90deg, #0078D4 0%, #106EBE 100%)';
+            teamsBtn.style.color = '#fff';
+            teamsBtn.style.border = 'none';
+            teamsBtn.style.borderRadius = '10px';
+            teamsBtn.style.padding = '12px 24px';
+            teamsBtn.style.fontSize = '1rem';
+            teamsBtn.style.fontWeight = '600';
+            teamsBtn.style.cursor = 'pointer';
+            teamsBtn.style.transition = 'all 0.2s';
+            teamsBtn.style.boxShadow = '0 2px 8px rgba(0, 120, 212, 0.15)';
+            teamsBtn.style.marginLeft = '12px';
+            teamsBtn.onclick = async () => {
+              try {
+                teamsBtn.disabled = true;
+                teamsBtn.textContent = '🚀 Preparing...';
+                
+                // First, check if user is connected to Teams
+                const statusResponse = await fetch('/api/teams/oauth/installations');
+                const statusData = await statusResponse.json();
+                
+                if (!statusData.success || statusData.installations.length === 0) {
+                  // User not connected, redirect to OAuth
+                  const confirmed = confirm('🚀 You need to connect your Microsoft Teams account first to share success stories.\n\nClick OK to connect to Teams.');
+                  if (confirmed) {
+                    window.location.href = '/api/teams/oauth/authorize';
+                  }
+                  return;
+                }
+                
+                // Check if we can get channels (permissions check)
+                const channelsResponse = await fetch('/api/teams/oauth/channels');
+                const channelsData = await channelsResponse.json();
+                
+                if (!channelsData.success || channelsData.channels.length === 0) {
+                  // No channels available due to permissions - offer direct Teams redirect
+                  const useDirectRedirect = confirm(
+                    '🚀 Chat listing is not available due to organization permissions.\n\n' +
+                    'Would you like to:\n' +
+                    '• OK = Open Microsoft Teams directly (you can then share manually)\n' +
+                    '• Cancel = Try the channel selection modal anyway'
+                  );
+                  
+                  if (useDirectRedirect) {
+                    // Direct redirect to Teams
+                    window.open('https://teams.microsoft.com/', '_blank');
+                    return;
+                  }
+                }
+                
+                // Open sophisticated channel selection modal
+                openTeamsChannelModal(story.id);
+                
+              } catch (error) {
+                console.error('Teams auto-sharing error:', error);
+                alert('❌ Failed to prepare Teams sharing. Please try again.');
+              } finally {
+                teamsBtn.disabled = false;
+                teamsBtn.textContent = '🚀 Auto-Share to Teams';
+              }
+            };
+            btnRow.appendChild(teamsBtn);
           }
 
           tabContent.appendChild(btnRow);
@@ -2724,16 +3549,267 @@
       document.head.appendChild(style);
     }
 
+    // Credit status management
+    let creditStatus = null;
+
+    async function fetchCreditStatus() {
+      try {
+        const response = await fetch('/api/credits/status', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          creditStatus = await response.json();
+          updateCreditStatusDisplay();
+        } else if (response.status === 403) {
+          // User needs subscription, but stay on dashboard and show message
+          console.log('User needs subscription but staying on dashboard');
+          creditStatus = { needs_subscription: true, stories_used_this_month: 0, extra_credits: 0 };
+          updateCreditStatusDisplay();
+        }
+      } catch (error) {
+        console.error('Error fetching credit status:', error);
+      }
+    }
+
+    function updateCreditStatusDisplay() {
+      const banner = document.getElementById('creditStatusBanner');
+      const statusText = document.getElementById('creditStatusText');
+      const buyLink = document.getElementById('buyCreditsLink');
+      
+      if (!creditStatus) return;
+      
+      // Show banner if user needs subscription or can buy extra credits
+      if (creditStatus.needs_subscription) {
+        banner.style.display = 'block';
+        statusText.innerHTML = 'You need an active subscription to create stories.<br><small>Subscribe for $99/month and get 10 stories included. Stories reset monthly.</small>';
+        buyLink.textContent = 'Subscribe for $99/month';
+        buyLink.href = '#';
+        buyLink.onclick = function(e) { e.preventDefault(); openMonthlySubscription(); };
+      } else if (creditStatus.can_buy_extra_credits) {
+        banner.style.display = 'block';
+        statusText.innerHTML = `You've used all 10 included stories this month.<br><small>You have ${creditStatus.extra_credits} extra credits remaining. Extra credits don't expire but you can only buy them after using all monthly stories.</small>`;
+        buyLink.textContent = 'Buy Extra Stories for $6.90';
+        buyLink.href = '#';
+        buyLink.onclick = function(e) { e.preventDefault(); openExtraCredits(); };
+      } else {
+        // Show remaining stories with expiration info
+        const remaining = 10 - creditStatus.stories_used_this_month;
+        banner.style.display = 'block';
+        statusText.innerHTML = `You have ${remaining} stories remaining this month.<br><small>Monthly stories reset on the 1st of each month. Extra credits don't expire.</small>`;
+        buyLink.style.display = 'none';
+      }
+      
+      // Update user dropdown buttons based on credit status
+      updateUserDropdownButtons();
+    }
+    
+    function updateUserDropdownButtons() {
+      const monthlyBtn = document.querySelector('.monthly-btn');
+      const extraBtn = document.querySelector('.extra-btn');
+      
+      if (!creditStatus) return;
+      
+      // Show monthly button if user needs subscription or hasn't used all 10 stories yet
+      if (monthlyBtn) {
+        if (creditStatus.needs_subscription || creditStatus.stories_used_this_month < 10) {
+          monthlyBtn.style.display = 'block';
+          monthlyBtn.innerHTML = '<i class="fas fa-crown" style="margin-right: 8px;"></i>Monthly Plan - $99/month';
+        } else {
+          monthlyBtn.style.display = 'none';
+        }
+      }
+      
+      // Show extra credits button only if user has subscription and can buy extra credits
+      if (extraBtn) {
+        if (creditStatus.has_active_subscription && creditStatus.can_buy_extra_credits) {
+          extraBtn.style.display = 'block';
+          extraBtn.innerHTML = '<i class="fas fa-plus-circle" style="margin-right: 8px;"></i>Buy Extra Stories - $6.90';
+        } else {
+          extraBtn.style.display = 'none';
+        }
+      }
+    }
+
+    async function checkCanCreateStory() {
+      if (!creditStatus) {
+        await fetchCreditStatus();
+      }
+      return creditStatus ? creditStatus.can_create_story : false;
+    }
+    
+    // Global error handler for subscription errors
+    function handleApiError(response) {
+      if (response.status === 403) {
+        const data = response.json();
+        if (data && data.needs_subscription) {
+          window.location.href = '/subscription-required';
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    // Payment functions with user metadata
+    function openMonthlySubscription() {
+      const userId = getCurrentUserId();
+      console.log('DEBUG: User ID from getCurrentUserId():', userId);
+      
+      if (!userId) {
+        alert('Please log in to subscribe');
+        return;
+      }
+      
+      // Use Payment Link with client_reference_id (this works!)
+      const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800'; // Monthly subscription URL
+      const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+      console.log('DEBUG: Monthly subscription URL:', urlWithUser);
+      window.open(urlWithUser, '_blank');
+      
+      // Show a message to manually activate subscription
+      setTimeout(() => {
+        if (confirm('After completing payment, click OK to manually activate your subscription.')) {
+          activateSubscriptionManually(userId);
+        }
+      }, 2000);
+    }
+    
+    function activateSubscriptionManually(userId) {
+      fetch('/api/test/activate-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          alert('Subscription activated! Please refresh the page.');
+          window.location.reload();
+        } else {
+          alert('Error activating subscription: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error activating subscription');
+      });
+    }
+    
+    function openExtraCredits() {
+      const userId = getCurrentUserId();
+      console.log('🔍 DEBUG: getCurrentUserId() returned:', userId);
+      
+      if (!userId) {
+        alert('Please log in to buy extra credits');
+        return;
+      }
+      
+      // Use the extra credits payment link with client_reference_id
+      const baseUrl = 'https://buy.stripe.com/test_28E3cnav35BL8nH2Ip8k801'; // Replace with your extra credits link
+      const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+      console.log('🔍 DEBUG: Extra credits payment URL:', urlWithUser);
+      console.log('🔍 DEBUG: User ID being passed:', userId);
+      window.open(urlWithUser, '_blank');
+      
+      // Show a message to manually activate extra credits if needed
+      setTimeout(() => {
+        if (confirm('After completing payment, if extra credits are not automatically added, click OK to manually add them.')) {
+          activateExtraCreditsManually(userId);
+        }
+      }, 3000);
+    }
+    
+    function activateExtraCreditsManually(userId) {
+      fetch('/api/test/add-extra-credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId, quantity: 1 })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          alert('Extra credits added! Please refresh the page.');
+          window.location.reload();
+        } else {
+          alert('Error adding extra credits: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding extra credits');
+      });
+    }
+    
+    function getCurrentUserId() {
+      console.log('🔍 DEBUG: getCurrentUserId() called');
+      
+      // Try to get user ID from the page data first
+      const container = document.querySelector('.dashboard-container');
+      console.log('🔍 DEBUG: Container found:', container);
+      
+      if (container) {
+        const userId = container.getAttribute('data-user-id');
+        console.log('🔍 DEBUG: data-user-id attribute:', userId);
+        if (userId && userId !== 'null') {
+          console.log('✅ DEBUG: Got user ID from data attribute:', userId);
+          return userId;
+        }
+      }
+      
+      // Fallback: try JWT token
+      const token = localStorage.getItem('token');
+      console.log('🔍 DEBUG: Token found:', token ? 'Yes' : 'No');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('✅ DEBUG: Got user ID from JWT token:', payload.user_id);
+          return payload.user_id;
+        } catch (e) {
+          console.error('❌ Error parsing token:', e);
+        }
+      }
+      
+      console.log('❌ DEBUG: No user ID found');
+      return null;
+    }
+
+    async function recordStoryCreation() {
+      try {
+        // This would be called when a story is actually created
+        // For now, we'll just refresh the credit status
+        await fetchCreditStatus();
+      } catch (error) {
+        console.error('Error recording story creation:', error);
+      }
+    }
+
     async function fetchAndRender() {
       await fetchLabels();
       await fetchStories();
+      await fetchCreditStatus();
       renderStories();
       renderMainContent();
     }
 
     document.getElementById('searchInput').oninput = renderStories;
-    document.getElementById('tellStoryBtn').onclick = () => {
-      window.location.href = '/index';
+    document.getElementById('tellStoryBtn').onclick = async () => {
+      const canCreate = await checkCanCreateStory();
+      if (canCreate) {
+        window.location.href = '/index';
+      } else {
+        // Show appropriate message based on subscription status
+        if (creditStatus && creditStatus.needs_subscription) {
+          alert('You need an active subscription to create stories. Please subscribe to get started.');
+        } else {
+          alert('You have no story credits remaining. Please purchase extra credits to continue.');
+        }
+      }
     };
     setupLabelDropdown();
     fetchUser();
@@ -3457,6 +4533,243 @@
         }
       }, 10000); // Check every 10 seconds
     }
+        // Slack Integration Section
+    const slackStatusText = document.getElementById('slackStatusText');
+    const slackStatusIcon = document.getElementById('slackStatusIcon');
+    const connectSlackBtn = document.getElementById('connectSlackBtn');
+    const addWorkspaceBtn = document.getElementById('addWorkspaceBtn');
+    const disconnectSlackBtn = document.getElementById('disconnectSlackBtn');
+    const slackWorkspaces = document.getElementById('slackWorkspaces');
+    const workspacesList = document.getElementById('workspacesList');
+
+    async function checkSlackConnection() {
+      try {
+        const response = await fetch('/api/slack/oauth/installations');
+        const data = await response.json();
+        
+        if (data.success && data.installations.length > 0) {
+          // User has Slack workspaces connected
+          slackStatusText.textContent = `Slack: ${data.installations.length} workspace(s) connected`;
+          slackStatusIcon.style.background = '#10B981';
+          
+          // Show workspace management buttons
+          connectSlackBtn.style.display = 'none';
+          addWorkspaceBtn.style.display = 'block';
+          disconnectSlackBtn.style.display = 'block';
+          slackWorkspaces.style.display = 'block';
+          
+          // Display connected workspaces
+          displayWorkspacesList(data.installations);
+        } else {
+          // No workspaces connected
+          slackStatusText.textContent = 'Slack: Not connected';
+          slackStatusIcon.style.background = '#dc3545';
+          
+          // Show connect button only
+          connectSlackBtn.style.display = 'block';
+          addWorkspaceBtn.style.display = 'none';
+          disconnectSlackBtn.style.display = 'none';
+          slackWorkspaces.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error checking Slack connection:', error);
+        slackStatusText.textContent = 'Slack: Error checking connection';
+        slackStatusIcon.style.background = '#F59E0B';
+        
+        // Show connect button only
+        connectSlackBtn.style.display = 'block';
+        addWorkspaceBtn.style.display = 'none';
+        disconnectSlackBtn.style.display = 'none';
+        slackWorkspaces.style.display = 'none';
+      }
+    }
+
+    function displayWorkspacesList(installations) {
+      workspacesList.innerHTML = installations.map(workspace => `
+        <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+          <strong>${workspace.team_name}</strong>
+          ${workspace.is_enterprise ? ' <span style="color: #F59E0B;">(Org-wide)</span>' : ''}
+          <br><small>Installed ${new Date(workspace.installed_at).toLocaleDateString()}</small>
+        </div>
+      `).join('');
+    }
+
+    // Add event listeners for Slack buttons
+    connectSlackBtn.addEventListener('click', () => {
+      window.location.href = '/api/slack/oauth/authorize';
+    });
+
+    addWorkspaceBtn.addEventListener('click', () => {
+      window.location.href = '/api/slack/oauth/authorize';
+    });
+
+    disconnectSlackBtn.addEventListener('click', async () => {
+      if (confirm('This will disconnect ALL Slack workspaces. Are you sure?')) {
+        try {
+          // Get all installations and disconnect them
+          const response = await fetch('/api/slack/oauth/installations');
+          const data = await response.json();
+          
+          if (data.success) {
+            for (const workspace of data.installations) {
+              await fetch(`/api/slack/oauth/installation/${workspace.team_id}/disconnect`, {
+                method: 'POST'
+              });
+            }
+            alert('All Slack workspaces disconnected successfully!');
+            checkSlackConnection();
+          }
+        } catch (error) {
+          console.error('Error disconnecting workspaces:', error);
+          alert('Failed to disconnect some workspaces. Please try again.');
+        }
+      }
+    });
+
+    // Check Slack connection on page load
+    checkSlackConnection();
+    
+    // Initialize Slack integration when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check initial Slack status
+      checkSlackConnection();
+    });
+
+    // =============================
+    // Teams Integration Section
+    // =============================
+    const teamsStatusText = document.getElementById('teamsStatusText');
+    const teamsStatusIcon = document.getElementById('teamsStatusIcon');
+    const connectTeamsBtn = document.getElementById('connectTeamsBtn');
+    const disconnectTeamsBtn = document.getElementById('disconnectTeamsBtn');
+    const teamsTenants = document.getElementById('teamsTenants');
+    const tenantsList = document.getElementById('tenantsList');
+
+    async function checkTeamsConnection() {
+      try {
+        const res = await fetch('/api/teams/oauth/installations');
+        const data = await res.json();
+        if (data.success && data.installations && data.installations.length > 0) {
+          teamsStatusText.textContent = `Teams: ${data.installations.length} tenant(s) connected`;
+          teamsStatusIcon.style.background = '#10B981';
+          connectTeamsBtn.style.display = 'none';
+          disconnectTeamsBtn.style.display = 'block';
+          teamsTenants.style.display = 'block';
+          tenantsList.innerHTML = data.installations.map(inst => `
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+              <strong>${inst.tenant_name}</strong><br><small>${inst.tenant_id}</small>
+            </div>
+          `).join('');
+        } else {
+          teamsStatusText.textContent = 'Teams: Not connected';
+          teamsStatusIcon.style.background = '#dc3545';
+          connectTeamsBtn.style.display = 'block';
+          disconnectTeamsBtn.style.display = 'none';
+          teamsTenants.style.display = 'none';
+          tenantsList.innerHTML = '';
+        }
+      } catch (e) {
+        console.error('Error checking Teams connection:', e);
+        teamsStatusText.textContent = 'Teams: Error checking connection';
+        teamsStatusIcon.style.background = '#F59E0B';
+        connectTeamsBtn.style.display = 'block';
+        disconnectTeamsBtn.style.display = 'none';
+        teamsTenants.style.display = 'none';
+      }
+    }
+
+    connectTeamsBtn?.addEventListener('click', () => {
+      window.location.href = '/api/teams/oauth/authorize';
+    });
+
+    disconnectTeamsBtn?.addEventListener('click', async () => {
+      if (!confirm('This will disconnect ALL Teams tenants. Are you sure?')) return;
+      try {
+        const res = await fetch('/api/teams/oauth/installations');
+        const data = await res.json();
+        if (data.success && data.installations) {
+          for (const inst of data.installations) {
+            await fetch(`/api/teams/oauth/installation/${inst.tenant_id}/disconnect`, { method: 'POST' });
+          }
+          alert('All Teams tenants disconnected successfully!');
+          checkTeamsConnection();
+        }
+      } catch (e) {
+        console.error('Failed to disconnect Teams:', e);
+        alert('❌ Failed to disconnect Teams tenants.');
+      }
+    });
+
+    // Check Teams connection on page load
+    checkTeamsConnection();
+
+    // Add this function to handle the sophisticated modal
+    function openTeamsChannelModal(caseStudyId) {
+      // Create modal overlay
+      const modalOverlay = document.createElement('div');
+      modalOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease-out;
+      `;
+      
+      // Create iframe for the modal
+      const iframe = document.createElement('iframe');
+      iframe.src = `/templates/teams_channel_modal.html?case_study_id=${caseStudyId}`;
+      iframe.style.cssText = `
+        width: 90%;
+        max-width: 800px;
+        height: 80vh;
+        border: none;
+        border-radius: 20px;
+        background: white;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      `;
+      
+      modalOverlay.appendChild(iframe);
+      document.body.appendChild(modalOverlay);
+      
+      // Listen for close message from iframe
+      window.addEventListener('message', function(event) {
+        if (event.data.action === 'closeTeamsModal') {
+          document.body.removeChild(modalOverlay);
+        }
+      });
+      
+      // Close modal on overlay click
+      modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) {
+          document.body.removeChild(modalOverlay);
+        }
+      });
+      
+      // Close modal on Escape key
+      const handleEscape = function(e) {
+        if (e.key === 'Escape') {
+          document.body.removeChild(modalOverlay);
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    // Add CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html> 

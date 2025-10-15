@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Teams Channel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #0078D4 0%, #106EBE 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .modal-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .modal-content {
+            padding: 30px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .search-section {
+            margin-bottom: 25px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #0078D4;
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+        
+        .tenant-section {
+            margin-bottom: 30px;
+        }
+        
+        .tenant-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tenant-header:hover {
+            background: #e9ecef;
+        }
+        
+        .tenant-header.expanded {
+            background: #e3f2fd;
+            border: 2px solid #0078D4;
+        }
+        
+        .tenant-icon {
+            font-size: 1.5rem;
+            margin-right: 12px;
+            color: #0078D4;
+        }
+        
+        .tenant-info {
+            flex: 1;
+        }
+        
+        .tenant-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+        
+        .tenant-id {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .expand-icon {
+            font-size: 1.2rem;
+            color: #6c757d;
+            transition: transform 0.3s ease;
+        }
+        
+        .tenant-header.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        
+        .channels-list {
+            display: none;
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .tenant-header.expanded + .channels-list {
+            display: block;
+        }
+        
+        .channel-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .channel-item:hover {
+            border-color: #0078D4;
+            background: #f8f9ff;
+            transform: translateX(5px);
+        }
+        
+        .channel-item.selected {
+            border-color: #0078D4;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.15);
+        }
+        
+        .channel-icon {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            color: #6c757d;
+        }
+        
+        .channel-info {
+            flex: 1;
+        }
+        
+        .channel-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 2px;
+        }
+        
+        .channel-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .channel-type {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #e9ecef;
+            color: #6c757d;
+            margin-left: 10px;
+        }
+        
+        .channel-type.private {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .no-channels {
+            text-align: center;
+            padding: 30px;
+            color: #6c757d;
+        }
+        
+        .no-channels-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0078D4 0%, #106EBE 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .selected-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0078D4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #dc3545;
+            background: #f8d7da;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .modal {
+                margin: 20px;
+                max-height: 90vh;
+            }
+            
+            .modal-header {
+                padding: 20px;
+            }
+            
+            .modal-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .modal-footer {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>�� Share to Microsoft Teams</h2>
+                <p>Select a channel to share your success story</p>
+            </div>
+            
+            <div class="modal-content">
+                <div class="search-section">
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search channels and tenants...">
+                </div>
+                
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading your Teams channels...</p>
+                </div>
+                
+                <div id="error" class="error" style="display: none;">
+                    <p>❌ Failed to load channels. Please try again.</p>
+                </div>
+                
+                <div id="channelsContainer" style="display: none;">
+                    <!-- Channels will be populated here -->
+                </div>
+                
+                <div id="noChannels" class="no-channels" style="display: none;">
+                    <div class="no-channels-icon">📭</div>
+                    <h3>No Channels Available</h3>
+                    <p>You don't have access to any Teams channels. Make sure you're a member of at least one team.</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <div class="selected-info" id="selectedInfo">
+                    No channel selected
+                </div>
+                <div>
+                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button class="btn btn-primary" id="shareBtn" disabled>Share to Teams</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let allChannels = [];
+        let filteredChannels = [];
+        let selectedChannel = null;
+        let caseStudyId = null;
+        
+        // DOM elements
+        const modalOverlay = document.getElementById('modalOverlay');
+        const searchInput = document.getElementById('searchInput');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const channelsContainer = document.getElementById('channelsContainer');
+        const noChannels = document.getElementById('noChannels');
+        const selectedInfo = document.getElementById('selectedInfo');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get case study ID from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            caseStudyId = urlParams.get('case_study_id');
+            
+            if (!caseStudyId) {
+                showError('No case study ID provided');
+                return;
+            }
+            
+            loadChannels();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // Search functionality
+            searchInput.addEventListener('input', handleSearch);
+            
+            // Cancel button
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // Share button
+            shareBtn.addEventListener('click', shareToTeams);
+            
+            // Close modal on overlay click
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) {
+                    closeModal();
+                }
+            });
+            
+            // Close modal on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+        }
+        
+        async function loadChannels() {
+            try {
+                showLoading(true);
+                
+                const response = await fetch('/api/teams/oauth/channels');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allChannels = data.channels;
+                    filteredChannels = [...allChannels];
+                    renderChannels();
+                } else {
+                    showError(data.error || 'Failed to load channels');
+                }
+            } catch (err) {
+                console.error('Error loading channels:', err);
+                showError('Failed to load channels. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function renderChannels() {
+            if (filteredChannels.length === 0) {
+                showNoChannels();
+                return;
+            }
+            
+            // Group channels by tenant
+            const tenants = {};
+            filteredChannels.forEach(channel => {
+                const tenantId = channel.tenant_id;
+                if (!tenants[tenantId]) {
+                    tenants[tenantId] = {
+                        tenant_name: channel.tenant_name,
+                        tenant_id: tenantId,
+                        channels: []
+                    };
+                }
+                tenants[tenantId].channels.push(channel);
+            });
+            
+            // Render tenant sections
+            channelsContainer.innerHTML = '';
+            Object.values(tenants).forEach(tenant => {
+                const tenantSection = createTenantSection(tenant);
+                channelsContainer.appendChild(tenantSection);
+            });
+            
+            channelsContainer.style.display = 'block';
+            noChannels.style.display = 'none';
+        }
+        
+        function createTenantSection(tenant) {
+            const section = document.createElement('div');
+            section.className = 'tenant-section';
+            
+            const header = document.createElement('div');
+            header.className = 'tenant-header';
+            header.innerHTML = `
+                <div class="tenant-icon">🏢</div>
+                <div class="tenant-info">
+                    <div class="tenant-name">${tenant.tenant_name}</div>
+                    <div class="tenant-id">${tenant.tenant_id}</div>
+                </div>
+                <div class="expand-icon">▼</div>
+            `;
+            
+            const channelsList = document.createElement('div');
+            channelsList.className = 'channels-list';
+            
+            tenant.channels.forEach(channel => {
+                const channelItem = createChannelItem(channel);
+                channelsList.appendChild(channelItem);
+            });
+            
+            // Toggle functionality
+            header.addEventListener('click', function() {
+                header.classList.toggle('expanded');
+            });
+            
+            section.appendChild(header);
+            section.appendChild(channelsList);
+            
+            return section;
+        }
+        
+        function createChannelItem(channel) {
+            const item = document.createElement('div');
+            item.className = 'channel-item';
+            item.innerHTML = `
+                <div class="channel-icon">${channel.is_private ? '🔒' : '💬'}</div>
+                <div class="channel-info">
+                    <div class="channel-name">${channel.name}</div>
+                    <div class="channel-description">${channel.description || 'No description'}</div>
+                </div>
+                <div class="channel-type ${channel.is_private ? 'private' : ''}">
+                    ${channel.is_private ? 'Private' : 'Public'}
+                </div>
+            `;
+            
+            item.addEventListener('click', function() {
+                selectChannel(channel, item);
+            });
+            
+            return item;
+        }
+        
+        function selectChannel(channel, element) {
+            // Remove previous selection
+            document.querySelectorAll('.channel-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to current item
+            element.classList.add('selected');
+            selectedChannel = channel;
+            
+            // Update UI
+            selectedInfo.textContent = `Selected: #${channel.name} in ${channel.tenant_name}`;
+            shareBtn.disabled = false;
+        }
+        
+        function handleSearch() {
+            const query = searchInput.value.toLowerCase().trim();
+            
+            if (query === '') {
+                filteredChannels = [...allChannels];
+            } else {
+                filteredChannels = allChannels.filter(channel => 
+                    channel.name.toLowerCase().includes(query) ||
+                    channel.description.toLowerCase().includes(query) ||
+                    channel.tenant_name.toLowerCase().includes(query) ||
+                    channel.team_name.toLowerCase().includes(query)
+                );
+            }
+            
+            renderChannels();
+        }
+        
+        async function shareToTeams() {
+            if (!selectedChannel || !caseStudyId) {
+                return;
+            }
+            
+            try {
+                shareBtn.disabled = true;
+                shareBtn.textContent = 'Sharing...';
+                
+                const response = await fetch('/api/teams/oauth/auto-share-case-study', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        case_study_id: caseStudyId,
+                        channel_id: selectedChannel.id,
+                        team_id: selectedChannel.team_id,
+                        tenant_id: selectedChannel.tenant_id
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}\n\nYour success story has been shared to #${selectedChannel.name} in ${selectedChannel.tenant_name}!`);
+                    closeModal();
+                } else {
+                    if (data.install_required) {
+                        const confirmed = confirm(`❌ ${data.error}\n\nClick OK to install StoryBoom in this tenant.`);
+                        if (confirmed) {
+                            window.location.href = data.authorize_url;
+                        }
+                    } else {
+                        alert('❌ ' + (data.error || 'Failed to share to Teams'));
+                    }
+                }
+            } catch (err) {
+                console.error('Error sharing to Teams:', err);
+                alert('❌ Failed to share to Teams. Please try again.');
+            } finally {
+                shareBtn.disabled = false;
+                shareBtn.textContent = 'Share to Teams';
+            }
+        }
+        
+        function closeModal() {
+            // Send message to parent window to close modal
+            if (window.parent) {
+                window.parent.postMessage({ action: 'closeTeamsModal' }, '*');
+            }
+        }
+        
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            channelsContainer.style.display = show ? 'none' : 'block';
+            noChannels.style.display = 'none';
+            error.style.display = 'none';
+        }
+        
+        function showError(message) {
+            error.querySelector('p').textContent = message;
+            error.style.display = 'block';
+            loading.style.display = 'none';
+            channelsContainer.style.display = 'none';
+            noChannels.style.display = 'none';
+        }
+        
+        function showNoChannels() {
+            noChannels.style.display = 'block';
+            loading.style.display = 'none';
+            channelsContainer.style.display = 'none';
+            error.style.display = 'none';
+        }
+    </script>
+</body>
+</html> 

@@ -9,7 +9,7 @@ from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label
-from app.utils.auth_helpers import get_current_user_id, login_required
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required, subscription_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
@@ -105,7 +105,7 @@ def get_case_studies():
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/case_studies/<int:case_study_id>', methods=['GET'])
-@login_required
+@login_or_token_required
 @swag_from({
     'tags': ['Case Studies'],
     'summary': 'Get case study by ID',
@@ -116,6 +116,13 @@ def get_case_studies():
             'in': 'path',
             'required': True,
             'schema': {'type': 'integer'}
+        },
+        {
+            'name': 'token',
+            'in': 'query',
+            'required': False,
+            'schema': {'type': 'string'},
+            'description': 'Client interview token (optional, for client-side calls)'
         }
     ],
     'responses': {
@@ -141,10 +148,24 @@ def get_case_study(case_study_id):
     """Get a single case study by ID"""
     try:
         user_id = get_current_user_id()
-        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        
+        if user_id:
+            # Session-based authentication - filter by user_id
+            case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        else:
+            # Token-based authentication - just get the case study directly
+            case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+            
+            # Verify the token corresponds to this case study
+            token = request.args.get('token')
+            if token:
+                invite_token = InviteToken.query.filter_by(token=token).first()
+                if not invite_token or invite_token.case_study_id != case_study_id:
+                    return jsonify({'error': 'Invalid token for this case study'}), 403
         
         if not case_study:
             return jsonify({'error': 'Case study not found'}), 404
+        
         
         case_study_data = {
             'id': case_study.id,
@@ -660,116 +681,6 @@ def generate_linkedin_post():
         print(f"Error in generate_linkedin_post route: {str(e)}")
         return jsonify({"status": "error", "message": f"Error generating LinkedIn post: {str(e)}"}), 500
 
-@bp.route("/save_as_word", methods=["POST"])
-@login_required
-@swag_from({
-    'tags': ['Summary'],
-    'summary': 'Generate Word document',
-    'description': 'Generate Word document from case study',
-    'requestBody': {
-        'required': True,
-        'content': {
-            'application/json': {
-                'schema': {
-                    'type': 'object',
-                    'required': ['case_study_id'],
-                    'properties': {
-                        'case_study_id': {'type': 'integer'}
-                    }
-                }
-            }
-        }
-    },
-    'responses': {
-        200: {
-            'description': 'Word document file path',
-            'content': {
-                'application/json': {
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'word_path': {'type': 'string'},
-                            'status': {'type': 'string'}
-                        }
-                    }
-                }
-            }
-        },
-        400: {'description': 'Missing case_study_id'}
-    }
-})
-def save_as_word():
-    """Save case study as Word document and store in DB"""
-    try:
-        data = request.get_json()
-        case_study_id = data.get("case_study_id")
-        final_summary = data.get("final_summary")
-        title = data.get("title", "Case Study")
-
-        if not case_study_id or not final_summary:
-            return jsonify({"status": "error", "message": "Missing case_study_id or final_summary"}), 400
-
-        # Create Word document using python-docx
-        doc = Document()
-        
-        # Set default font for the entire document
-        style = doc.styles['Normal']
-        style.font.name = 'Arial'
-        
-        # Add title
-        title_para = doc.add_paragraph()
-        title_run = title_para.add_run(title)
-        title_run.bold = True
-        title_run.font.size = Inches(0.5)
-        title_run.font.name = 'Arial'
-        title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        # Add some spacing
-        spacing_para = doc.add_paragraph()
-        spacing_para.style = doc.styles['Normal']  # Use Normal style with Arial font
-        
-        # Add the final summary content
-        lines = final_summary.split('\n')
-        for line in lines:
-            if line.strip():  # Only add non-empty lines
-                # Check if it's a header (all caps or starts with **)
-                if line.strip().isupper() or line.strip().startswith('**'):
-                    # It's a header
-                    header_para = doc.add_paragraph()
-                    header_run = header_para.add_run(line.strip().replace('**', ''))
-                    header_run.bold = True
-                    header_run.font.size = Inches(0.3)
-                    header_run.font.name = 'Arial'
-                else:
-                    # It's regular content
-                    para = doc.add_paragraph()
-                    content_run = para.add_run(line.strip())
-                    content_run.font.name = 'Arial'
-        
-        # Save to BytesIO buffer
-        word_buffer = BytesIO()
-        doc.save(word_buffer)
-        word_data = word_buffer.getvalue()
-
-        # Store in DB
-        case_study = CaseStudy.query.filter_by(id=case_study_id).first()
-        if not case_study:
-            return jsonify({"status": "error", "message": "Case study not found"}), 404
-        case_study.final_summary_word_data = word_data
-        db.session.commit()
-
-        # Return the file
-        word_buffer.seek(0)
-        return send_file(
-            word_buffer,
-            as_attachment=True,
-            download_name=f"{title.replace(' ', '_')}_{case_study_id}.docx",
-            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/download_full_summary_pdf")
 @login_required
@@ -1204,5 +1115,105 @@ def update_case_study_title(case_study_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@bp.route("/case_study_status/<int:case_study_id>", methods=["GET"])
+@login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Check case study completion status',
+    'description': 'Check if case study has been completed with client interview',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Case study status retrieved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string', 'description': 'completion status'},
+                            'has_client_interview': {'type': 'boolean'},
+                            'has_full_case_study': {'type': 'boolean'},
+                            'updated_at': {'type': 'string'},
+                            'client_summary': {'type': 'string'},
+                            'final_summary': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Case study not found'}
+    }
+})
+def check_case_study_status(case_study_id):
+    """Check if case study has been completed with client interview"""
+    try:
+        user_id = get_current_user_id()
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        
+        if not case_study:
+            return jsonify({"error": "Case study not found"}), 404
+        
+        # Check if client interview exists and has summary
+        has_client_interview = bool(
+            case_study.client_interview and 
+            case_study.client_interview.summary and 
+            case_study.client_interview.summary.strip()
+        )
+        
+        # ✅ FIXED: Check if final_summary was generated AFTER client interview
+        # We check for meta_data_text which is only generated when both interviews are complete
+        has_full_case_study_with_client = bool(
+            case_study.final_summary and 
+            case_study.final_summary.strip() and
+            case_study.meta_data_text and  # This is only set when both interviews are processed
+            case_study.meta_data_text.strip()
+        )
+        
+        # Additional check: Ensure final_summary contains client perspective content
+        # (This is generated only when client interview is included)
+        has_client_content_in_summary = False
+        if has_client_interview and case_study.final_summary:
+            # Check if the final_summary was updated after client interview completion
+            # by looking for metadata or timestamp comparison
+            if case_study.meta_data_text:
+                try:
+                    meta_data = json.loads(case_study.meta_data_text)
+                    # If sentiment data exists, it means the full case study was generated with client data
+                    has_client_content_in_summary = bool(meta_data.get("sentiment"))
+                except:
+                    has_client_content_in_summary = False
+        
+        # Final check: Both conditions must be true for completion
+        has_full_case_study = has_full_case_study_with_client and (has_client_content_in_summary or not has_client_interview)
+        
+        # Determine overall status
+        if has_client_interview and has_full_case_study:
+            status = "completed"
+        elif has_client_interview:
+            status = "client_completed"
+        else:
+            status = "pending"
+        
+        return jsonify({
+            "status": status,
+            "has_client_interview": has_client_interview,
+            "has_full_case_study": has_full_case_study,
+            "updated_at": case_study.updated_at.isoformat() if case_study.updated_at else None,
+            "client_summary": case_study.client_interview.summary if case_study.client_interview else None,
+            "final_summary": case_study.final_summary
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
  

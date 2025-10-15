@@ -30,6 +30,9 @@ class Config:
     PICTORY_CLIENT_SECRET = os.environ.get('PICTORY_CLIENT_SECRET')
     PICTORY_USER_ID = os.environ.get('PICTORY_USER_ID')
     WONDERCRAFT_API_KEY = os.environ.get('WONDERCRAFT_API_KEY')
+    # Stripe webhook configuration
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 
 class DevelopmentConfig(Config):
     """Development configuration"""

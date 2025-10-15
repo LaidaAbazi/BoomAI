@@ -136,6 +136,23 @@ async function endConversation(reason) {
   console.log("Conversation ended:", reason);
   statusEl.textContent = "Interview complete";
 
+  // Flush any partial buffers into transcript before saving
+  try {
+    if (userBuffer && userBuffer.trim()) {
+      transcriptLog.push({ speaker: "user", text: userBuffer.trim() });
+      userBuffer = "";
+    }
+    if (aiBuffer && aiBuffer.trim()) {
+      transcriptLog.push({ speaker: "ai", text: aiBuffer.trim() });
+      aiBuffer = "";
+    }
+  } catch (e) {
+    console.warn("Buffer flush failed:", e);
+  }
+
+  // Debug
+  console.log("Client transcript length before save:", transcriptLog.length);
+
   // Save CLIENT transcript
   fetch(`/save_client_transcript?token=${getClientTokenFromURL()}`, {
     method: "POST",
@@ -146,7 +163,12 @@ async function endConversation(reason) {
   .then(async (data) => {
     console.log("Client transcript saved:", data.file);
 
-    // Generate CLIENT summary
+    // Generate CLIENT summary only if we actually have content
+    if (!transcriptLog || transcriptLog.length === 0) {
+      console.warn("No client transcript captured; skipping summary generation.");
+      return;
+    }
+
     const formattedTranscript = transcriptLog
       .map(e => `${e.speaker.toUpperCase()}: ${e.text}`)
       .join("\n");
@@ -167,7 +189,7 @@ async function endConversation(reason) {
     if (summaryData.status === "success") {
       // Get the current case study data to extract the updated names
       try {
-        const caseStudyRes = await fetch(`/api/case_studies/${summaryData.case_study_id}`, {
+        const caseStudyRes = await fetch(`/api/case_studies/${summaryData.case_study_id}?token=${token}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
         });
@@ -235,7 +257,8 @@ async function endConversation(reason) {
             case_study_id: summaryData.case_study_id,
             solution_provider: solution_provider,
             client_name: client_name_updated,
-            project_name: project_name_updated
+            project_name: project_name_updated,
+            token: token  // Add the token here
           })
         });
 
@@ -251,7 +274,10 @@ async function endConversation(reason) {
         const fullRes = await fetch("/api/generate_full_case_study", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ case_study_id: summaryData.case_study_id })
+          body: JSON.stringify({ 
+            case_study_id: summaryData.case_study_id,
+            token: token  // Add the token here too
+          })
         });
 
         const fullResData = await fullRes.json();
@@ -270,35 +296,44 @@ async function endConversation(reason) {
   })
   .catch(err => console.error("Failed to save client transcript", err));
   
-  // IMMEDIATELY stop all audio and connections
-  try {
-    // Stop all audio tracks immediately
-    if (window.localStream) {
-      window.localStream.getTracks().forEach(track => {
-        track.stop();
-        console.log("Stopped audio track:", track.kind);
-      });
-      window.localStream = null;
+  // Close audio/connections with grace period on timeout
+  const performCleanup = () => {
+    try {
+      // Stop all audio tracks
+      if (window.localStream) {
+        window.localStream.getTracks().forEach(track => {
+          track.stop();
+          console.log("Stopped audio track:", track.kind);
+        });
+        window.localStream = null;
+      }
+
+      // Close data channel
+      if (dataChannel) {
+        dataChannel.close();
+        console.log("Data channel closed");
+      }
+
+      // Close peer connection
+      if (peerConnection) {
+        peerConnection.close();
+        console.log("Peer connection closed");
+      }
+
+      // Set session as not ready
+      isSessionReady = false;
+      console.log("Session marked as not ready");
+
+    } catch (err) {
+      console.error("Error during connection cleanup:", err);
     }
+  };
 
-    // Close data channel immediately
-    if (dataChannel) {
-      dataChannel.close();
-      console.log("Data channel closed");
-    }
-
-    // Close peer connection immediately
-    if (peerConnection) {
-      peerConnection.close();
-      console.log("Peer connection closed");
-    }
-
-    // Set session as not ready
-    isSessionReady = false;
-    console.log("Session marked as not ready");
-
-  } catch (err) {
-    console.error("Error during connection cleanup:", err);
+  if (reason === "10-minute limit reached.") {
+    // Give a short grace period for final transcription events
+    setTimeout(performCleanup, 3000);
+  } else {
+    performCleanup();
   }
 
   const endBtn = document.getElementById("endBtn");
@@ -484,7 +519,7 @@ async function initConnection(clientGreeting) {
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
   
-      const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17", {
+      const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2025-06-03", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${EPHEMERAL_KEY}`,
@@ -508,11 +543,7 @@ async function initConnection(clientGreeting) {
   }
   
 function handleMessage(event) {
-  // Don't process messages if conversation has ended
-  if (hasEnded) {
-    console.log("Message ignored - conversation ended");
-    return;
-  }
+  // Allow final events to land even if hasEnded is true
 
   const msg = JSON.parse(event.data);
 
@@ -525,12 +556,12 @@ function handleMessage(event) {
       break;
 
     case "conversation.item.input_audio_transcription.completed":
-      if (msg.transcript && !hasEnded) {
+      if (msg.transcript) {
         transcriptLog.push({ speaker: "user", text: msg.transcript });
         const cleanedText = msg.transcript.toLowerCase().trim();
         userBuffer = "";
 
-        if (isFarewell(cleanedText)) {
+        if (isFarewell(cleanedText) && !hasEnded) {
           console.log("Detected farewell from user.");
           endConversation("User said farewell.");
         }

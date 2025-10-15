@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Subscription Required | StoryBoom AI</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;500;400&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(145deg, #F8FAFC, #E0E7FF);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .subscription-container {
+      background: #fff;
+      padding: 60px 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(49, 46, 129, 0.15);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .subscription-icon {
+      font-size: 4rem;
+      color: #3B82F6;
+      margin-bottom: 24px;
+    }
+    
+    .subscription-title {
+      font-size: 2.5rem;
+      color: #1E293B;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+    
+    .subscription-subtitle {
+      font-size: 1.2rem;
+      color: #64748B;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+    
+    .features-list {
+      text-align: left;
+      margin: 40px 0;
+      padding: 0 20px;
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin: 16px 0;
+      font-size: 1.1rem;
+      color: #374151;
+    }
+    
+    .feature-icon {
+      color: #10B981;
+      margin-right: 12px;
+      font-size: 1.2rem;
+    }
+    
+    .subscription-btn {
+      background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+      margin: 20px 0;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .subscription-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+    }
+    
+    .pricing-info {
+      background: #F8FAFC;
+      padding: 24px;
+      border-radius: 12px;
+      margin: 30px 0;
+      border: 2px solid #E2E8F0;
+    }
+    
+    .price {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 0;
+    }
+    
+    .price-period {
+      font-size: 1.2rem;
+      color: #64748B;
+      margin: 0;
+    }
+    
+    .back-to-dashboard {
+      color: #64748B;
+      text-decoration: none;
+      font-size: 1rem;
+      margin-top: 30px;
+      display: inline-block;
+    }
+    
+    .back-to-dashboard:hover {
+      color: #3B82F6;
+    }
+  </style>
+</head>
+<body>
+  <div class="subscription-container" data-user-id="{{ user_id|tojson|safe if user_id else 'null' }}">
+    <div class="subscription-icon">
+      <i class="fas fa-crown"></i>
+    </div>
+    
+    <h1 class="subscription-title">Subscription Required</h1>
+    <p class="subscription-subtitle">
+      You need an active subscription to access StoryBoom AI features. 
+      Subscribe now to start creating amazing case studies!
+    </p>
+    
+    <div class="pricing-info">
+      <h2 class="price">$99<span class="price-period">/month</span></h2>
+      <p style="margin: 8px 0 0 0; color: #64748B;">Includes 10 stories per month</p>
+    </div>
+    
+    <div class="features-list">
+      <div class="feature-item">
+        <i class="fas fa-check-circle feature-icon"></i>
+        <span>10 case studies per month</span>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-check-circle feature-icon"></i>
+        <span>AI-powered story generation</span>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-check-circle feature-icon"></i>
+        <span>Video and podcast creation</span>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-check-circle feature-icon"></i>
+        <span>Slack & Teams integration</span>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-check-circle feature-icon"></i>
+        <span>Extra stories for $6.90 each</span>
+      </div>
+    </div>
+    
+    <a href="#" 
+       onclick="openSubscription()" 
+       class="subscription-btn">
+      <i class="fas fa-credit-card" style="margin-right: 8px;"></i>
+      Subscribe Now
+    </a>
+    
+    <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+      <p style="margin: 0 0 10px 0; font-size: 14px; color: #856404;">
+        <strong>⚠️ Development Only:</strong> If you've completed payment but subscription isn't activated, click below:
+      </p>
+      <button onclick="activateSubscriptionManually()" style="background: #ffc107; color: #212529; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+        <i class="fas fa-tools" style="margin-right: 5px;"></i>
+        Manual Activation (Dev Only)
+      </button>
+    </div>
+    
+    <a href="/dashboard" class="back-to-dashboard">
+      <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
+      Back to Dashboard
+    </a>
+  </div>
+  
+  <script>
+    function openSubscription() {
+      // Get user ID from data attribute
+      const container = document.querySelector('.subscription-container');
+      const userId = container.getAttribute('data-user-id');
+      
+      console.log('DEBUG: User ID from subscription wall:', userId);
+      
+      if (!userId || userId === 'null') {
+        alert('Please log in to subscribe');
+        window.location.href = '/login';
+        return;
+      }
+      
+      // Use client_reference_id approach (this works with Payment Links!)
+      const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
+      const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+      console.log('DEBUG: Payment URL with user ID:', urlWithUser);
+      window.open(urlWithUser, '_blank');
+    }
+    
+    function activateSubscriptionManually() {
+      const container = document.querySelector('.subscription-container');
+      const userId = container.getAttribute('data-user-id');
+      
+      if (!userId || userId === 'null') {
+        alert('Please log in to activate subscription');
+        window.location.href = '/login';
+        return;
+      }
+      
+      // Confirm this is for development/testing only
+      if (!confirm('⚠️ This is a development-only feature. Only use this if you have completed payment but the subscription was not activated automatically. Continue?')) {
+        return;
+      }
+      
+      fetch('/api/test/activate-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          if (data.message.includes('already has an active subscription')) {
+            alert('You already have an active subscription! Redirecting to dashboard...');
+          } else {
+            alert('Subscription activated! Redirecting to dashboard...');
+          }
+          window.location.href = '/dashboard';
+        } else {
+          alert('Error activating subscription: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error activating subscription');
+      });
+    }
+  </script>
+</body>
+</html>

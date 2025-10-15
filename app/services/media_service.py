@@ -2,13 +2,16 @@ import os
 import requests
 import json
 from datetime import datetime, UTC
+import base64
+import time
+from app.utils.text_processing import clean_text_for_heygen, validate_heygen_text
 
 class MediaService:
     def __init__(self):
         # HeyGen API configuration
         self.heygen_api_key = os.getenv("HEYGEN_API_KEY")
         self.heygen_api_base_url = "https://api.heygen.com/v2"
-        self.heygen_avatar_id = "Tuba_Casual_Front_public"
+        self.heygen_avatar_id = "Annie_Casual_Standing_Front_2_public" #Amelia_sitting_business_training_front
         self.heygen_voice_id = "ea5493f87c244e0e99414ca6bd4af709"
         
         # Pictory API configuration
@@ -20,28 +23,51 @@ class MediaService:
         # Wondercraft API configuration
         self.wondercraft_api_key = os.getenv("WONDERCRAFT_API_KEY")
         self.wondercraft_api_base_url = "https://api.wondercraft.ai/v1"
+        
+        # Synthesia API configuration
+        self.synthesia_api_key = os.getenv("SYNTHESIA_API_KEY")
+        self.synthesia_api_base_url = "https://api.synthesia.io/v2"
+        self.synthesia_avatar_id = "f588d1cf-0b26-45bd-9a7d-55124d824f85"  # Custom avatar ID
+        self.synthesia_test_mode = os.getenv("SYNTHESIA_TEST_MODE", "false").lower() == "true"  # Default to production mode
     
     def generate_heygen_input_text(self, final_summary):
-        """Generate input text for HeyGen video"""
+        """Generate input text for HeyGen video - optimized for 30-40 seconds"""
         try:
-            # Limit text to reasonable length for video
-            if len(final_summary) > 1000:
-                summary = final_summary[:1000] + "..."
+            # Target: 75-100 words = ~150-200 characters for 30-40 second video
+            if len(final_summary) > 150:
+                # Find the last complete sentence within 150 characters
+                truncated = final_summary[:150]
+                last_period = truncated.rfind('.')
+                last_exclamation = truncated.rfind('!')
+                last_question = truncated.rfind('?')
+                
+                # Find the last sentence ending
+                last_sentence_end = max(last_period, last_exclamation, last_question)
+                
+                if last_sentence_end > 0:
+                    summary = final_summary[:last_sentence_end + 1]
+                else:
+                    # If no sentence ending found, truncate at word boundary
+                    last_space = truncated.rfind(' ')
+                    if last_space > 0:
+                        summary = final_summary[:last_space] + "."
+                    else:
+                        summary = final_summary[:147] + "..."
             else:
                 summary = final_summary
             
-            # Format for video narration
+            # Format for brief video narration (30-40 seconds)
             video_text = f"""
             {summary}
             
-            This case study demonstrates how innovative solutions can transform business outcomes and drive success.
+            Here's how we helped our client succeed. Check the PDF for more details.
             """
             
             return video_text.strip()
             
         except Exception as e:
             print(f"Error generating HeyGen input text: {str(e)}")
-            return "This case study demonstrates successful business transformation through innovative solutions."
+            return "We helped a client achieve great results. Check the PDF for more details."
     
     def generate_heygen_video(self, case_study):
         """Generate HeyGen video from case study"""
@@ -52,6 +78,19 @@ class MediaService:
             # Generate input text
             input_text = self.generate_heygen_input_text(case_study.final_summary)
             
+            # Validate and clean the input text to prevent mid-word cuts
+            if input_text:
+                input_text = clean_text_for_heygen(input_text)
+                
+                # Validate the cleaned text
+                validation = validate_heygen_text(input_text)
+                if not validation["valid"]:
+                    print(f"HeyGen text validation failed: {validation['message']}")
+                    return {"error": f"Text validation failed: {validation['message']}"}
+            
+            if not input_text:
+                return {"error": "Failed to generate valid input text for video"}
+            
             # Prepare video generation request
             payload = {
                 "video_inputs": [
@@ -60,7 +99,8 @@ class MediaService:
                             "type": "avatar",
                             "avatar_id": self.heygen_avatar_id,
                             "input_text": input_text,
-                            "voice_id": self.heygen_voice_id
+                            "voice_id": self.heygen_voice_id,
+                            "emotion": "Excited"
                         }
                     }
                 ],
@@ -91,6 +131,12 @@ class MediaService:
         except Exception as e:
             print(f"Error generating HeyGen video: {str(e)}")
             return {"error": str(e)}
+    
+    def _clean_text_for_heygen(self, text):
+        """Clean and validate text to prevent HeyGen from cutting off mid-word"""
+        # This method is now deprecated in favor of the utility function
+        # Keeping for backward compatibility
+        return clean_text_for_heygen(text)
     
     def check_heygen_video_status(self, video_id):
         """Check status of HeyGen video generation"""
@@ -366,8 +412,8 @@ class MediaService:
             payload = {
                 "script": script,
                 "voice_ids": [
-                    "f79709a9-6b2c-4333-9bdf-dd5973a1d55b",
-                    "3b650d7d-4918-402d-a9fe-b28b50cc5bee"
+                    "5acfb17c-dd70-4af3-b17e-750a8a312ef8",
+                    "331fbe9e-8efb-48f2-99d2-e81f3f7ccf84"
                 ],
                 "format": "mp3"
             }

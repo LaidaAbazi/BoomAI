@@ -23,6 +23,11 @@ class UserResponseSchema(Schema):
     company_name = fields.Str()
     created_at = fields.DateTime(dump_only=True)
     last_login = fields.DateTime(dump_only=True)
+    stories_used_this_month = fields.Int()
+    extra_credits = fields.Int()
+    last_reset_date = fields.Date()
+    has_active_subscription = fields.Bool()
+    subscription_start_date = fields.Date()
 
 class UserUpdateSchema(Schema):
     """Schema for user updates"""

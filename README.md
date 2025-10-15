@@ -8,7 +8,7 @@ A comprehensive Flask application for generating business case studies with AI-p
 AICaseStudy/
 ├── app/                          # Main application package
 │   ├── __init__.py              # Flask app factory
-│   ├── models.py                # SQLAlchemy models
+│   ├──                 # SQLAlchemy models
 │   ├── routes/                  # Route blueprints
 │   │   ├── __init__.py
 │   │   ├── main.py             # Main routes (index, sessions)

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Success Story to Slack - StoryBoom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            border: 2px solid #f3f4f6;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+        
+        .section h2 {
+            color: #374151;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .status.connected {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .status.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .conversation-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .conversation-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .conversation-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        .conversation-item.selected {
+            background-color: #eef2ff;
+            border-left: 4px solid #4F46E5;
+        }
+        
+        .conversation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .conversation-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .conversation-icon.public {
+            background: #10B981;
+        }
+        
+        .conversation-icon.private {
+            background: #F59E0B;
+        }
+        
+        .conversation-icon.dm {
+            background: #8B5CF6;
+        }
+        
+        .conversation-icon.mpim {
+            background: #EF4444;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #fecaca;
+        }
+        
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4F46E5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Share to Slack</h1>
+            <p>Connect your Slack account and share success stories with your team</p>
+        </div>
+        
+        <div class="content">
+            <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+            
+            <!-- Slack Connection Status -->
+            <div class="section">
+                <h2>🔌 Slack Connection</h2>
+                <div id="connectionStatus" class="status disconnected">
+                    Checking connection status...
+                </div>
+                <div id="connectionActions">
+                    <button id="connectBtn" class="btn">📱 Connect to Slack</button>
+                    <button id="disconnectBtn" class="btn danger hidden">🔌 Disconnect Slack</button>
+                </div>
+            </div>
+            
+            <!-- Conversation Selection -->
+            <div id="conversationSection" class="section hidden">
+                <h2>💬 Select Conversation</h2>
+                <div class="form-group">
+                    <label for="conversationSelect">Choose where to share your story:</label>
+                    <div id="conversationList" class="conversation-list">
+                        <div class="loading">Loading conversations...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Story Input -->
+            <div id="storySection" class="section hidden">
+                <h2>📝 Your Success Story</h2>
+                <div class="form-group">
+                    <label for="storyTitle">Story Title:</label>
+                    <input type="text" id="storyTitle" class="form-control" placeholder="Enter a compelling title for your success story">
+                </div>
+                <div class="form-group">
+                    <label for="storyContent">Story Content:</label>
+                    <textarea id="storyContent" class="form-control" rows="6" placeholder="Share the details of your success story..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="storyLink">Optional Link:</label>
+                    <input type="url" id="storyLink" class="form-control" placeholder="https://example.com (optional)">
+                </div>
+                <button id="postBtn" class="btn secondary">🚀 Post to Slack</button>
+            </div>
+            
+            <!-- Messages -->
+            <div id="messages"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedConversation = null;
+        let conversations = [];
+        
+        // Check connection status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkConnectionStatus();
+        });
+        
+        // Check Slack connection status
+        async function checkConnectionStatus() {
+            try {
+                const response = await fetch('/api/slack/oauth/status');
+                const data = await response.json();
+                
+                if (data.connected) {
+                    showConnectedStatus();
+                    loadConversations();
+                } else {
+                    showDisconnectedStatus();
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+                showDisconnectedStatus();
+            }
+        }
+        
+        // Show connected status
+        function showConnectedStatus() {
+            const status = document.getElementById('connectionStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            status.className = 'status connected';
+            status.textContent = '✅ Connected to Slack! You can now share success stories.';
+            
+            connectBtn.classList.add('hidden');
+            disconnectBtn.classList.remove('hidden');
+            
+            document.getElementById('conversationSection').classList.remove('hidden');
+        }
+        
+        // Show disconnected status
+        function showDisconnectedStatus() {
+            const status = document.getElementById('connectionStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            status.className = 'status disconnected';
+            status.textContent = '❌ Not connected to Slack. Connect your account to start sharing.';
+            
+            connectBtn.classList.remove('hidden');
+            disconnectBtn.classList.add('hidden');
+            
+            document.getElementById('conversationSection').classList.add('hidden');
+            document.getElementById('storySection').classList.add('hidden');
+        }
+        
+        // Connect to Slack
+        document.getElementById('connectBtn').addEventListener('click', function() {
+            window.location.href = '/api/slack/oauth/authorize';
+        });
+        
+        // Disconnect from Slack
+        document.getElementById('disconnectBtn').addEventListener('click', async function() {
+            if (confirm('Are you sure you want to disconnect your Slack account?')) {
+                try {
+                    const response = await fetch('/api/slack/oauth/disconnect');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showDisconnectedStatus();
+                        showMessage('✅ Successfully disconnected from Slack', 'success');
+                    } else {
+                        showMessage('❌ Failed to disconnect: ' + data.error, 'error');
+                    }
+                } catch (error) {
+                    showMessage('❌ Error disconnecting from Slack', 'error');
+                }
+            }
+        });
+        
+        // Load conversations
+        async function loadConversations() {
+            try {
+                const response = await fetch('/api/slack/oauth/conversations');
+                const data = await response.json();
+                
+                if (data.success) {
+                    conversations = data.conversations;
+                    displayConversations();
+                } else {
+                    showMessage('❌ Failed to load conversations: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error loading conversations', 'error');
+            }
+        }
+        
+        // Display conversations
+        function displayConversations() {
+            const list = document.getElementById('conversationList');
+            
+            if (conversations.length === 0) {
+                list.innerHTML = '<div class="loading">No conversations found. Make sure you\'re a member of at least one channel or DM.</div>';
+                return;
+            }
+            
+            list.innerHTML = conversations.map(conv => `
+                <div class="conversation-item" data-id="${conv.id}" data-name="${conv.name}">
+                    <div class="conversation-icon ${conv.type}">
+                        ${getConversationIcon(conv.type)}
+                    </div>
+                    <div>
+                        <strong>${conv.name}</strong>
+                        <br>
+                        <small>${getConversationTypeLabel(conv.type)}</small>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add click handlers
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    // Remove previous selection
+                    document.querySelectorAll('.conversation-item').forEach(i => i.classList.remove('selected'));
+                    
+                    // Select this item
+                    this.classList.add('selected');
+                    selectedConversation = {
+                        id: this.dataset.id,
+                        name: this.dataset.name
+                    };
+                    
+                    // Show story input section
+                    document.getElementById('storySection').classList.remove('hidden');
+                });
+            });
+        }
+        
+        // Get conversation icon
+        function getConversationIcon(type) {
+            switch (type) {
+                case 'public_channel': return '#';
+                case 'private_channel': return '🔒';
+                case 'im': return '💬';
+                case 'mpim': return '👥';
+                default: return '?';
+            }
+        }
+        
+        // Get conversation type label
+        function getConversationTypeLabel(type) {
+            switch (type) {
+                case 'public_channel': return 'Public Channel';
+                case 'private_channel': return 'Private Channel';
+                case 'im': return 'Direct Message';
+                case 'mpim': return 'Group DM';
+                default: return 'Unknown';
+            }
+        }
+        
+        // Post story to Slack
+        document.getElementById('postBtn').addEventListener('click', async function() {
+            if (!selectedConversation) {
+                showMessage('❌ Please select a conversation first', 'error');
+                return;
+            }
+            
+            const title = document.getElementById('storyTitle').value.trim();
+            const content = document.getElementById('storyContent').value.trim();
+            const link = document.getElementById('storyLink').value.trim();
+            
+            if (!title || !content) {
+                showMessage('❌ Please enter both title and content', 'error');
+                return;
+            }
+            
+            // Build message text
+            let messageText = `🎉 *${title}*\n\n${content}`;
+            if (link) {
+                messageText += `\n\n📄 <${link}|Read more>`;
+            }
+            
+            // Disable button and show loading
+            const btn = this;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '📤 Posting...';
+            
+            try {
+                const response = await fetch('/api/slack/oauth/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        channel: selectedConversation.id,
+                        text: messageText
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ Successfully posted to Slack!', 'success');
+                    
+                    // Clear form
+                    document.getElementById('storyTitle').value = '';
+                    document.getElementById('storyContent').value = '';
+                    document.getElementById('storyLink').value = '';
+                    
+                    // Hide story section
+                    document.getElementById('storySection').classList.add('hidden');
+                    
+                    // Deselect conversation
+                    document.querySelectorAll('.conversation-item').forEach(i => i.classList.remove('selected'));
+                    selectedConversation = null;
+                } else {
+                    showMessage('❌ Failed to post: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error posting to Slack', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+        
+        // Show message
+        function showMessage(text, type) {
+            const messages = document.getElementById('messages');
+            const message = document.createElement('div');
+            message.className = `status ${type}`;
+            message.textContent = text;
+            
+            messages.appendChild(message);
+            
+            // Remove message after 5 seconds
+            setTimeout(() => {
+                message.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

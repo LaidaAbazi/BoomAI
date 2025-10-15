@@ -318,7 +318,7 @@ async function initConnection() {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17", {
+    const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2025-06-03", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${EPHEMERAL_KEY}`,

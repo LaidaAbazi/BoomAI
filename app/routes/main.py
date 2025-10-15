@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta, UTC
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken
 from app.utils.text_processing import clean_text, detect_language
-from app.utils.auth_helpers import get_current_user_id
+from app.utils.auth_helpers import get_current_user_id, subscription_required
 from app.services.ai_service import AIService
 from flasgger import swag_from
 import logging
@@ -57,11 +57,18 @@ def verification():
 
 @bp.route("/dashboard")
 def dashboard():
-    """Serve the dashboard page - requires authentication"""
+    """Serve the dashboard page - requires authentication only"""
     user_id = get_current_user_id()
     if not user_id:
         return redirect(url_for('main.login'))
-    return render_template('dashboard.html')
+    
+    from app.models import User
+    user = User.query.get(user_id)
+    if not user:
+        session.clear()
+        return redirect(url_for('main.login'))
+    
+    return render_template('dashboard.html', user_id=user_id)
 
 @bp.route("/feedback")
 def feedback():
@@ -70,6 +77,16 @@ def feedback():
     if not user_id:
         return redirect(url_for('main.login'))
     return render_template('feedback.html')
+
+@bp.route("/subscription-required")
+def subscription_wall():
+    """Serve the subscription wall page"""
+    user_id = get_current_user_id()
+    if not user_id:
+        return redirect(url_for('main.login'))
+    
+    # Pass user_id to template
+    return render_template('subscription_wall.html', user_id=user_id)
 
 @bp.route("/client")
 def client():
@@ -82,6 +99,11 @@ def client():
 @bp.route("/index")
 def index_page():
     return render_template('index.html')
+
+# Serve Teams channel picker modal as an HTML page (loaded in iframe)
+@bp.route("/templates/teams_channel_modal.html")
+def serve_teams_channel_modal():
+    return render_template('teams_channel_modal.html')
 
 @bp.route("/session")
 @swag_from({
@@ -116,13 +138,14 @@ def create_session():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "gpt-4o-realtime-preview-2024-12-17",
+        "model": "gpt-4o-realtime-preview-2025-06-03",
         "voice": "coral"
     }
     response = requests.post("https://api.openai.com/v1/realtime/sessions", headers=headers, json=data)
     return jsonify(response.json())
 
 @bp.route("/save_transcript", methods=["POST"])
+@subscription_required
 @swag_from({
     'tags': ['Real-time Interviews'],
     'summary': 'Save provider interview transcript',
@@ -319,6 +342,7 @@ def save_client_transcript():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/generate_summary", methods=["POST"])
+@subscription_required
 @swag_from({
     'tags': ['Interviews'],
     'summary': 'Generate interview summary',
@@ -581,6 +605,7 @@ def generate_summary():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/save_provider_summary", methods=["POST"])
+@subscription_required
 def save_provider_summary():
     """Save provider summary"""
     try:
@@ -596,6 +621,16 @@ def save_provider_summary():
         if not interview:
             return jsonify({"status": "error", "message": "Session not found"}), 404
 
+        # Get the case study and user
+        case_study = CaseStudy.query.filter_by(id=interview.case_study_id).first()
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+            
+        from app.models import User
+        user = User.query.filter_by(id=case_study.user_id).first()
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
         # Update summary
         interview.summary = updated_summary
 
@@ -605,7 +640,6 @@ def save_provider_summary():
         
         # Keep the existing title as is - it should be a short hook, not the old format
         # The title was already generated correctly in the initial summary generation
-        case_study = CaseStudy.query.filter_by(id=interview.case_study_id).first()
         if case_study:
             # Don't override the title - keep the short hook that was already generated
             pass
