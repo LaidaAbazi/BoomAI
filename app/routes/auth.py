@@ -371,6 +371,44 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @bp.route('/verify/<token>', methods=['GET'])
+@swag_from({
+    'tags': ['Authentication'],
+    'summary': 'Verify email address',
+    'description': 'Verify user email address using verification token',
+    'parameters': [
+        {
+            'name': 'token',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'},
+            'description': 'Email verification token'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Email verification result',
+            'content': {
+                'text/html': {
+                    'schema': {
+                        'type': 'string',
+                        'description': 'HTML response with verification status'
+                    }
+                }
+            }
+        },
+        400: {
+            'description': 'Invalid or expired token',
+            'content': {
+                'text/html': {
+                    'schema': {
+                        'type': 'string',
+                        'description': 'Error message'
+                    }
+                }
+            }
+        }
+    }
+})
 def verify(token):
     local_session = SessionLocal()
     try:
@@ -401,8 +439,19 @@ def verify(token):
 
 def send_email(to, link):
     try:
-        msg = Message('Verify Your Email', recipients=[to])
-        msg.body = f'Click this link to verify your email: {link}'
+        msg = Message('Welcome to Storyboom.ai - Email Verification', recipients=[to])
+        # Extract the user's first name from the database using the email
+        user = User.query.filter_by(email=to).first()
+        first_name = user.first_name if user and hasattr(user, 'first_name') and user.first_name else "there"
+        msg.body = (
+            f"Hi {first_name},\n\n"
+            "Thank you for signing up for Storyboom.ai! To complete your registration and access your account, "
+            "please verify your email address by visiting the link below:\n\n"
+            f"{link}\n\n"
+            "If you did not create an account with us, you can safely ignore this message.\n\n"
+            "Best regards,\n"
+            "The Storyboom.ai team"
+        )
         mail.send(msg)
     except Exception as e:
         print(f"Email sending failed: {e}")

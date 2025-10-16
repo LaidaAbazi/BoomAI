@@ -509,6 +509,73 @@ def check_pictory_video_status(storyboard_job_id):
 
 @bp.route("/generate_podcast", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Generate podcast',
+    'description': 'Generate a podcast using Wondercraft API',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study to generate podcast from'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Podcast generation started successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'job_id': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            'description': 'Missing case study ID or no final summary available',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'error': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Case study not found'},
+        500: {
+            'description': 'Internal server error or API configuration issue',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'error': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
 def generate_podcast():
     """Generate podcast using Wondercraft API"""
     try:

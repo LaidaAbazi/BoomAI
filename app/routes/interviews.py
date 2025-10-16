@@ -686,6 +686,63 @@ def extract_interviewee_name():
 
 @bp.route("/get_email_draft", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Email'],
+    'summary': 'Get email draft for case study sharing',
+    'description': 'Generate a pre-filled email draft for sharing a success story',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study to share'
+                        },
+                        'recipient_email': {
+                            'type': 'string',
+                            'format': 'email',
+                            'description': 'Optional recipient email address'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Email draft generated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'email_draft': {
+                                'type': 'object',
+                                'properties': {
+                                    'subject': {'type': 'string'},
+                                    'body': {'type': 'string'},
+                                    'recipient': {'type': 'string'},
+                                    'pdf_url': {'type': 'string'},
+                                    'mailto_url': {'type': 'string'},
+                                    'case_study_title': {'type': 'string'},
+                                    'generated_at': {'type': 'string', 'format': 'date-time'}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study ID'},
+        404: {'description': 'Case study not found'},
+        500: {'description': 'Failed to generate email draft'}
+    }
+})
 def get_email_draft_route():
     """Get a pre-filled email draft for sharing success story"""
     try:
@@ -738,6 +795,77 @@ def get_email_draft_route():
 
 @bp.route("/send_email", methods=["POST"])
 @login_required
+@swag_from({
+    'tags': ['Email'],
+    'summary': 'Send email with case study',
+    'description': 'Send email automatically from the logged-in user\'s email for sharing success story',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id', 'recipient_email'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study to share'
+                        },
+                        'recipient_email': {
+                            'type': 'string',
+                            'format': 'email',
+                            'description': 'Recipient email address'
+                        },
+                        'email_draft': {
+                            'type': 'object',
+                            'description': 'Optional email draft data with edited content',
+                            'properties': {
+                                'subject': {'type': 'string'},
+                                'body': {'type': 'string'},
+                                'use_edited_content': {'type': 'boolean'}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Email sent successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'},
+                            'sender': {'type': 'string'},
+                            'recipient': {'type': 'string'},
+                            'subject': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            'description': 'Missing required data or invalid email',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Case study not found'},
+        500: {'description': 'Failed to send email'}
+    }
+})
 def send_email_route():
     """Send email automatically from the logged-in user's email for sharing success story"""
     try:
