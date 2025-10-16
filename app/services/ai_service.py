@@ -142,7 +142,6 @@ The post should feel like a personal reflection from someone in the company (e.g
 • Optionally illustrate the *wrong way vs right way* using short lines.  
 • Wrap up with 1–2 lines encouraging readers to apply the idea right away.  
 • End with 3–5 relevant hashtags (all lowercase, no spaces).  
-• Finally, add one line: *Visual idea:* describe a simple graphic that matches the framework.
 
 ---
 

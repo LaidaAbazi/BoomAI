@@ -450,7 +450,7 @@ def send_email(to, link):
             f"{link}\n\n"
             "If you did not create an account with us, you can safely ignore this message.\n\n"
             "Best regards,\n"
-            "The Storyboom.ai team"
+            "The Storyboom team"
         )
         mail.send(msg)
     except Exception as e:
