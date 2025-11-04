@@ -822,6 +822,79 @@ def podcast_audio_options(case_study_id):
     return response
 
 @bp.route("/podcast_audio/<int:case_study_id>", methods=["GET"])
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Get podcast audio file',
+    'description': 'Serve podcast audio file for a case study. Automatically serves from database (permanent storage) if available, otherwise falls back to external URL. This endpoint handles CORS and streaming.',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Audio file served successfully',
+            'content': {
+                'audio/mpeg': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                },
+                'audio/mp3': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'binary'
+                    }
+                }
+            },
+            'headers': {
+                'X-Audio-Source': {
+                    'description': 'Source of audio: "database" if served from DB (permanent), null if from URL (may expire)',
+                    'schema': {'type': 'string'}
+                },
+                'Content-Length': {
+                    'description': 'Size of audio file in bytes',
+                    'schema': {'type': 'integer'}
+                },
+                'Content-Type': {
+                    'description': 'MIME type of audio (usually audio/mpeg)',
+                    'schema': {'type': 'string'}
+                }
+            }
+        },
+        404: {
+            'description': 'Podcast not found for this case study',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'error': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        500: {
+            'description': 'Failed to fetch audio file from external URL',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'error': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
 def serve_podcast_audio(case_study_id):
     """Proxy endpoint to serve podcast audio files to avoid CORS issues."""
     try:
