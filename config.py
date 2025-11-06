@@ -34,6 +34,9 @@ class Config:
     # LinkedIn Integration
     LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID')
     LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
+    # Support multiple redirect URIs (comma-separated) for multi-host support
+    # Format: "http://localhost:10000/linkedin/callback,https://your-app.onrender.com/linkedin/callback"
+    # Falls back to LINKEDIN_REDIRECT_URI if LINKEDIN_REDIRECT_URIS is not set
     LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI')
     LINKEDIN_TOKEN_ENCRYPTION_KEY = os.environ.get('LINKEDIN_TOKEN_ENCRYPTION_KEY')
 

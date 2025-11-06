@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, DateTime, func, Table, Date
 from sqlalchemy.orm import relationship
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from app import db
 
 class User(db.Model):
@@ -267,4 +267,30 @@ class Feedback(db.Model):
             'feedback_type': self.feedback_type,
             'status': self.status,
             'feedback_summary': self.feedback_summary
-        } 
+        }
+
+class OAuthState(db.Model):
+    """
+    Store OAuth state values for CSRF protection across multiple hosts.
+    Each state is associated with a user, has an expiration time, and stores
+    the redirect_uri that was used for the OAuth request.
+    """
+    __tablename__ = 'oauth_states'
+    id = Column(Integer, primary_key=True)
+    state = Column(String(255), nullable=False, unique=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    redirect_uri = Column(String(500), nullable=False)  # Store the redirect URI used
+    content = Column(Text, nullable=True)  # Optional: store content to be posted
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)  # State expiration time
+    used = Column(Boolean, default=False)  # Mark as used after successful validation
+    
+    user = relationship('User', backref='oauth_states')
+    
+    def is_expired(self):
+        """Check if the state has expired"""
+        return datetime.now(timezone.utc) > self.expires_at
+    
+    def is_valid(self):
+        """Check if the state is valid (not expired and not used)"""
+        return not self.is_expired() and not self.used 

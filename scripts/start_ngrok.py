@@ -10,12 +10,14 @@ except ImportError:
     sys.exit(1)
 
 
+load_dotenv() 
+
 def main():
 
-    load_dotenv()
+    
     # Configuration
     port = int(os.getenv("FLASK_PORT", os.getenv("PORT", "10000")))
-    authtoken = os.getenv("NGROK_AUTHTOKEN")
+    authtoken = '32BkS3wlXKiGjOGLlr93It2ycAo_51zfCi9kT4YKhVUdjpBUm'
     region = os.getenv("NGROK_REGION", "us")  # us, eu, ap, au, sa, jp, in
 
     if not authtoken:

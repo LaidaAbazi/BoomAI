@@ -1,16 +1,29 @@
 import os
 import requests
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 from cryptography.fernet import Fernet
-from app.models import db, User
+from app.models import db, User, OAuthState
 
 class LinkedInOAuthService:
     def __init__(self):
         self.client_id = os.getenv("LINKEDIN_CLIENT_ID")
         self.client_secret = os.getenv("LINKEDIN_CLIENT_SECRET")
-        self.redirect_uri = os.getenv("LINKEDIN_REDIRECT_URI")
+        # Support multiple redirect URIs via environment variable (comma-separated)
+        # Format: "http://localhost:10000/linkedin/callback,https://your-app.onrender.com/linkedin/callback,https://your-domain.com/linkedin/callback"
+        redirect_uris_str = os.getenv("LINKEDIN_REDIRECT_URIS", os.getenv("LINKEDIN_REDIRECT_URI", ""))
+        if redirect_uris_str:
+            self.redirect_uris = [uri.strip() for uri in redirect_uris_str.split(",") if uri.strip()]
+        else:
+            self.redirect_uris = []
+        
+        # Fallback to single redirect URI for backward compatibility
+        if not self.redirect_uris:
+            single_uri = os.getenv("LINKEDIN_REDIRECT_URI")
+            if single_uri:
+                self.redirect_uris = [single_uri]
+        
         self.scope = "openid profile w_member_social"
         
         # LinkedIn API endpoints
@@ -33,14 +46,67 @@ class LinkedInOAuthService:
         
         self.cipher = Fernet(self.encryption_key)
     
-    def get_oauth_url(self, state=None):
+    def get_redirect_uri_for_host(self, request_host, request_scheme="https"):
+        """
+        Determine the appropriate redirect URI based on the request host.
+        Supports localhost, Render, and other external hosts.
+        
+        Args:
+            request_host: The host from the request (e.g., 'localhost:10000', 'your-app.onrender.com')
+            request_scheme: The request scheme ('http' or 'https')
+        
+        Returns:
+            The matching redirect URI or the first available one
+        """
+        # Normalize the host
+        host_lower = request_host.lower()
+        
+        # Build the expected redirect URI for this host
+        if 'localhost' in host_lower or '127.0.0.1' in host_lower:
+            # Local development
+            scheme = 'http'
+            port = ':10000' if ':10000' in host_lower else ''
+            expected_uri = f"{scheme}://{request_host.split(':')[0]}{port}/linkedin/callback"
+        else:
+            # Production/external host
+            scheme = request_scheme
+            expected_uri = f"{scheme}://{request_host}/linkedin/callback"
+        
+        # Try to find a matching redirect URI
+        for uri in self.redirect_uris:
+            # Normalize URIs for comparison (remove trailing slashes, lowercase)
+            uri_normalized = uri.rstrip('/').lower()
+            expected_normalized = expected_uri.rstrip('/').lower()
+            if uri_normalized == expected_normalized:
+                return uri
+        
+        # If no exact match, return the first available redirect URI
+        # This allows fallback behavior
+        if self.redirect_uris:
+            print(f"⚠️  No exact redirect URI match for {expected_uri}, using first available: {self.redirect_uris[0]}")
+            return self.redirect_uris[0]
+        
+        # Last resort: construct from request
+        print(f"⚠️  No redirect URIs configured, constructing from request: {expected_uri}")
+        return expected_uri
+    
+    def get_oauth_url(self, state=None, redirect_uri=None):
         """
         Generate OAuth URL for user to authorize the app
+        
+        Args:
+            state: The state parameter for CSRF protection
+            redirect_uri: The redirect URI to use (if None, uses first configured)
         """
+        if not redirect_uri and self.redirect_uris:
+            redirect_uri = self.redirect_uris[0]
+        elif not redirect_uri:
+            raise ValueError("No redirect URI configured. Set LINKEDIN_REDIRECT_URI or LINKEDIN_REDIRECT_URIS environment variable.")
+        
         params = {
             "response_type": "code",
             "client_id": self.client_id,
-            "redirect_uri": self.redirect_uri,
+            "redirect_uri": redirect_uri,
             "scope": self.scope,
             "state": state
         }
@@ -48,15 +114,25 @@ class LinkedInOAuthService:
         query_string = urlencode(params)
         return f"{self.authorization_url}?{query_string}"
     
-    def exchange_code_for_token(self, code):
+    def exchange_code_for_token(self, code, redirect_uri=None):
         """
         Exchange authorization code for access token
+        
+        Args:
+            code: The authorization code from LinkedIn
+            redirect_uri: The redirect URI that was used in the authorization request
         """
         try:
+            # Use the provided redirect_uri or fall back to first configured
+            if not redirect_uri and self.redirect_uris:
+                redirect_uri = self.redirect_uris[0]
+            elif not redirect_uri:
+                raise ValueError("No redirect URI provided or configured")
+            
             data = {
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": self.redirect_uri,
+                "redirect_uri": redirect_uri,
                 "client_id": self.client_id,
                 "client_secret": self.client_secret
             }
@@ -248,7 +324,7 @@ class LinkedInOAuthService:
             expires_in = token_data.get("expires_in")
             if expires_in:
                 try:
-                    user.linkedin_token_expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
+                    user.linkedin_token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
                     print(f"✅ Token expiration set: {user.linkedin_token_expires_at}")
                 except (ValueError, TypeError) as e:
                     print(f"⚠️ Invalid expires_in value: {expires_in}, error: {e}")
@@ -257,7 +333,7 @@ class LinkedInOAuthService:
                 user.linkedin_token_expires_at = None
                 print(f"ℹ️  No expiration time provided")
             
-            user.linkedin_authed_at = datetime.utcnow()
+            user.linkedin_authed_at = datetime.now(timezone.utc)
             
             # Flush to check for errors before commit
             print(f"💾 Flushing changes to database...")
@@ -314,7 +390,7 @@ class LinkedInOAuthService:
                 return None
             
             # Check if token is expired
-            if user.linkedin_token_expires_at and user.linkedin_token_expires_at < datetime.utcnow():
+            if user.linkedin_token_expires_at and user.linkedin_token_expires_at < datetime.now(timezone.utc):
                 print(f"⚠️ LinkedIn token expired for user {user_id}")
                 # TODO: Implement token refresh if refresh_token is available
                 return None
@@ -350,5 +426,134 @@ class LinkedInOAuthService:
             print(f"❌ Error disconnecting LinkedIn: {str(e)}")
             db.session.rollback()
             return False
+    
+    def create_oauth_state(self, user_id, redirect_uri, content=None, expiration_minutes=10):
+        """
+        Create and store an OAuth state in the database for CSRF protection.
+        
+        Args:
+            user_id: The user ID associated with this OAuth flow
+            redirect_uri: The redirect URI that will be used for this OAuth request
+            content: Optional content to be posted (stored with state)
+            expiration_minutes: How long the state should be valid (default: 10 minutes)
+        
+        Returns:
+            The generated state string, or None if creation failed
+        """
+        try:
+            import secrets
+            state = secrets.token_urlsafe(32)
+            expires_at = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
+            
+            oauth_state = OAuthState(
+                state=state,
+                user_id=user_id,
+                redirect_uri=redirect_uri,
+                content=content,
+                expires_at=expires_at,
+                used=False
+            )
+            
+            db.session.add(oauth_state)
+            db.session.commit()
+            
+            print(f"✅ OAuth state created for user {user_id}, expires at {expires_at}")
+            return state
+            
+        except Exception as e:
+            print(f"❌ Error creating OAuth state: {str(e)}")
+            db.session.rollback()
+            return None
+    
+    def validate_oauth_state(self, state, user_id=None):
+        """
+        Validate an OAuth state from the database.
+        
+        Args:
+            state: The state value to validate
+            user_id: Optional user ID to verify the state belongs to this user
+        
+        Returns:
+            OAuthState object if valid, None otherwise
+        """
+        try:
+            oauth_state = OAuthState.query.filter_by(state=state).first()
+            
+            if not oauth_state:
+                print(f"❌ OAuth state not found: {state[:10]}...")
+                return None
+            
+            # Check if user_id matches (if provided)
+            if user_id and oauth_state.user_id != user_id:
+                print(f"❌ OAuth state user mismatch: expected {user_id}, got {oauth_state.user_id}")
+                return None
+            
+            # Check if state is expired
+            if oauth_state.is_expired():
+                print(f"❌ OAuth state expired: {oauth_state.expires_at}")
+                return None
+            
+            # Check if state has already been used
+            if oauth_state.used:
+                print(f"❌ OAuth state already used")
+                return None
+            
+            print(f"✅ OAuth state validated for user {oauth_state.user_id}")
+            return oauth_state
+            
+        except Exception as e:
+            print(f"❌ Error validating OAuth state: {str(e)}")
+            return None
+    
+    def mark_state_as_used(self, state):
+        """
+        Mark an OAuth state as used to prevent replay attacks.
+        
+        Args:
+            state: The state value to mark as used
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            oauth_state = OAuthState.query.filter_by(state=state).first()
+            if oauth_state:
+                oauth_state.used = True
+                db.session.commit()
+                print(f"✅ OAuth state marked as used: {state[:10]}...")
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ Error marking state as used: {str(e)}")
+            db.session.rollback()
+            return False
+    
+    def cleanup_expired_states(self, older_than_hours=24):
+        """
+        Clean up expired and old OAuth states from the database.
+        This should be run periodically (e.g., via a scheduled task).
+        
+        Args:
+            older_than_hours: Delete states older than this many hours (default: 24)
+        
+        Returns:
+            Number of states deleted
+        """
+        try:
+            now = datetime.now(timezone.utc)
+            cutoff_time = now - timedelta(hours=older_than_hours)
+            deleted = OAuthState.query.filter(
+                (OAuthState.expires_at < now) | 
+                (OAuthState.created_at < cutoff_time)
+            ).delete()
+            
+            db.session.commit()
+            print(f"✅ Cleaned up {deleted} expired OAuth states")
+            return deleted
+            
+        except Exception as e:
+            print(f"❌ Error cleaning up OAuth states: {str(e)}")
+            db.session.rollback()
+            return 0
 
 

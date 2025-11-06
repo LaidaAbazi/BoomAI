@@ -12,7 +12,7 @@ bp = Blueprint('linkedin_oauth', __name__, url_prefix='/linkedin')
 @swag_from({
     'tags': ['LinkedIn'],
     'summary': 'Initialize LinkedIn sharing flow',
-    'description': 'Initialize the LinkedIn OAuth sharing flow. Stores content in session and generates OAuth URL for authentication.',
+    'description': 'Initialize the LinkedIn OAuth sharing flow. Stores content and state in database and generates OAuth URL for authentication.',
     'requestBody': {
         'required': True,
         'content': {
@@ -55,7 +55,7 @@ bp = Blueprint('linkedin_oauth', __name__, url_prefix='/linkedin')
 def share_init():
     """
     Initialize LinkedIn sharing flow
-    Stores content in session and generates OAuth state
+    Stores content and state in database (not session) for multi-host support
     """
     try:
         data = request.get_json()
@@ -66,20 +66,29 @@ def share_init():
         
         user_id = get_current_user_id()
         
-        # Generate state for CSRF protection
-        state = secrets.token_urlsafe(32)
-        
-        # Store state and content in session
-        session[f'linkedin_oauth_state_{user_id}'] = state
-        session['linkedin_oauth_state'] = state
-        session['linkedin_share_content'] = content
-        
-        print(f"🔐 LinkedIn OAuth state generated for user {user_id}: {state[:10]}...")
-        print(session['linkedin_oauth_state'])
-        print(session[f'linkedin_oauth_state_{user_id}'])
-        # Get OAuth URL
+        # Determine redirect URI based on request host
         oauth_service = LinkedInOAuthService()
-        oauth_url = oauth_service.get_oauth_url(state=state)
+        request_host = request.host
+        request_scheme = request.scheme
+        redirect_uri = oauth_service.get_redirect_uri_for_host(request_host, request_scheme)
+        
+        print(f"🌐 Using redirect URI: {redirect_uri} for host: {request_host}")
+        
+        # Create and store OAuth state in database (with content)
+        state = oauth_service.create_oauth_state(
+            user_id=user_id,
+            redirect_uri=redirect_uri,
+            content=content,
+            expiration_minutes=10
+        )
+        
+        if not state:
+            return jsonify({"error": "Failed to create OAuth state"}), 500
+        
+        print(f"🔐 LinkedIn OAuth state generated and stored in DB for user {user_id}: {state[:10]}...")
+        
+        # Generate OAuth URL with the correct redirect_uri
+        oauth_url = oauth_service.get_oauth_url(state=state, redirect_uri=redirect_uri)
         
         return jsonify({
             "success": True,
@@ -88,6 +97,8 @@ def share_init():
         
     except Exception as e:
         print(f"❌ Error initializing LinkedIn share: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": "Failed to initialize LinkedIn share"}), 500
 
 @bp.route('/callback', methods=['GET'])
@@ -134,10 +145,9 @@ def callback():
     print("🔐 LinkedIn OAuth callback received")
     """
     Handle OAuth callback from LinkedIn
-    Exchange code for token, get user info, create post, redirect to status page
+    Validates state from database, exchanges code for token, gets user info, redirects to form
     """
     try:
-
         # Get authorization code and state from callback
         code = request.args.get('code')
         state = request.args.get('state')
@@ -149,31 +159,32 @@ def callback():
         
         if not code:
             return redirect(url_for('linkedin_oauth.share_status', error='no_code'))
-    
+        
+        if not state:
+            return redirect(url_for('linkedin_oauth.share_status', error='no_state'))
         
         user_id = get_current_user_id()
         print(f"🔐 User ID: {user_id}")
-        print(f"🔐 State: {state}")
+        print(f"🔐 State received: {state[:10]}...")
 
-        # Validate state parameter
-        stored_state = session.get('linkedin_oauth_state') or session.get(f'linkedin_oauth_state_{user_id}')
+        # Validate state parameter from database
+        oauth_service = LinkedInOAuthService()
+        oauth_state = oauth_service.validate_oauth_state(state, user_id=user_id)
         
-        if state and stored_state and state != stored_state:
-            print(f"⚠️ State parameter mismatch for user {user_id}")
-            return redirect(url_for('linkedin_oauth.share_status', error='state_mismatch'))
+        if not oauth_state:
+            print(f"⚠️ Invalid or expired state for user {user_id}")
+            return redirect(url_for('linkedin_oauth.share_status', error='invalid_state'))
         
-        if not stored_state:
-            print(f"⚠️ No stored state found for user {user_id}")
-            return redirect(url_for('linkedin_oauth.share_status', error='no_state'))
-        
-        # Get content from session
-        content = session.get('linkedin_share_content')
+        # Get content from stored state
+        content = oauth_state.content
         if not content:
             return redirect(url_for('linkedin_oauth.share_status', error='no_content'))
         
-        # Exchange code for access token
-        oauth_service = LinkedInOAuthService()
-        token_data = oauth_service.exchange_code_for_token(code)
+        # Get the redirect_uri that was used for this OAuth request
+        redirect_uri = oauth_state.redirect_uri
+        
+        # Exchange code for access token (must use the same redirect_uri)
+        token_data = oauth_service.exchange_code_for_token(code, redirect_uri=redirect_uri)
         
         if not token_data:
             return redirect(url_for('linkedin_oauth.share_status', error='token_exchange_failed'))
@@ -208,19 +219,21 @@ def callback():
         else:
             print(f"✅ Successfully saved LinkedIn token to database for user {user_id}")
         
-        # Store token and user info temporarily in session for form confirmation
+        # Mark state as used to prevent replay attacks
+        oauth_service.mark_state_as_used(state)
+        
+        # Store token, user info, and content temporarily in session for form confirmation
         session['linkedin_access_token'] = access_token
         session['linkedin_author_id'] = user_info.get('sub')
-        
-        # Clear OAuth state but keep content
-        session.pop('linkedin_oauth_state', None)
-        session.pop(f'linkedin_oauth_state_{user_id}', None)
+        session['linkedin_share_content'] = content
         
         # Redirect to form page where user can confirm and post
         return redirect(url_for('linkedin_oauth.share_form'))
             
     except Exception as e:
         print(f"❌ Error in LinkedIn OAuth callback: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return redirect(url_for('linkedin_oauth.share_status', error='callback_failed'))
 
 @bp.route('/share/form')
