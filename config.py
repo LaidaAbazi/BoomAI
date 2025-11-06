@@ -30,6 +30,12 @@ class Config:
     PICTORY_CLIENT_SECRET = os.environ.get('PICTORY_CLIENT_SECRET')
     PICTORY_USER_ID = os.environ.get('PICTORY_USER_ID')
     WONDERCRAFT_API_KEY = os.environ.get('WONDERCRAFT_API_KEY')
+    
+    # LinkedIn Integration
+    LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID')
+    LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
+    LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI')
+    LINKEDIN_TOKEN_ENCRYPTION_KEY = os.environ.get('LINKEDIN_TOKEN_ENCRYPTION_KEY')
 
 class DevelopmentConfig(Config):
     """Development configuration"""

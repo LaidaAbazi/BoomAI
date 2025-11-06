@@ -33,10 +33,23 @@ class User(db.Model):
     teams_scope = Column(String(500), nullable=True)  # Store granted scopes
     teams_authed_at = Column(DateTime(timezone=True), nullable=True)  # When OAuth was completed
 
+    # LinkedIn integration fields
+    linkedin_connected = Column(Boolean, default=False)
+    linkedin_member_id = Column(String(100), nullable=True)  # LinkedIn Member ID (sub)
+    linkedin_access_token = Column(Text, nullable=True)  # Encrypted access token (TEXT for long encrypted values)
+    linkedin_refresh_token = Column(Text, nullable=True)  # Encrypted refresh token (TEXT for long encrypted values)
+    linkedin_scope = Column(String(500), nullable=True)  # Store granted scopes
+    linkedin_name = Column(String(200), nullable=True)  # LinkedIn display name
+    linkedin_email = Column(String(255), nullable=True)  # LinkedIn email (if available)
+    linkedin_token_expires_at = Column(DateTime(timezone=True), nullable=True)  # Token expiration timestamp
+    linkedin_authed_at = Column(DateTime(timezone=True), nullable=True)  # When OAuth was completed
+
     # Story usage tracking fields
     stories_used_this_month = Column(Integer, default=0)
     extra_credits = Column(Integer, default=0)
     last_reset_date = Column(Date, nullable=True)
+
+
     
     # Subscription status
     has_active_subscription = Column(Boolean, default=False)
@@ -119,9 +132,9 @@ class CaseStudy(db.Model):
     podcast_audio_data = Column(db.LargeBinary, nullable=True)
     podcast_audio_mime = Column(String(64), nullable=True)
     podcast_audio_size = Column(Integer, nullable=True)
-    podcast_audio_data = Column(db.LargeBinary, nullable=True)  # NEW
-    podcast_audio_mime = Column(String(64), nullable=True)     # NEW
-    podcast_audio_size = Column(Integer, nullable=True)         # NEW
+    # podcast_audio_data = Column(db.LargeBinary, nullable=True)  NEW
+    # podcast_audio_mime = Column(String(64), nullable=True)     NEW
+    # podcast_audio_size = Column(Integer, nullable=True)         NEW
     
     # Story counting field
     story_counted = Column(Boolean, default=False)

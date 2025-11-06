@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Share Status - StoryBoom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0077B5 0%, #00A0DC 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0077B5 0%, #00A0DC 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #10B981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+        
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #EF4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+        
+        .message {
+            font-size: 1.2rem;
+            color: #374151;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .details {
+            font-size: 0.9rem;
+            color: #6B7280;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #F9FAFB;
+            border-radius: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #0077B5 0%, #00A0DC 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 119, 181, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6B7280;
+            margin-left: 10px;
+        }
+        
+        .error-message {
+            color: #EF4444;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LinkedIn Share Status</h1>
+            <p>Your post sharing result</p>
+        </div>
+        
+        <div class="content">
+            {% if success %}
+                <div class="success-icon">✓</div>
+                <div class="message">
+                    <strong>Success!</strong><br>
+                    Your LinkedIn post has been shared successfully!
+                </div>
+                <div class="details">
+                    The content is now live on your LinkedIn profile. You can view it on LinkedIn to see the engagement.
+                </div>
+                <a href="/dashboard" class="btn">Return to Dashboard</a>
+            {% else %}
+                <div class="error-icon">✗</div>
+                <div class="message error-message">
+                    <strong>Oops!</strong><br>
+                    There was an issue sharing your post to LinkedIn.
+                </div>
+                <div class="details">
+                    {% if error %}
+                        <strong>Error:</strong> {{ error }}<br>
+                    {% endif %}
+                    {% if details %}
+                        <strong>Details:</strong> {{ details }}
+                    {% endif %}
+                    {% if not error and not details %}
+                        An unexpected error occurred. Please try again.
+                    {% endif %}
+                </div>
+                <a href="/dashboard" class="btn">Return to Dashboard</a>
+                <a href="/dashboard" class="btn btn-secondary">Try Again</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
+
+

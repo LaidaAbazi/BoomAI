@@ -68,7 +68,8 @@ def dashboard():
         session.clear()
         return redirect(url_for('main.login'))
     
-    return render_template('dashboard.html', user_id=user_id)
+    from flask import current_app
+    return render_template('dashboard.html', user_id=user_id, base_url=current_app.config.get('BASE_URL'))
 
 @bp.route("/feedback")
 def feedback():
@@ -87,6 +88,16 @@ def subscription_wall():
     
     # Pass user_id to template
     return render_template('subscription_wall.html', user_id=user_id)
+
+@bp.route("/forgot-password")
+def forgot_password_page():
+    """Serve the forgot password page"""
+    return render_template('forgot_password.html')
+
+@bp.route("/reset-password/<token>")
+def reset_password_page(token):
+    """Serve the reset password page"""
+    return render_template('reset_password.html')
 
 @bp.route("/client")
 def client():
@@ -1264,7 +1275,21 @@ def store_solution_provider_session(provider_session_id, cleaned_case_study):
         # Create the CaseStudy (links to user)
         # Extract the title from the first line of the case study content
         lines = cleaned_case_study.split('\n')
-        title = lines[0].strip() if lines else "Case Study"
+        base_title = lines[0].strip() if lines else "Case Study"
+
+        # Helper to strip any existing "Something: " prefix
+        def strip_existing_prefix(text):
+            if ':' in text:
+                parts = text.split(':', 1)
+                # Only treat it as a prefix if left part is reasonably short (likely a name)
+                if len(parts[0].strip()) <= 100:
+                    return parts[1].strip()
+            return text.strip()
+
+        # Format as "Client Name: Title"
+        client_name = (extracted_names.get("partner_entity") or "Unknown").strip()
+        title_core = strip_existing_prefix(base_title)
+        title = f"{client_name}: {title_core}" if client_name else title_core
         
         print(f"🔍 DEBUG: Extracted title from first line: '{title}'")
         print(f"🔍 DEBUG: First few lines of case study:")

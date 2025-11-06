@@ -982,6 +982,189 @@
       background: #e5e7eb;
       margin: 8px 0;
     }
+
+    /* FAQ Button Styles */
+    .faq-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #06B6D4 0%, #312E81 100%);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .faq-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+    }
+
+    /* FAQ Modal Overlay */
+    .faq-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .faq-modal-overlay.hidden {
+      display: none;
+    }
+
+    /* FAQ Modal Content */
+    .faq-modal {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .faq-modal-header {
+      padding: 28px 32px;
+      border-bottom: 1px solid #E0E7FF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      z-index: 10;
+    }
+
+    .faq-modal-header h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #312E81;
+      letter-spacing: 0.02em;
+    }
+
+    .faq-close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #888;
+      cursor: pointer;
+      padding: 4px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .faq-close-btn:hover {
+      background: #f3f4f6;
+      color: #312E81;
+    }
+
+    .faq-modal-body {
+      padding: 24px 32px 32px 32px;
+    }
+
+    /* FAQ Item */
+    .faq-item {
+      margin-bottom: 16px;
+      border: 1px solid #E0E7FF;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .faq-item:hover {
+      box-shadow: 0 2px 8px rgba(49, 46, 129, 0.1);
+    }
+
+    .faq-question {
+      padding: 20px 24px;
+      background: #F8FAFC;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #312E81;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .faq-question:hover {
+      background: #F1F5F9;
+    }
+
+    .faq-question i {
+      font-size: 1.2rem;
+      color: #06B6D4;
+      transition: transform 0.3s ease;
+    }
+
+    .faq-question.active i {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      padding: 0 24px;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .faq-answer.active {
+      padding: 20px 24px;
+      max-height: 1000px;
+    }
+
+    .faq-answer-text {
+      color: #666;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    /* Smooth scrollbar for modal */
+    .faq-modal::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .faq-modal::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 20px;
+    }
+
+    .faq-modal::-webkit-scrollbar-thumb {
+      background: #06B6D4;
+      border-radius: 20px;
+    }
+
+    .faq-modal::-webkit-scrollbar-thumb:hover {
+      background: #312E81;
+    }
   </style>
 </head>
 <body>
@@ -1081,6 +1264,81 @@
     </div>
     <div class="main-content" id="mainContent">
       <div style="color:#888; font-size:1.1rem; text-align:center; margin-top:80px;">Select a story from the left to view details.</div>
+    </div>
+  </div>
+
+  <!-- FAQ Button -->
+  <button id="faqButton" class="faq-button" onclick="openFaqModal()">?</button>
+
+  <!-- FAQ Modal -->
+  <div id="faqModalOverlay" class="faq-modal-overlay hidden" onclick="closeFaqModal(event)">
+    <div class="faq-modal" onclick="event.stopPropagation()">
+      <div class="faq-modal-header">
+        <h2>Frequently Asked Questions</h2>
+        <button class="faq-close-btn" onclick="closeFaqModal()">×</button>
+      </div>
+      <div class="faq-modal-body">
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            How do I start an interview? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              To begin an interview with our agent, click "New Story" — you'll find it either in the top-left corner or at the center of the homepage.<br><br>
+              You'll then be redirected to a new page where you can click "Start Story" to begin your interview session.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            How do I generate my story? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              Once you've finished the interview, simply click the "End" button.<br><br>
+              Your story will then be automatically generated — no extra steps required!
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            How can I invite my client to my story? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              To invite a client, go to your generated story summary and open the "Invite" tab (next to the current one).<br><br>
+              Click "Generate Client Link" to create a unique invitation link, then share it directly with your client.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            Can I search for specific stories? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              Yes! You can search for stories by their titles or labels.<br><br>
+              To add labels, navigate to your story summary and click the "Add Label" button next to the title — this makes searching and organizing stories much easier.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            Can I give feedback? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              Absolutely!<br><br>
+              Click the "AI Feedback" button located in the bottom-left corner of the page.<br><br>
+              You'll have a brief chat with our agent to share your thoughts and suggestions.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -1844,6 +2102,11 @@
                 if (storyIndex !== -1) {
                   allStories[storyIndex].linkedin_post = data.linkedin_post;
                 }
+                // Enable share button if it exists
+                const shareBtn = linkedinSection.querySelector('.linkedin-share-btn');
+                if (shareBtn) {
+                  shareBtn.disabled = false;
+                }
                 alert('LinkedIn post generated successfully!');
               } else {
                 alert('Failed to generate LinkedIn post: ' + data.message);
@@ -1855,7 +2118,70 @@
               linkedinBtn.textContent = 'Generate LinkedIn Post';
             }
           };
-          linkedinSection.appendChild(linkedinBtn);
+
+          // Create button row container
+          const btnRow1 = document.createElement('div');
+          btnRow1.style.display = 'flex';
+          btnRow1.style.gap = '12px';
+          btnRow1.style.marginTop = '12px';
+          btnRow1.appendChild(linkedinBtn);
+
+          // Add "Share to LinkedIn" button
+          const shareBtn = document.createElement('button');
+          shareBtn.className = 'linkedin-share-btn';
+          shareBtn.textContent = 'Share to LinkedIn';
+          shareBtn.style.background = 'linear-gradient(90deg, #0077B5 0%, #00A0DC 100%)';
+          shareBtn.style.color = '#fff';
+          shareBtn.style.border = 'none';
+          shareBtn.style.borderRadius = '10px';
+          shareBtn.style.padding = '12px 24px';
+          shareBtn.style.fontSize = '1rem';
+          shareBtn.style.fontWeight = '600';
+          shareBtn.style.cursor = 'pointer';
+          shareBtn.style.transition = 'all 0.2s';
+          shareBtn.style.boxShadow = '0 2px 8px rgba(0, 119, 181, 0.15)';
+          shareBtn.style.flex = '1';
+          shareBtn.disabled = !story.linkedin_post;
+
+          shareBtn.onclick = async () => {
+            const postContent = story.linkedin_post || linkedinContent.textContent;
+            
+            if (!postContent || postContent.trim() === '' || postContent === 'No LinkedIn post generated yet.') {
+              alert('Please generate a LinkedIn post first before sharing.');
+              return;
+            }
+
+            shareBtn.disabled = true;
+            shareBtn.textContent = 'Sharing...';
+            
+            try {
+              // Copy the content and initiate LinkedIn share
+              const res = await fetch('/linkedin/share/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: postContent })
+              });
+              
+              const data = await res.json();
+              
+              if (data.success && data.oauth_url) {
+                // Redirect to LinkedIn OAuth
+                window.location.href = data.oauth_url;
+              } else {
+                alert('Failed to initiate LinkedIn share. Please try again.');
+                shareBtn.disabled = false;
+                shareBtn.textContent = 'Share to LinkedIn';
+              }
+            } catch (error) {
+              console.error('LinkedIn share error:', error);
+              alert('Failed to share to LinkedIn. Please try again.');
+              shareBtn.disabled = false;
+              shareBtn.textContent = 'Share to LinkedIn';
+            }
+          };
+
+          btnRow1.appendChild(shareBtn);
+          linkedinSection.appendChild(btnRow1);
           tabContent.appendChild(linkedinSection);
 
           // --- PODCAST SECTION ---
@@ -3093,6 +3419,8 @@ The email has been sent automatically from your account with PDF attachment.`);
               }
             };
             btnRow.appendChild(slackBtn);
+            
+            // LinkedIn share button removed per request
             
             // Add Slack Disconnect button (only show if connected)
             const slackDisconnectBtn = document.createElement('button');
@@ -4770,6 +5098,55 @@ The email has been sent automatically from your account with PDF attachment.`);
       }
     `;
     document.head.appendChild(style);
+
+    // FAQ Modal Functions
+    function openFaqModal() {
+      const modalOverlay = document.getElementById('faqModalOverlay');
+      modalOverlay.classList.remove('hidden');
+      
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeFaqModal(event) {
+      // Close when clicking outside the modal or on the close button
+      if (event && event.target.id === 'faqModalOverlay') {
+        event.target.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      } else if (!event || event.target.classList.contains('faq-close-btn')) {
+        const modalOverlay = document.getElementById('faqModalOverlay');
+        modalOverlay.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      }
+      
+      // Close all open FAQ answers when closing the modal
+      const openAnswers = document.querySelectorAll('.faq-answer.active');
+      const openQuestions = document.querySelectorAll('.faq-question.active');
+      openAnswers.forEach(answer => answer.classList.remove('active'));
+      openQuestions.forEach(question => question.classList.remove('active'));
+    }
+
+    function toggleFaqAnswer(questionElement) {
+      // Toggle the active class on the question
+      questionElement.classList.toggle('active');
+      
+      // Get the answer element (next sibling)
+      const answerElement = questionElement.nextElementSibling;
+      if (answerElement && answerElement.classList.contains('faq-answer')) {
+        answerElement.classList.toggle('active');
+      }
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modalOverlay = document.getElementById('faqModalOverlay');
+        if (!modalOverlay.classList.contains('hidden')) {
+          closeFaqModal();
+        }
+      }
+    });
   </script>
+<!-- LinkedIn OAuth resume logic removed per request -->
 </body>
 </html> 

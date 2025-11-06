@@ -896,10 +896,23 @@ def save_final_summary():
         partner_entity = names["partner_entity"]
         project_title = names["project_title"]
 
-        # Update CaseStudy name fields (but keep title as is - it should be a short hook)
+        # Update CaseStudy name fields
         case_study.provider_name = lead_entity
         case_study.client_name = partner_entity
         case_study.project_name = project_title
+
+        # Enforce title format: "Client Name: Title"
+        def strip_existing_prefix(text):
+            if not text:
+                return ""
+            if ':' in text:
+                parts = text.split(':', 1)
+                if len(parts[0].strip()) <= 100:
+                    return parts[1].strip()
+            return text.strip()
+
+        current_title_core = strip_existing_prefix(case_study.title or "")
+        case_study.title = f"{partner_entity}: {current_title_core}" if partner_entity else current_title_core
 
         db.session.commit()
 
@@ -1009,7 +1022,7 @@ def generate_pdf():
             pdf.multi_cell(0, 10, summary_text)
 
         # Save PDF to database (not filesystem)
-        pdf_bytes = pdf.output(dest='S').encode('latin-1')
+        pdf_bytes = pdf.output(dest='S')
         case_study.final_summary_pdf_data = pdf_bytes
         db.session.commit()
 

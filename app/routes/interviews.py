@@ -464,15 +464,27 @@ def generate_full_case_study():
             names = ai_service.extract_names_from_case_study(main_story)
             print(f"✅ Using extracted names from final summary: {names}")
         
-        # Update case study with extracted names (but keep the title as a short hook)
+        # Update case study with extracted names and enforce title prefix
         lead_entity = names["lead_entity"]
         partner_entity = names["partner_entity"]
         project_title = names["project_title"]
-        
-        # Don't override the title - keep the short hook that was already generated
+
         case_study.provider_name = lead_entity
         case_study.client_name = partner_entity
         case_study.project_name = project_title
+
+        # Enforce title format: "Client Name: Title"
+        def strip_existing_prefix(text):
+            if not text:
+                return ""
+            if ':' in text:
+                parts = text.split(':', 1)
+                if len(parts[0].strip()) <= 100:
+                    return parts[1].strip()
+            return text.strip()
+
+        current_title_core = strip_existing_prefix(case_study.title or "")
+        case_study.title = f"{partner_entity}: {current_title_core}" if partner_entity else current_title_core
         
         # Record story creation and update user credits (this is when the story is actually completed)
         # Only count the story once per case study, not on every call to generate_full_case_study

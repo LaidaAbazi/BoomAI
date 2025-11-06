@@ -337,6 +337,14 @@ def create_app(config_name=None):
         # OAuth routes not available, continue without them
         pass
     
+    # Register LinkedIn OAuth blueprint
+    try:
+        from app.routes import linkedin_oauth
+        app.register_blueprint(linkedin_oauth.bp)
+    except ImportError:
+        # LinkedIn OAuth routes not available, continue without them
+        pass
+    
     # Register main routes
     from app.routes import main
     app.register_blueprint(main.bp)

@@ -645,6 +645,9 @@ def generate_podcast():
             case_study.podcast_job_id = job_id
             case_study.podcast_status = 'processing'
             case_study.podcast_created_at = datetime.now(UTC)
+            case_study.podcast_audio_data = podcast_data.get('audio_data')
+            case_study.podcast_audio_mime = podcast_data.get('audio_mime')
+            case_study.podcast_audio_size = podcast_data.get('audio_size')
             db.session.commit()
             
             return jsonify({
@@ -763,9 +766,11 @@ def check_podcast_status(job_id):
         )
         
         if response.status_code == 404:
+            print(f"🔍 DEBUG: Podcast not found: {response.text}")
             return jsonify({"status": "not_ready", "message": "Podcast not ready yet"}), 200
         
         if response.status_code != 200:
+            print(f"🔍 DEBUG: Wondercraft API error: {response.text}")
             error_msg = f"Wondercraft API error: {response.text}"
             return jsonify({"error": error_msg}), 500
             

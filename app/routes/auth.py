@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, request, jsonify, session
 from flask_mail import Message
 from sqlalchemy import create_engine
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime, timedelta
 from app.models import db, User
@@ -455,3 +455,80 @@ def send_email(to, link):
         mail.send(msg)
     except Exception as e:
         print(f"Email sending failed: {e}")
+
+
+# =========================
+# Password reset endpoints
+# =========================
+
+@bp.route('/forgot_password', methods=['POST'])
+def forgot_password():
+    try:
+        data = request.get_json() or {}
+        email = (data.get('email') or '').strip().lower()
+        # Always respond success to avoid account enumeration
+        if not email:
+            return jsonify({"success": True}), 200
+
+        user = User.query.filter_by(email=email).first()
+        if user and user.is_verified:
+            try:
+                token = serializer.dumps(email, salt='password-reset')
+                BASE_URL = current_app.config.get('BASE_URL', os.getenv("BASE_URL", "http://127.0.0.1:10000"))
+                reset_link = f"{BASE_URL}/reset-password/{token}"
+                _send_password_reset_email(email, reset_link)
+            except Exception as e:
+                logger.error(f"Reset email error: {e}")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        logger.error(f"Forgot password error: {e}")
+        # Still do not disclose details
+        return jsonify({"success": True}), 200
+
+
+@bp.route('/reset_password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json() or {}
+        token = data.get('token')
+        new_password = data.get('password')
+
+        if not token or not new_password or len(new_password) < 8:
+            return jsonify({"success": False, "error": "Invalid request"}), 400
+
+        try:
+            email = serializer.loads(token, salt='password-reset', max_age=3600)
+        except Exception:
+            return jsonify({"success": False, "error": "Invalid or expired token"}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"success": False, "error": "Invalid token"}), 400
+
+        user.password_hash = generate_password_hash(new_password)
+        user.failed_login_attempts = 0
+        user.account_locked_until = None
+        db.session.commit()
+        return jsonify({"success": True, "message": "Password reset successful"}), 200
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        return jsonify({"success": False, "error": "Server error"}), 500
+
+
+def _send_password_reset_email(to_email, reset_link):
+    try:
+        msg = Message('Storyboom.ai — Reset your password', recipients=[to_email])
+        user = User.query.filter_by(email=to_email).first()
+        first_name = user.first_name if user and hasattr(user, 'first_name') and user.first_name else "there"
+        msg.body = (
+            f"Hi {first_name},\n\n"
+            "We received a request to reset your password. If you made this request, "
+            "please click the link below to set a new password (valid for 1 hour):\n\n"
+            f"{reset_link}\n\n"
+            "If you did not request this, you can safely ignore this email.\n\n"
+            "Best regards,\n"
+            "The Storyboom team"
+        )
+        mail.send(msg)
+    except Exception as e:
+        logger.error(f"Reset email send failed: {e}")
