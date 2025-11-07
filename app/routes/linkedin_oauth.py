@@ -12,7 +12,7 @@ bp = Blueprint('linkedin_oauth', __name__, url_prefix='/linkedin')
 @swag_from({
     'tags': ['LinkedIn'],
     'summary': 'Initialize LinkedIn sharing flow',
-    'description': 'Initialize the LinkedIn OAuth sharing flow. Stores content and state in database and generates OAuth URL for authentication.',
+    'description': 'Initialize the LinkedIn OAuth sharing flow. Stores content and state in database and generates OAuth URL for authentication. Set return_format="json" to receive JSON response in callback instead of redirect.',
     'requestBody': {
         'required': True,
         'content': {
@@ -24,6 +24,12 @@ bp = Blueprint('linkedin_oauth', __name__, url_prefix='/linkedin')
                         'content': {
                             'type': 'string',
                             'description': 'The LinkedIn post content to share'
+                        },
+                        'return_format': {
+                            'type': 'string',
+                            'enum': ['redirect', 'json'],
+                            'default': 'redirect',
+                            'description': 'Response format: "redirect" (default) redirects to status page, "json" returns JSON response in callback'
                         }
                     }
                 }
@@ -56,10 +62,13 @@ def share_init():
     """
     Initialize LinkedIn sharing flow
     Stores content and state in database (not session) for multi-host support
+    
+    Optional: Set return_format='json' to receive JSON response instead of redirect
     """
     try:
         data = request.get_json()
         content = data.get('content')
+        return_format = data.get('return_format', 'redirect')  # 'json' or 'redirect' (default)
         
         if not content:
             return jsonify({"error": "Content is required"}), 400
@@ -72,7 +81,14 @@ def share_init():
         request_scheme = request.scheme
         redirect_uri = oauth_service.get_redirect_uri_for_host(request_host, request_scheme)
         
+        # Add return_format to redirect_uri as query parameter (LinkedIn will preserve it)
+        if return_format == 'json':
+            from urllib.parse import urlencode
+            separator = '&' if '?' in redirect_uri else '?'
+            redirect_uri = f"{redirect_uri}{separator}return_format=json"
+        
         print(f"🌐 Using redirect URI: {redirect_uri} for host: {request_host}")
+        print(f"📋 Return format: {return_format}")
         
         # Create and store OAuth state in database (with content)
         state = oauth_service.create_oauth_state(
@@ -102,50 +118,13 @@ def share_init():
         return jsonify({"error": "Failed to initialize LinkedIn share"}), 500
 
 @bp.route('/callback', methods=['GET'])
-@swag_from({
-    'tags': ['LinkedIn'],
-    'summary': 'LinkedIn OAuth callback',
-    'description': 'Handle OAuth callback from LinkedIn. Exchanges authorization code for access token, retrieves user info, and redirects to confirmation form.',
-    'parameters': [
-        {
-            'name': 'code',
-            'in': 'query',
-            'required': False,
-            'schema': {'type': 'string'},
-            'description': 'Authorization code from LinkedIn OAuth'
-        },
-        {
-            'name': 'state',
-            'in': 'query',
-            'required': False,
-            'schema': {'type': 'string'},
-            'description': 'State parameter for CSRF protection'
-        },
-        {
-            'name': 'error',
-            'in': 'query',
-            'required': False,
-            'schema': {'type': 'string'},
-            'description': 'Error code if OAuth authorization failed'
-        }
-    ],
-    'responses': {
-        302: {
-            'description': 'Redirects to share form on success, or status page on error',
-            'headers': {
-                'Location': {
-                    'schema': {'type': 'string'},
-                    'description': 'Redirect URL'
-                }
-            }
-        }
-    }
-})
+# No Swagger decorator - this is an internal OAuth callback endpoint called by LinkedIn, not by frontend
 def callback():
     print("🔐 LinkedIn OAuth callback received")
     """
     Handle OAuth callback from LinkedIn
-    Validates state from database, exchanges code for token, gets user info, redirects to form
+    Validates state, exchanges code for token, saves token, and automatically posts content to LinkedIn.
+    Then redirects to status page.
     """
     try:
         # Get authorization code and state from callback
@@ -153,14 +132,32 @@ def callback():
         state = request.args.get('state')
         error = request.args.get('error')
         
+        # Check if frontend wants JSON response
+        return_format = request.args.get('return_format', 'redirect')
+        
         if error:
             print(f"❌ LinkedIn OAuth error: {error}")
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": f"LinkedIn OAuth error: {error}"
+                }), 400
             return redirect(url_for('linkedin_oauth.share_status', error=error))
         
         if not code:
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": "Authorization code not provided"
+                }), 400
             return redirect(url_for('linkedin_oauth.share_status', error='no_code'))
         
         if not state:
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": "State parameter not provided"
+                }), 400
             return redirect(url_for('linkedin_oauth.share_status', error='no_state'))
         
         user_id = get_current_user_id()
@@ -173,20 +170,44 @@ def callback():
         
         if not oauth_state:
             print(f"⚠️ Invalid or expired state for user {user_id}")
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": "Invalid or expired OAuth state"
+                }), 400
             return redirect(url_for('linkedin_oauth.share_status', error='invalid_state'))
         
         # Get content from stored state
         content = oauth_state.content
         if not content:
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": "Content not found in OAuth state"
+                }), 400
             return redirect(url_for('linkedin_oauth.share_status', error='no_content'))
         
-        # Get the redirect_uri that was used for this OAuth request
+        # Get the redirect_uri that was used for this OAuth request (remove return_format if present)
         redirect_uri = oauth_state.redirect_uri
+        # Remove return_format from redirect_uri for token exchange (LinkedIn needs exact match)
+        from urllib.parse import urlparse, urlencode, parse_qs
+        parsed = urlparse(redirect_uri)
+        query_params = parse_qs(parsed.query)
+        query_params.pop('return_format', None)  # Remove return_format
+        clean_query = urlencode(query_params, doseq=True)
+        redirect_uri_clean = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        if clean_query:
+            redirect_uri_clean = f"{redirect_uri_clean}?{clean_query}"
         
-        # Exchange code for access token (must use the same redirect_uri)
-        token_data = oauth_service.exchange_code_for_token(code, redirect_uri=redirect_uri)
+        # Exchange code for access token (must use the same redirect_uri without return_format)
+        token_data = oauth_service.exchange_code_for_token(code, redirect_uri=redirect_uri_clean)
         
         if not token_data:
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": "Failed to exchange authorization code for access token"
+                }), 500
             return redirect(url_for('linkedin_oauth.share_status', error='token_exchange_failed'))
         
         access_token = token_data.get('access_token')
@@ -195,6 +216,11 @@ def callback():
         user_info = oauth_service.get_user_info(access_token)
 
         if not user_info or not user_info.get('sub'):
+            if return_format == 'json':
+                return jsonify({
+                    "success": False,
+                    "error": "Failed to retrieve user information from LinkedIn"
+                }), 500
             return redirect(url_for('linkedin_oauth.share_status', error='user_info_failed'))
         
         print(f"📝 LinkedIn OAuth data received for user {user_id}:")
@@ -213,7 +239,7 @@ def callback():
         )
         
         if not save_success:
-            print(f"⚠️ Failed to save LinkedIn token for user {user_id}, continuing with session storage")
+            print(f"⚠️ Failed to save LinkedIn token for user {user_id}, continuing...")
             print(f"   This usually means the database columns don't exist yet.")
             print(f"   Please run: python migrations/add_linkedin_fields.py")
         else:
@@ -222,129 +248,68 @@ def callback():
         # Mark state as used to prevent replay attacks
         oauth_service.mark_state_as_used(state)
         
-        # Store token, user info, and content temporarily in session for form confirmation
-        session['linkedin_access_token'] = access_token
-        session['linkedin_author_id'] = user_info.get('sub')
-        session['linkedin_share_content'] = content
+        # AUTOMATICALLY POST THE CONTENT (no preview needed)
+        author_id = user_info.get('sub')
+        print(f"📤 Automatically posting content to LinkedIn for user {user_id}...")
+        post_result = oauth_service.create_ugc_post(access_token, author_id, content)
         
-        # Redirect to form page where user can confirm and post
-        return redirect(url_for('linkedin_oauth.share_form'))
+        # Check if frontend wants JSON response instead of redirect
+        return_format = request.args.get('return_format', 'redirect')
+        
+        if return_format == 'json':
+            # Return JSON response for frontend to handle
+            if post_result.get('success'):
+                print(f"✅ LinkedIn post created successfully: {post_result.get('post_id')}")
+                return jsonify({
+                    "success": True,
+                    "post_id": post_result.get('post_id'),
+                    "message": "Post created successfully",
+                    "linkedin_member_id": user_info.get('sub'),
+                    "linkedin_name": user_info.get('name')
+                }), 200
+            else:
+                error_msg = post_result.get('error', 'Unknown error')
+                print(f"❌ Failed to create LinkedIn post: {error_msg}")
+                return jsonify({
+                    "success": False,
+                    "error": error_msg,
+                    "status_code": post_result.get('status_code')
+                }), 500
+        else:
+            # Default: Redirect to status page
+            if post_result.get('success'):
+                print(f"✅ LinkedIn post created successfully: {post_result.get('post_id')}")
+                return redirect(url_for('linkedin_oauth.share_status', success=True))
+            else:
+                error_msg = post_result.get('error', 'Unknown error')
+                print(f"❌ Failed to create LinkedIn post: {error_msg}")
+                return redirect(url_for('linkedin_oauth.share_status', error='post_failed', details=error_msg))
             
     except Exception as e:
         print(f"❌ Error in LinkedIn OAuth callback: {str(e)}")
         import traceback
         traceback.print_exc()
+        return_format = request.args.get('return_format', 'redirect')
+        if return_format == 'json':
+            return jsonify({
+                "success": False,
+                "error": f"Callback processing failed: {str(e)}"
+            }), 500
         return redirect(url_for('linkedin_oauth.share_status', error='callback_failed'))
 
 @bp.route('/share/form')
+# No Swagger decorator - this endpoint is deprecated (preview form no longer used)
+# Kept for backward compatibility, but redirects to status page
 def share_form():
     """
-    Display form with prefilled LinkedIn post content for user confirmation
+    Deprecated: Preview form endpoint (no longer used)
+    Auto-posting happens in callback, so this redirects to status page
     """
-    try:
-        content = session.get('linkedin_share_content')
-        access_token = session.get('linkedin_access_token')
-        author_id = session.get('linkedin_author_id')
-        
-        if not content:
-            return redirect(url_for('linkedin_oauth.share_status', error='no_content'))
-        
-        if not access_token or not author_id:
-            return redirect(url_for('linkedin_oauth.share_status', error='no_token'))
-        
-        return render_template('linkedin_share_form.html', content=content)
-        
-    except Exception as e:
-        print(f"❌ Error rendering form page: {str(e)}")
-        return redirect(url_for('linkedin_oauth.share_status', error='form_error'))
+    return redirect(url_for('linkedin_oauth.share_status', error='form_deprecated'))
 
 @bp.route('/share/post', methods=['POST'])
-@swag_from({
-    'tags': ['LinkedIn'],
-    'summary': 'Create LinkedIn post',
-    'description': 'Create a LinkedIn UGC (User Generated Content) post after user confirmation. Requires valid OAuth session. Returns JSON for API calls, redirects for form submissions.',
-    'requestBody': {
-        'required': True,
-        'content': {
-            'application/json': {
-                'schema': {
-                    'type': 'object',
-                    'properties': {
-                        'content': {
-                            'type': 'string',
-                            'description': 'LinkedIn post content (optional, uses session content if not provided)'
-                        }
-                    }
-                }
-            },
-            'application/x-www-form-urlencoded': {
-                'schema': {
-                    'type': 'object',
-                    'properties': {
-                        'content': {
-                            'type': 'string',
-                            'description': 'LinkedIn post content (optional, uses session content if not provided)'
-                        }
-                    }
-                }
-            }
-        }
-    },
-    'responses': {
-        200: {
-            'description': 'Post created successfully (JSON response for API calls)',
-            'content': {
-                'application/json': {
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'success': {'type': 'boolean'},
-                            'post_id': {'type': 'string', 'description': 'LinkedIn post ID'},
-                            'message': {'type': 'string'}
-                        }
-                    }
-                }
-            }
-        },
-        400: {
-            'description': 'Bad request (JSON response for API calls)',
-            'content': {
-                'application/json': {
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'success': {'type': 'boolean'},
-                            'error': {'type': 'string'}
-                        }
-                    }
-                }
-            }
-        },
-        500: {
-            'description': 'Internal server error (JSON response for API calls)',
-            'content': {
-                'application/json': {
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'success': {'type': 'boolean'},
-                            'error': {'type': 'string'}
-                        }
-                    }
-                }
-            }
-        },
-        302: {
-            'description': 'Redirects to status page (for form submissions)',
-            'headers': {
-                'Location': {
-                    'schema': {'type': 'string'},
-                    'description': 'Redirect URL to status page'
-                }
-            }
-        }
-    }
-})
+# No Swagger decorator - this endpoint is deprecated (auto-posting happens in callback)
+# Kept for backward compatibility, but posts are now created automatically in /callback
 def share_post():
     """
     Create the LinkedIn post after user confirmation
