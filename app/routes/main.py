@@ -35,6 +35,30 @@ def serve_index():
     else:
         return redirect(url_for('main.login'))
 
+@bp.route("/schedule")
+def schedule_page():
+    """Serve the Calendly scheduling page with inline embed and prefilled user info"""
+    user_id = get_current_user_id()
+    user_name = None
+    user_email = None
+    if user_id:
+        try:
+            from app.models import User
+            user = User.query.get(user_id)
+            if user:
+                user_name = f"{user.first_name} {user.last_name}".strip()
+                user_email = user.email
+        except Exception:
+            pass
+
+    calendly_link = current_app.config.get("CALENDLY_SCHEDULING_LINK", "")
+    return render_template(
+        'schedule.html',
+        calendly_link=calendly_link,
+        prefill_name=user_name,
+        prefill_email=user_email
+    )
+
 @bp.route("/favicon.ico")
 def favicon():
     """Serve favicon to prevent 404 errors"""

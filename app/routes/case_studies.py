@@ -88,6 +88,10 @@ def get_case_studies():
                 'video_url': case_study.video_url,
                 'video_id': case_study.video_id,
                 'video_created_at': case_study.video_created_at.isoformat() if case_study.video_created_at else None,
+                'newsflash_video_url': case_study.newsflash_video_url,
+                'newsflash_video_id': case_study.newsflash_video_id,
+                'newsflash_video_status': case_study.newsflash_video_status,
+                'newsflash_video_created_at': case_study.newsflash_video_created_at.isoformat() if case_study.newsflash_video_created_at else None,
                 'pictory_video_url': case_study.pictory_video_url,
                 'pictory_storyboard_id': case_study.pictory_storyboard_id,
                 'pictory_render_id': case_study.pictory_render_id,
@@ -97,6 +101,8 @@ def get_case_studies():
                 'podcast_script': case_study.podcast_script,
                 'podcast_created_at': case_study.podcast_created_at.isoformat() if case_study.podcast_created_at else None,
                 'linkedin_post': case_study.linkedin_post,
+                'email_subject': case_study.email_subject,
+                'email_body': case_study.email_body,
             }
             case_studies_data.append(case_study_data)
         
@@ -193,6 +199,8 @@ def get_case_study(case_study_id):
             'podcast_script': case_study.podcast_script,
             'podcast_created_at': case_study.podcast_created_at.isoformat() if case_study.podcast_created_at else None,
             'linkedin_post': case_study.linkedin_post,
+            'email_subject': case_study.email_subject,
+            'email_body': case_study.email_body,
         }
         
         return jsonify({'success': True, 'case_study': case_study_data})
@@ -680,6 +688,171 @@ def generate_linkedin_post():
         db.session.rollback()
         print(f"Error in generate_linkedin_post route: {str(e)}")
         return jsonify({"status": "error", "message": f"Error generating LinkedIn post: {str(e)}"}), 500
+
+@bp.route("/save_linkedin_post", methods=["POST"])
+@login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Save LinkedIn post',
+    'description': 'Save a LinkedIn post to a case study (for edited posts)',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id', 'linkedin_post'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study'
+                        },
+                        'linkedin_post': {
+                            'type': 'string',
+                            'description': 'The LinkedIn post content to save'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'LinkedIn post saved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study ID or LinkedIn post content'},
+        404: {'description': 'Case study not found'},
+        500: {'description': 'Error saving LinkedIn post'}
+    }
+})
+def save_linkedin_post():
+    """Save LinkedIn post to case study"""
+    try:
+        data = request.get_json()
+        case_study_id = data.get("case_study_id")
+        linkedin_post = data.get("linkedin_post")
+
+        if not case_study_id:
+            return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
+
+        if linkedin_post is None:
+            return jsonify({"status": "error", "message": "Missing linkedin_post"}), 400
+
+        case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+
+        # Save to database
+        case_study.linkedin_post = linkedin_post
+        db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "LinkedIn post saved successfully"
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in save_linkedin_post route: {str(e)}")
+        return jsonify({"status": "error", "message": f"Error saving LinkedIn post: {str(e)}"}), 500
+
+@bp.route("/save_email_draft", methods=["POST"])
+@login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Save email draft',
+    'description': 'Save an email draft (subject and body) to a case study',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id', 'email_subject', 'email_body'],
+                    'properties': {
+                        'case_study_id': {
+                            'type': 'integer',
+                            'description': 'ID of the case study'
+                        },
+                        'email_subject': {
+                            'type': 'string',
+                            'description': 'The email subject to save'
+                        },
+                        'email_body': {
+                            'type': 'string',
+                            'description': 'The email body content to save'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Email draft saved successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Missing case study ID, email subject, or email body'},
+        404: {'description': 'Case study not found'},
+        500: {'description': 'Error saving email draft'}
+    }
+})
+def save_email_draft():
+    """Save email draft to case study"""
+    try:
+        data = request.get_json()
+        case_study_id = data.get("case_study_id")
+        email_subject = data.get("email_subject")
+        email_body = data.get("email_body")
+
+        if not case_study_id:
+            return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
+
+        if email_subject is None:
+            return jsonify({"status": "error", "message": "Missing email_subject"}), 400
+
+        if email_body is None:
+            return jsonify({"status": "error", "message": "Missing email_body"}), 400
+
+        case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+
+        # Save to database
+        case_study.email_subject = email_subject
+        case_study.email_body = email_body
+        db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Email draft saved successfully"
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in save_email_draft route: {str(e)}")
+        return jsonify({"status": "error", "message": f"Error saving email draft: {str(e)}"}), 500
 
 
 @bp.route("/download_full_summary_pdf")

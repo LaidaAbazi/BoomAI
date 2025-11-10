@@ -108,6 +108,8 @@ class CaseStudy(db.Model):
     sentiment_chart_data = Column(db.LargeBinary, nullable=True)
     meta_data_text = Column(Text, nullable=True)
     linkedin_post = Column(Text, nullable=True)
+    email_subject = Column(Text, nullable=True)
+    email_body = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -116,6 +118,12 @@ class CaseStudy(db.Model):
     video_url = Column(Text, nullable=True)
     video_status = Column(String(50), nullable=True)
     video_created_at = Column(DateTime(timezone=True), nullable=True)
+
+    # HeyGen newsflash video fields (30-second)
+    newsflash_video_id = Column(String(100), nullable=True)
+    newsflash_video_url = Column(Text, nullable=True)
+    newsflash_video_status = Column(String(50), nullable=True)
+    newsflash_video_created_at = Column(DateTime(timezone=True), nullable=True)
 
     # Pictory video fields
     pictory_storyboard_id = Column(String(100), nullable=True)

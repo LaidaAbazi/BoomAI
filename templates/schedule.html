@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule a Call | StoryBoom.ai</title>
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f8fafc; }
+    .container { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .title { font-size: 1.4rem; font-weight: 700; color: #312E81; }
+    .back { color: #06B6D4; text-decoration: none; font-weight: 600; }
+  </style>
+  <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">Schedule a call with StoryBoom.ai</div>
+      <a href="/dashboard" class="back">← Back to Dashboard</a>
+    </div>
+
+    <div class="calendly-inline-widget"
+         data-url="{{ calendly_link }}?primary_color=c000ff{% if prefill_name %}&name={{ prefill_name|urlencode }}{% endif %}{% if prefill_email %}&email={{ prefill_email|urlencode }}{% endif %}"
+         style="min-width:320px;height:700px;">
+    </div>
+  </div>
+</body>
+</html>
+
+

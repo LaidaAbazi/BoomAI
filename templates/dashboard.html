@@ -642,6 +642,30 @@
     .download-video-btn:hover {
       background: #059669;
     }
+    .generate-newsflash-video-btn {
+      background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+    }
+    .generate-newsflash-video-btn:hover {
+      background: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+    .generate-newsflash-video-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
     .generate-pictory-video-btn {
       background: linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%);
       color: white;
@@ -982,7 +1006,6 @@
       background: #e5e7eb;
       margin: 8px 0;
     }
-
     /* FAQ Button Styles */
     .faq-button {
       position: fixed;
@@ -1004,12 +1027,10 @@
       align-items: center;
       justify-content: center;
     }
-
     .faq-button:hover {
       transform: scale(1.1);
       box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
     }
-
     /* FAQ Modal Overlay */
     .faq-modal-overlay {
       position: fixed;
@@ -1024,11 +1045,9 @@
       z-index: 10000;
       animation: fadeIn 0.3s ease-out;
     }
-
     .faq-modal-overlay.hidden {
       display: none;
     }
-
     /* FAQ Modal Content */
     .faq-modal {
       background: white;
@@ -1040,7 +1059,6 @@
       overflow-y: auto;
       position: relative;
     }
-
     .faq-modal-header {
       padding: 28px 32px;
       border-bottom: 1px solid #E0E7FF;
@@ -1053,7 +1071,6 @@
       border-radius: 20px 20px 0 0;
       z-index: 10;
     }
-
     .faq-modal-header h2 {
       margin: 0;
       font-size: 1.8rem;
@@ -1061,7 +1078,6 @@
       color: #312E81;
       letter-spacing: 0.02em;
     }
-
     .faq-close-btn {
       background: none;
       border: none;
@@ -1077,16 +1093,13 @@
       border-radius: 50%;
       transition: all 0.2s;
     }
-
     .faq-close-btn:hover {
       background: #f3f4f6;
       color: #312E81;
     }
-
     .faq-modal-body {
       padding: 24px 32px 32px 32px;
     }
-
     /* FAQ Item */
     .faq-item {
       margin-bottom: 16px;
@@ -1095,11 +1108,9 @@
       overflow: hidden;
       transition: all 0.2s;
     }
-
     .faq-item:hover {
       box-shadow: 0 2px 8px rgba(49, 46, 129, 0.1);
     }
-
     .faq-question {
       padding: 20px 24px;
       background: #F8FAFC;
@@ -1113,21 +1124,17 @@
       user-select: none;
       transition: background 0.2s;
     }
-
     .faq-question:hover {
       background: #F1F5F9;
     }
-
     .faq-question i {
       font-size: 1.2rem;
       color: #06B6D4;
       transition: transform 0.3s ease;
     }
-
     .faq-question.active i {
       transform: rotate(180deg);
     }
-
     .faq-answer {
       padding: 0 24px;
       max-height: 0;
@@ -1135,33 +1142,27 @@
       transition: all 0.3s ease;
       background: white;
     }
-
     .faq-answer.active {
       padding: 20px 24px;
       max-height: 1000px;
     }
-
     .faq-answer-text {
       color: #666;
       line-height: 1.6;
       font-size: 0.95rem;
     }
-
     /* Smooth scrollbar for modal */
     .faq-modal::-webkit-scrollbar {
       width: 8px;
     }
-
     .faq-modal::-webkit-scrollbar-track {
       background: #f1f1f1;
       border-radius: 20px;
     }
-
     .faq-modal::-webkit-scrollbar-thumb {
       background: #06B6D4;
       border-radius: 20px;
     }
-
     .faq-modal::-webkit-scrollbar-thumb:hover {
       background: #312E81;
     }
@@ -1171,6 +1172,7 @@
   <div class="topbar-user">
     <span id="userName">Hi, Laida Abazi</span>
             <button id="feedbackBtn" class="btn btn-primary" onclick="window.location.href='/feedback'">Give Feedback</button>
+            <a class="btn btn-primary" href="/schedule" style="margin-left: 10px; text-decoration: none; background: #06B6D4; padding: 10px 16px; border-radius: 8px; color: #fff; font-weight: 600;">Schedule a call</a>
     <div class="user-dropdown-container">
       <button id="userDropdownBtn" class="user-icon-btn" aria-label="User menu">
         <i class="fa fa-user-circle" style="font-size:2rem;"></i>
@@ -1264,81 +1266,6 @@
     </div>
     <div class="main-content" id="mainContent">
       <div style="color:#888; font-size:1.1rem; text-align:center; margin-top:80px;">Select a story from the left to view details.</div>
-    </div>
-  </div>
-
-  <!-- FAQ Button -->
-  <button id="faqButton" class="faq-button" onclick="openFaqModal()">?</button>
-
-  <!-- FAQ Modal -->
-  <div id="faqModalOverlay" class="faq-modal-overlay hidden" onclick="closeFaqModal(event)">
-    <div class="faq-modal" onclick="event.stopPropagation()">
-      <div class="faq-modal-header">
-        <h2>Frequently Asked Questions</h2>
-        <button class="faq-close-btn" onclick="closeFaqModal()">×</button>
-      </div>
-      <div class="faq-modal-body">
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaqAnswer(this)">
-            How do I start an interview? <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="faq-answer">
-            <div class="faq-answer-text">
-              To begin an interview with our agent, click "New Story" — you'll find it either in the top-left corner or at the center of the homepage.<br><br>
-              You'll then be redirected to a new page where you can click "Start Story" to begin your interview session.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaqAnswer(this)">
-            How do I generate my story? <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="faq-answer">
-            <div class="faq-answer-text">
-              Once you've finished the interview, simply click the "End" button.<br><br>
-              Your story will then be automatically generated — no extra steps required!
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaqAnswer(this)">
-            How can I invite my client to my story? <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="faq-answer">
-            <div class="faq-answer-text">
-              To invite a client, go to your generated story summary and open the "Invite" tab (next to the current one).<br><br>
-              Click "Generate Client Link" to create a unique invitation link, then share it directly with your client.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaqAnswer(this)">
-            Can I search for specific stories? <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="faq-answer">
-            <div class="faq-answer-text">
-              Yes! You can search for stories by their titles or labels.<br><br>
-              To add labels, navigate to your story summary and click the "Add Label" button next to the title — this makes searching and organizing stories much easier.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaqAnswer(this)">
-            Can I give feedback? <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="faq-answer">
-            <div class="faq-answer-text">
-              Absolutely!<br><br>
-              Click the "AI Feedback" button located in the bottom-left corner of the page.<br><br>
-              You'll have a brief chat with our agent to share your thoughts and suggestions.
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
   
@@ -2061,72 +1988,29 @@
           linkedinHeader.style.color = '#1e293b';
           linkedinSection.appendChild(linkedinHeader);
 
-          const linkedinContent = document.createElement('div');
+          const linkedinContent = document.createElement('textarea');
+          linkedinContent.id = `linkedin-post-${story.id}`;
           linkedinContent.style.marginBottom = '16px';
           linkedinContent.style.padding = '12px';
           linkedinContent.style.backgroundColor = '#fff';
           linkedinContent.style.borderRadius = '8px';
           linkedinContent.style.border = '1px solid #e2e8f0';
-          linkedinContent.style.whiteSpace = 'pre-wrap';
-          linkedinContent.textContent = story.linkedin_post || 'No LinkedIn post generated yet.';
+          linkedinContent.style.width = '100%';
+          linkedinContent.style.minHeight = '200px';
+          linkedinContent.style.fontFamily = 'inherit';
+          linkedinContent.style.fontSize = '14px';
+          linkedinContent.style.lineHeight = '1.6';
+          linkedinContent.style.resize = 'vertical';
+          linkedinContent.value = story.linkedin_post || 'No LinkedIn post generated yet.';
+          linkedinContent.placeholder = 'LinkedIn post will appear here after generation...';
           linkedinSection.appendChild(linkedinContent);
 
-          const linkedinBtn = document.createElement('button');
-          linkedinBtn.className = 'linkedin-btn';
-          linkedinBtn.textContent = 'Generate LinkedIn Post';
-          linkedinBtn.style.background = 'linear-gradient(90deg, #0077B5 0%, #00A0DC 100%)';
-          linkedinBtn.style.color = '#fff';
-          linkedinBtn.style.border = 'none';
-          linkedinBtn.style.borderRadius = '10px';
-          linkedinBtn.style.padding = '12px 24px';
-          linkedinBtn.style.fontSize = '1rem';
-          linkedinBtn.style.fontWeight = '600';
-          linkedinBtn.style.cursor = 'pointer';
-          linkedinBtn.style.transition = 'all 0.2s';
-          linkedinBtn.style.boxShadow = '0 2px 8px rgba(0, 119, 181, 0.15)';
+          const linkedinBtnContainer = document.createElement('div');
+          linkedinBtnContainer.style.display = 'flex';
+          linkedinBtnContainer.style.gap = '12px';
+          linkedinBtnContainer.style.alignItems = 'center';
 
-          linkedinBtn.onclick = async () => {
-            linkedinBtn.disabled = true;
-            linkedinBtn.textContent = 'Generating...';
-            try {
-              const res = await fetch('/api/generate_linkedin_post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ case_study_id: story.id })
-              });
-              const data = await res.json();
-              if (data.status === 'success') {
-                linkedinContent.textContent = data.linkedin_post;
-                // Update the story in the local array to persist the LinkedIn post
-                const storyIndex = allStories.findIndex(s => s.id === story.id);
-                if (storyIndex !== -1) {
-                  allStories[storyIndex].linkedin_post = data.linkedin_post;
-                }
-                // Enable share button if it exists
-                const shareBtn = linkedinSection.querySelector('.linkedin-share-btn');
-                if (shareBtn) {
-                  shareBtn.disabled = false;
-                }
-                alert('LinkedIn post generated successfully!');
-              } else {
-                alert('Failed to generate LinkedIn post: ' + data.message);
-              }
-            } catch (error) {
-              alert('Failed to create LinkedIn post. Please try again.');
-            } finally {
-              linkedinBtn.disabled = false;
-              linkedinBtn.textContent = 'Generate LinkedIn Post';
-            }
-          };
-
-          // Create button row container
-          const btnRow1 = document.createElement('div');
-          btnRow1.style.display = 'flex';
-          btnRow1.style.gap = '12px';
-          btnRow1.style.marginTop = '12px';
-          btnRow1.appendChild(linkedinBtn);
-
-          // Add "Share to LinkedIn" button
+          // Create share button first so it's accessible in linkedinBtn.onclick
           const shareBtn = document.createElement('button');
           shareBtn.className = 'linkedin-share-btn';
           shareBtn.textContent = 'Share to LinkedIn';
@@ -2142,15 +2026,13 @@
           shareBtn.style.boxShadow = '0 2px 8px rgba(0, 119, 181, 0.15)';
           shareBtn.style.flex = '1';
           shareBtn.disabled = !story.linkedin_post;
-
           shareBtn.onclick = async () => {
-            const postContent = story.linkedin_post || linkedinContent.textContent;
+            const postContent = story.linkedin_post || linkedinContent.value;
             
             if (!postContent || postContent.trim() === '' || postContent === 'No LinkedIn post generated yet.') {
               alert('Please generate a LinkedIn post first before sharing.');
               return;
             }
-
             shareBtn.disabled = true;
             shareBtn.textContent = 'Sharing...';
             
@@ -2180,8 +2062,124 @@
             }
           };
 
-          btnRow1.appendChild(shareBtn);
-          linkedinSection.appendChild(btnRow1);
+          const linkedinBtn = document.createElement('button');
+          linkedinBtn.className = 'linkedin-btn';
+          linkedinBtn.textContent = 'Generate LinkedIn Post';
+          linkedinBtn.style.background = 'linear-gradient(90deg, #0077B5 0%, #00A0DC 100%)';
+          linkedinBtn.style.color = '#fff';
+          linkedinBtn.style.border = 'none';
+          linkedinBtn.style.borderRadius = '10px';
+          linkedinBtn.style.padding = '12px 24px';
+          linkedinBtn.style.fontSize = '1rem';
+          linkedinBtn.style.fontWeight = '600';
+          linkedinBtn.style.cursor = 'pointer';
+          linkedinBtn.style.transition = 'all 0.2s';
+          linkedinBtn.style.boxShadow = '0 2px 8px rgba(0, 119, 181, 0.15)';
+
+          linkedinBtn.onclick = async () => {
+            linkedinBtn.disabled = true;
+            linkedinBtn.textContent = 'Generating...';
+            try {
+              const res = await fetch('/api/generate_linkedin_post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ case_study_id: story.id })
+              });
+              const data = await res.json();
+              if (data.status === 'success') {
+                linkedinContent.value = data.linkedin_post;
+                // Update the story in the local array to persist the LinkedIn post
+                const storyIndex = allStories.findIndex(s => s.id === story.id);
+                if (storyIndex !== -1) {
+                  allStories[storyIndex].linkedin_post = data.linkedin_post;
+                }
+                // Show save button after generation
+                saveLinkedInBtn.style.display = 'block';
+                // Enable share button if it exists
+                if (shareBtn) {
+                  shareBtn.disabled = false;
+                }
+                alert('LinkedIn post generated successfully!');
+              } else {
+                alert('Failed to generate LinkedIn post: ' + data.message);
+              }
+            } catch (error) {
+              alert('Failed to create LinkedIn post. Please try again.');
+            } finally {
+              linkedinBtn.disabled = false;
+              linkedinBtn.textContent = 'Generate LinkedIn Post';
+            }
+          };
+          linkedinBtnContainer.appendChild(linkedinBtn);
+
+          // Add Save button for LinkedIn post
+          const saveLinkedInBtn = document.createElement('button');
+          saveLinkedInBtn.className = 'save-linkedin-btn';
+          saveLinkedInBtn.textContent = '💾 Save Post';
+          saveLinkedInBtn.style.background = 'linear-gradient(90deg, #10B981 0%, #34D399 100%)';
+          saveLinkedInBtn.style.color = '#fff';
+          saveLinkedInBtn.style.border = 'none';
+          saveLinkedInBtn.style.borderRadius = '10px';
+          saveLinkedInBtn.style.padding = '12px 24px';
+          saveLinkedInBtn.style.fontSize = '1rem';
+          saveLinkedInBtn.style.fontWeight = '600';
+          saveLinkedInBtn.style.cursor = 'pointer';
+          saveLinkedInBtn.style.transition = 'all 0.2s';
+          saveLinkedInBtn.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.15)';
+          saveLinkedInBtn.style.display = story.linkedin_post ? 'block' : 'none';
+
+          saveLinkedInBtn.onclick = async () => {
+            saveLinkedInBtn.disabled = true;
+            saveLinkedInBtn.textContent = 'Saving...';
+            try {
+              const postContent = linkedinContent.value.trim();
+              if (!postContent || postContent === 'No LinkedIn post generated yet.') {
+                alert('Please generate or enter a LinkedIn post first.');
+                saveLinkedInBtn.disabled = false;
+                saveLinkedInBtn.textContent = '💾 Save Post';
+                return;
+              }
+
+              const res = await fetch('/api/save_linkedin_post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  case_study_id: story.id,
+                  linkedin_post: postContent
+                })
+              });
+              const data = await res.json();
+              if (data.status === 'success') {
+                // Update the story in the local array
+                const storyIndex = allStories.findIndex(s => s.id === story.id);
+                if (storyIndex !== -1) {
+                  allStories[storyIndex].linkedin_post = postContent;
+                }
+                alert('✅ LinkedIn post saved successfully!');
+              } else {
+                alert('❌ Failed to save LinkedIn post: ' + (data.message || 'Unknown error'));
+              }
+            } catch (error) {
+              console.error('Error saving LinkedIn post:', error);
+              alert('❌ Failed to save LinkedIn post. Please try again.');
+            } finally {
+              saveLinkedInBtn.disabled = false;
+              saveLinkedInBtn.textContent = '💾 Save Post';
+            }
+          };
+          linkedinBtnContainer.appendChild(saveLinkedInBtn);
+          linkedinBtnContainer.appendChild(shareBtn);
+
+          // Show save button when post is generated or edited
+          linkedinContent.addEventListener('input', () => {
+            if (linkedinContent.value.trim() && linkedinContent.value !== 'No LinkedIn post generated yet.') {
+              saveLinkedInBtn.style.display = 'block';
+              // Enable share button when content is available
+              shareBtn.disabled = false;
+            }
+          });
+
+          linkedinSection.appendChild(linkedinBtnContainer);
           tabContent.appendChild(linkedinSection);
 
           // --- PODCAST SECTION ---
@@ -2712,6 +2710,62 @@
 
           tabContent.appendChild(videoSection);
 
+          // --- NEWSFLASH VIDEO SECTION (30-second) ---
+          const newsflashVideoSection = document.createElement('div');
+          newsflashVideoSection.className = 'newsflash-video-section';
+          newsflashVideoSection.style.marginTop = '20px';
+
+          // Debug log to verify newsflash video data
+          console.log('Newsflash video data for this story:', {
+            newsflash_video_url: story.newsflash_video_url,
+            newsflash_video_id: story.newsflash_video_id,
+            newsflash_video_status: story.newsflash_video_status
+          });
+
+          if (story.newsflash_video_url) {
+            // Show the newsflash video if it exists
+            const newsflashVideoContainer = document.createElement('div');
+            newsflashVideoContainer.className = 'video-container';
+
+            const newsflashVideoElement = document.createElement('iframe');
+            newsflashVideoElement.style.width = '100%';
+            newsflashVideoElement.style.height = '450px';
+            newsflashVideoElement.style.border = 'none';
+            newsflashVideoElement.allowFullscreen = true;
+            newsflashVideoElement.src = story.newsflash_video_url;
+
+            newsflashVideoContainer.appendChild(newsflashVideoElement);
+            newsflashVideoSection.appendChild(newsflashVideoContainer);
+          } else if (story.newsflash_video_id && story.newsflash_video_status) {
+            // Show newsflash video status if video is being generated
+            const newsflashVideoContainer = document.createElement('div');
+            newsflashVideoContainer.className = 'video-container';
+            newsflashVideoContainer.id = `newsflashVideoContainer-${story.id}`;
+
+            const newsflashVideoStatus = document.createElement('div');
+            newsflashVideoStatus.className = 'video-status';
+            newsflashVideoStatus.id = `newsflashVideoStatus-${story.id}`;
+            newsflashVideoStatus.textContent = `Newsflash video is ${story.newsflash_video_status}...`;
+
+            newsflashVideoContainer.appendChild(newsflashVideoStatus);
+            newsflashVideoSection.appendChild(newsflashVideoContainer);
+
+            // Start checking newsflash video status if it's still processing
+            if (story.newsflash_video_status === 'processing' || story.newsflash_video_status === 'pending') {
+              startNewsflashVideoStatusCheck(story.newsflash_video_id, story.id);
+            }
+          } else {
+            // Show the generate newsflash video button if no video exists
+            const newsflashVideoBtn = document.createElement('button');
+            newsflashVideoBtn.className = 'action-btn generate-newsflash-video-btn';
+            newsflashVideoBtn.id = `newsflashVideoBtn-${story.id}`;
+            newsflashVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Newsflash Video (30s)';
+            newsflashVideoBtn.onclick = () => generateNewsflashVideo(story.id);
+            newsflashVideoSection.appendChild(newsflashVideoBtn);
+          }
+
+          tabContent.appendChild(newsflashVideoSection);
+
           // --- PICTORY VIDEO SECTION ---
           const pictoryVideoSection = document.createElement('div');
           pictoryVideoSection.className = 'pictory-video-section';
@@ -2966,7 +3020,7 @@
                   
                   // Ensure we have a subject
                   if (!emailDraft.subject) {
-                    emailDraft.subject = `Success Story: ${story.title}`;
+                    emailDraft.subject = story.title || 'Case Study Update';
                     console.log('Using fallback subject:', emailDraft.subject);
                   }
                   
@@ -3217,6 +3271,7 @@ The email has been sent automatically from your account with PDF attachment.`);
                     </div>
                     
                     <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                      <button id="save-email-draft" style="padding: 10px 20px; background: #3B82F6; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Save Draft</button>
                       <button id="copy-email" style="padding: 10px 20px; background: #6B7280; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📋 Copy Email</button>
                       <button id="open-email-client" style="padding: 10px 20px; background: #10B981; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📧 Open in Email Client</button>
                       <button id="close-modal" style="padding: 10px 20px; background: #EF4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Close</button>
@@ -3227,6 +3282,45 @@ The email has been sent automatically from your account with PDF attachment.`);
                   document.body.appendChild(modal);
                   
                   // Add event listeners
+                  document.getElementById('save-email-draft').onclick = async () => {
+                    const saveBtn = document.getElementById('save-email-draft');
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = '💾 Saving...';
+                    try {
+                      const subject = document.getElementById('email-subject').value;
+                      const body = document.getElementById('email-body').value;
+                      
+                      const saveResponse = await fetch('/api/save_email_draft', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          case_study_id: story.id,
+                          email_subject: subject,
+                          email_body: body
+                        })
+                      });
+                      
+                      const saveData = await saveResponse.json();
+                      if (saveData.status === 'success') {
+                        // Update local story data
+                        const storyIndex = allStories.findIndex(s => s.id === story.id);
+                        if (storyIndex !== -1) {
+                          allStories[storyIndex].email_subject = subject;
+                          allStories[storyIndex].email_body = body;
+                        }
+                        alert('✅ Email draft saved successfully!');
+                      } else {
+                        alert('❌ Failed to save email draft: ' + (saveData.message || 'Unknown error'));
+                      }
+                    } catch (error) {
+                      console.error('Error saving email draft:', error);
+                      alert('❌ Failed to save email draft. Please try again.');
+                    } finally {
+                      saveBtn.disabled = false;
+                      saveBtn.textContent = '💾 Save Draft';
+                    }
+                  };
+                  
                   document.getElementById('copy-email').onclick = () => {
                     const emailText = `To: ${document.getElementById('recipient-email').value}\nSubject: ${document.getElementById('email-subject').value}\n\n${document.getElementById('email-body').value}`;
                     navigator.clipboard.writeText(emailText).then(() => {
@@ -3419,8 +3513,6 @@ The email has been sent automatically from your account with PDF attachment.`);
               }
             };
             btnRow.appendChild(slackBtn);
-            
-            // LinkedIn share button removed per request
             
             // Add Slack Disconnect button (only show if connected)
             const slackDisconnectBtn = document.createElement('button');
@@ -4425,7 +4517,7 @@ The email has been sent automatically from your account with PDF attachment.`);
       videoStatus.textContent = 'Checking video status...';
       
       let checkCount = 0;
-      const maxChecks = 300; // 25 minutes maximum (5 seconds * 300)
+      const maxChecks = 360; // 30 minutes maximum (5 seconds * 360)
       
       const checkStatus = async () => {
         try {
@@ -4490,6 +4582,191 @@ The email has been sent automatically from your account with PDF attachment.`);
       if (videoElement && videoElement.src) {
         window.open(videoElement.src, '_blank');
       }
+    }
+
+    async function generateNewsflashVideo(storyId) {
+      try {
+        const story = allStories.find(s => s.id === storyId);
+        if (!story) {
+          console.error('Story not found:', storyId);
+          return;
+        }
+
+        // Check if newsflash video already exists
+        if (story.newsflash_video_url || story.newsflash_video_id) {
+          alert('A newsflash video has already been generated for this story.');
+          return;
+        }
+
+        // Ensure required elements exist or create them
+        let newsflashVideoContainer = document.getElementById(`newsflashVideoContainer-${storyId}`);
+        let newsflashVideoStatus = document.getElementById(`newsflashVideoStatus-${storyId}`);
+        let newsflashVideoElement = document.getElementById(`storyNewsflashVideo-${storyId}`);
+        const newsflashVideoBtn = document.getElementById(`newsflashVideoBtn-${storyId}`);
+
+        // If elements don't exist, create and append them
+        if (!newsflashVideoContainer) {
+          newsflashVideoContainer = document.createElement('div');
+          newsflashVideoContainer.id = `newsflashVideoContainer-${storyId}`;
+          newsflashVideoContainer.className = 'video-container';
+          // Find the newsflash video section for this story and append
+          if (newsflashVideoBtn && newsflashVideoBtn.parentElement) {
+            newsflashVideoBtn.parentElement.appendChild(newsflashVideoContainer);
+          } else {
+            // fallback: append to main content
+            document.getElementById('mainContent').appendChild(newsflashVideoContainer);
+          }
+        }
+        if (!newsflashVideoElement) {
+          newsflashVideoElement = document.createElement('iframe');
+          newsflashVideoElement.id = `storyNewsflashVideo-${storyId}`;
+          newsflashVideoElement.style.width = '100%';
+          newsflashVideoElement.style.height = '450px';
+          newsflashVideoElement.style.border = 'none';
+          newsflashVideoElement.allowFullscreen = true;
+          newsflashVideoContainer.appendChild(newsflashVideoElement);
+        }
+        if (!newsflashVideoStatus) {
+          newsflashVideoStatus = document.createElement('div');
+          newsflashVideoStatus.id = `newsflashVideoStatus-${storyId}`;
+          newsflashVideoStatus.className = 'video-status';
+          newsflashVideoContainer.appendChild(newsflashVideoStatus);
+        }
+
+        // Hide generate button and show video container
+        if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'none';
+        newsflashVideoContainer.style.display = 'block';
+        newsflashVideoStatus.textContent = 'Starting newsflash video generation...';
+        
+        const downloadBtn = newsflashVideoContainer.querySelector('.download-video-btn');
+        if (downloadBtn) downloadBtn.style.display = 'none';
+
+        const response = await fetch('/api/generate_newsflash_video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ case_study_id: storyId })
+        });
+
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          if (data.video_id) {
+            newsflashVideoStatus.textContent = 'Newsflash video is being generated...';
+            startNewsflashVideoStatusCheck(data.video_id, storyId);
+          } else {
+            newsflashVideoStatus.textContent = 'Error: Newsflash video generation started but no video ID received';
+            if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+            newsflashVideoContainer.style.display = 'none';
+          }
+        } else {
+          newsflashVideoStatus.textContent = `Error: ${data.error || 'Failed to generate newsflash video'}`;
+          if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+          newsflashVideoContainer.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error generating newsflash video:', error);
+        const newsflashVideoStatus = document.getElementById(`newsflashVideoStatus-${storyId}`);
+        const newsflashVideoBtn = document.getElementById(`newsflashVideoBtn-${storyId}`);
+        const newsflashVideoContainer = document.getElementById(`newsflashVideoContainer-${storyId}`);
+        
+        if (newsflashVideoStatus) {
+          newsflashVideoStatus.textContent = `Error: ${error.message}`;
+        }
+        if (newsflashVideoBtn) {
+          newsflashVideoBtn.style.display = 'block';
+        }
+        if (newsflashVideoContainer) {
+          newsflashVideoContainer.style.display = 'none';
+        }
+      }
+    }
+
+    function startNewsflashVideoStatusCheck(videoId, storyId) {
+      const newsflashVideoContainer = document.getElementById(`newsflashVideoContainer-${storyId}`);
+      const newsflashVideoElement = document.getElementById(`storyNewsflashVideo-${storyId}`);
+      const newsflashVideoStatus = document.getElementById(`newsflashVideoStatus-${storyId}`);
+      const newsflashVideoBtn = document.getElementById(`newsflashVideoBtn-${storyId}`);
+      
+      // Check if elements exist before proceeding
+      if (!newsflashVideoContainer || !newsflashVideoStatus) {
+        console.warn(`Newsflash video elements not found for story ${storyId}`);
+        return;
+      }
+      
+      newsflashVideoContainer.style.display = 'block';
+      newsflashVideoStatus.textContent = 'Checking newsflash video status...';
+      
+      let checkCount = 0;
+      const maxChecks = 300; // 25 minutes maximum (5 seconds * 300)
+      
+      const checkStatus = async () => {
+        try {
+          const response = await fetch(`/api/video_status/${videoId}`);
+          const data = await response.json();
+          
+          if (data.status === 'completed' && data.video_url) {
+            if (newsflashVideoElement) {
+              newsflashVideoElement.src = data.video_url;
+              newsflashVideoElement.style.display = 'block';
+            } else {
+              // Create iframe if it doesn't exist
+              const iframe = document.createElement('iframe');
+              iframe.id = `storyNewsflashVideo-${storyId}`;
+              iframe.style.width = '100%';
+              iframe.style.height = '450px';
+              iframe.style.border = 'none';
+              iframe.allowFullscreen = true;
+              iframe.src = data.video_url;
+              if (newsflashVideoContainer) {
+                newsflashVideoContainer.appendChild(iframe);
+              }
+            }
+            newsflashVideoStatus.textContent = 'Newsflash video is ready!';
+            
+            // Safely check for download button
+            const downloadBtn = newsflashVideoContainer.querySelector('.download-video-btn');
+            if (downloadBtn) downloadBtn.style.display = 'block';
+            if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'none';
+            
+            // Update the story in allStories array
+            const storyIndex = allStories.findIndex(s => s.id === storyId);
+            if (storyIndex !== -1) {
+              allStories[storyIndex].newsflash_video_url = data.video_url;
+              allStories[storyIndex].newsflash_video_id = videoId;
+            }
+            
+            return;
+          } else if (data.status === 'failed') {
+            newsflashVideoStatus.textContent = `Newsflash video generation failed: ${data.message || 'Unknown error'}`;
+            if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+            return;
+          } else if (data.status === 'processing' || data.status === 'pending') {
+            newsflashVideoStatus.textContent = 'Newsflash video is being generated...';
+            checkCount++;
+            if (checkCount < maxChecks) {
+              setTimeout(checkStatus, 5000);
+            } else {
+              newsflashVideoStatus.textContent = 'Newsflash video generation is taking longer than expected. Please try again later.';
+              if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+            }
+          } else {
+            newsflashVideoStatus.textContent = `Newsflash video status: ${data.status}`;
+            checkCount++;
+            if (checkCount < maxChecks) {
+              setTimeout(checkStatus, 5000);
+            } else {
+              newsflashVideoStatus.textContent = 'Newsflash video generation timeout. Please try again.';
+              if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+            }
+          }
+        } catch (error) {
+          console.error('Error checking newsflash video status:', error);
+          newsflashVideoStatus.textContent = 'Error checking newsflash video status. Please try again.';
+          if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+        }
+      };
+      
+      checkStatus();
     }
 
     async function generatePictoryVideo(storyId) {
@@ -5147,6 +5424,80 @@ The email has been sent automatically from your account with PDF attachment.`);
       }
     });
   </script>
-<!-- LinkedIn OAuth resume logic removed per request -->
+
+  <!-- FAQ Button -->
+  <button id="faqButton" class="faq-button" onclick="openFaqModal()">?</button>
+
+  <!-- FAQ Modal -->
+  <div id="faqModalOverlay" class="faq-modal-overlay hidden" onclick="closeFaqModal(event)">
+    <div class="faq-modal" onclick="event.stopPropagation()">
+      <div class="faq-modal-header">
+        <h2>Frequently Asked Questions</h2>
+        <button class="faq-close-btn" onclick="closeFaqModal()">×</button>
+      </div>
+      <div class="faq-modal-body">
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            How do I start an interview? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              To begin an interview with our agent, click "New Story" — you'll find it either in the top-left corner or at the center of the homepage.<br><br>
+              You'll then be redirected to a new page where you can click "Start Story" to begin your interview session.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            How do I generate my story? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              Once you've finished the interview, simply click the "End" button.<br><br>
+              Your story will then be automatically generated — no extra steps required!
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            How can I invite my client to my story? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              To invite a client, go to your generated story summary and open the "Invite" tab (next to the current one).<br><br>
+              Click "Generate Client Link" to create a unique invitation link, then share it directly with your client.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            Can I search for specific stories? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              Yes! You can search for stories by their titles or labels.<br><br>
+              To add labels, navigate to your story summary and click the "Add Label" button next to the title — this makes searching and organizing stories much easier.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaqAnswer(this)">
+            Can I give feedback? <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-text">
+              Absolutely!<br><br>
+              Click the "AI Feedback" button located in the bottom-left corner of the page.<br><br>
+              You'll have a brief chat with our agent to share your thoughts and suggestions.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html> 

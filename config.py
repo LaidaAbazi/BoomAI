@@ -40,6 +40,9 @@ class Config:
     LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI')
     LINKEDIN_TOKEN_ENCRYPTION_KEY = os.environ.get('LINKEDIN_TOKEN_ENCRYPTION_KEY')
 
+    # Calendly
+    CALENDLY_SCHEDULING_LINK = os.environ.get('CALENDLY_SCHEDULING_LINK', '')
+
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True

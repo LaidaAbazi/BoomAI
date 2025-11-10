@@ -12,6 +12,8 @@ class CaseStudyUpdateSchema(Schema):
     final_summary = fields.Str()
     meta_data_text = fields.Str()
     linkedin_post = fields.Str()
+    email_subject = fields.Str()
+    email_body = fields.Str()
 
 class CaseStudyResponseSchema(Schema):
     """Schema for case study response"""
@@ -21,6 +23,8 @@ class CaseStudyResponseSchema(Schema):
     final_summary_pdf_path = fields.Str(dump_only=True)
     meta_data_text = fields.Str()
     linkedin_post = fields.Str()
+    email_subject = fields.Str()
+    email_body = fields.Str()
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
     

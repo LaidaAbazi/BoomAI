@@ -114,7 +114,7 @@ class EmailService:
         """
         try:
             if not case_study.final_summary:
-                return "Success Story: Case Study Available"
+                return case_study.title if case_study.title else "Case Study Update"
             
             # Clean the summary text
             clean_summary = self._clean_summary_text(case_study.final_summary)
@@ -133,44 +133,61 @@ class EmailService:
                     metrics_context += f"Savings: ${', '.join(metrics['cost_savings'])}\n"
             
             prompt = f"""
-            You are an expert email marketing specialist creating a compelling subject line for sharing a business success story.
+            You are an expert email marketing specialist creating a compelling, personalized subject line for sharing a business case study.
             
-            CRITICAL LANGUAGE REQUIREMENT: 
+            CRITICAL LANGUAGE REQUIREMENT (YOU MUST FOLLOW THIS): 
             - Analyze the language of the case study content below
-            - If the content is in German, write the subject in German
-            - If the content is in Spanish, write the subject in Spanish  
-            - If the content is in French, write the subject in French
-            - If the content is in English, write the subject in English
-            - Match the exact language of the case study content
+            - If the content is in GERMAN, you MUST write the subject in GERMAN
+            - If the content is in SPANISH, you MUST write the subject in SPANISH
+            - If the content is in FRENCH, you MUST write the subject in FRENCH
+            - If the content is in ENGLISH, you MUST write the subject in ENGLISH
+            - Match the exact language of the case study - do not default to any other language
             
             CONTEXT:
-            - This is a professional success story being shared with colleagues, clients, or stakeholders
+            - This is a professional case study being shared with colleagues, clients, or stakeholders
             - The recipient should be intrigued to open and read the full case study
             - The email includes a PDF attachment with complete details
             
-            SUCCESS STORY DETAILS:
+            CASE STUDY DETAILS:
             Title: {case_study.title}
-            Key Content: {clean_summary[:500]}
+            Key Content: {clean_summary[:800]}
             
             KEY METRICS TO HIGHLIGHT:
             {metrics_context if metrics_context else "Focus on qualitative achievements and outcomes mentioned in the content. Do NOT use placeholder numbers like 'XX%' or 'XXx'. Only mention specific, real metrics if they are clearly stated in the content."}
             
-            REQUIREMENTS:
+            CRITICAL REQUIREMENTS:
             - Maximum 60 characters (including spaces)
             - Professional yet engaging tone in the detected language
-            - Highlight the most impressive outcome or benefit
+            - MUST be SPECIFIC to this exact case study - extract unique details from the content
+            - Highlight the most impressive, specific outcome or benefit from THIS story
             - Use action-oriented language when possible
-            - Avoid generic phrases unless they add value
+            - NEVER use generic phrases like "Success Story", "Case Study", "Transformation" unless they add specific value
+            - Focus on WHAT happened, not that it's a "story" - be informative and specific
             - Include specific numbers/percentages ONLY if they are clearly available in the content
             - NEVER use placeholder text like "XX%", "XXx", or "XX" - only use real, specific numbers
+            - Make it personal and informative - tell them what they'll learn or discover
             
-            LANGUAGE-SPECIFIC EXAMPLES:
-            German: "Erfolgsgeschichte: [Company] Transformation", "40% Effizienzsteigerung: [Company] Durchbruch"
-            Spanish: "Historia de Éxito: [Company] Transformación", "40% Mejora de Eficiencia: [Company] Logro"
-            French: "Histoire de Succès: [Company] Transformation", "40% Amélioration: [Company] Percée"
-            English: "Success Story: [Company] Transformation", "40% Efficiency Boost: [Company] Breakthrough"
+            SUBJECT LINE STRATEGY:
+            1. Read the case study content carefully and identify the MOST INTERESTING or IMPRESSIVE specific detail
+            2. Extract the key solution, result, or outcome that makes THIS story unique
+            3. Create a subject that tells them WHAT happened, not that it's a "story"
+            4. Use specific metrics, solutions, or outcomes from the content
+            5. Make it informative - they should know what they're about to read
             
-            Generate ONE compelling subject line in the detected language that will make recipients want to open this email. Return only the subject line, no quotes or additional text.
+            LANGUAGE-SPECIFIC EXAMPLES (study these patterns - they are SPECIFIC and INFORMATIVE):
+            German: "40% Effizienzsteigerung durch KI-Automatisierung", "Von 3 Stunden auf 15 Minuten: Onboarding-Revolution", "Chatbot reduziert Support-Tickets um 70%"
+            Spanish: "40% Mejora de Eficiencia con Automatización IA", "De 3 Horas a 15 Minutos: Revolución en Onboarding", "Chatbot Reduce Tickets de Soporte en 70%"
+            French: "40% d'Amélioration avec Automatisation IA", "De 3 Heures à 15 Minutes: Révolution Onboarding", "Chatbot Réduit Tickets Support de 70%"
+            English: "40% Efficiency Boost Through AI Automation", "From 3 Hours to 15 Minutes: Onboarding Revolution", "Chatbot Reduced Support Tickets by 70%", "How We Scaled to 10,000 Users in 6 Months", "The Integration That Connected 5 Systems Seamlessly"
+            
+            FORBIDDEN PATTERNS (DO NOT USE):
+            - "Success Story: [anything]" ❌
+            - "Case Study: [anything]" ❌
+            - "Story: [anything]" ❌
+            - Generic phrases without specific details ❌
+            - "[Company] Transformation" (too vague) ❌
+            
+            Generate ONE compelling, specific, informative subject line in the detected language that tells recipients exactly what they'll discover in this case study. Return only the subject line, no quotes or additional text.
             """
             
             # Use GPT-4 for better language detection and generation
@@ -180,16 +197,21 @@ class EmailService:
             if subject and len(subject.strip()) > 0:
                 # Clean the subject by removing quotes if present
                 cleaned_subject = subject.strip().strip('"').strip("'")
+                # Remove "Success Story:" prefix if AI still added it
+                if cleaned_subject.lower().startswith("success story:"):
+                    cleaned_subject = cleaned_subject[14:].strip()
                 print(f"✅ Final AI subject: '{cleaned_subject}'")
                 return cleaned_subject
             else:
-                fallback_subject = f"Success Story: {case_study.title}"
+                # Fallback: use title directly or create a dynamic subject from title
+                fallback_subject = case_study.title if case_study.title else "Case Study Update"
                 print(f"⚠️ Using fallback subject: '{fallback_subject}'")
                 return fallback_subject
                 
         except Exception as e:
             print(f"Error generating email subject: {str(e)}")
-            return f"Success Story: {case_study.title}"
+            # Fallback: use title directly instead of "Success Story:" prefix
+            return case_study.title if case_study.title else "Case Study Update"
     
     def _generate_email_content(self, case_study, user_name=None):
         """
@@ -208,6 +230,11 @@ class EmailService:
             # Create a personalized email prompt
             sender_name = user_name or "our team"
             
+            # Get company name from the user
+            company_name = None
+            if case_study.user and case_study.user.company_name:
+                company_name = case_study.user.company_name
+            
             # Build metrics context for the prompt
             metrics_context = ""
             has_specific_metrics = False
@@ -222,60 +249,50 @@ class EmailService:
                     metrics_context += f"Cost Savings: ${', '.join(metrics['cost_savings'])}\n"
                     has_specific_metrics = True
             
+            # Build company context for the prompt
+            company_context = ""
+            if company_name:
+                company_context = f"\nIMPORTANT COMPANY CONTEXT:\n- This email is being sent by {company_name} (the solution provider)\n- When referring to achievements or work done, use 'we' or '{company_name}' to refer to your company\n- Do NOT use generic placeholder text like 'Solution provider company'\n- Example: 'We recently completed...' or '{company_name} recently helped...'\n"
+            
             prompt = f"""
-            Write a professional email to share a success story with your team.
+            Imagine you're sending an email to your own team to share a success story. Write it naturally, as if you're genuinely sharing good news with colleagues you work with every day. Keep it authentic, brief, and conversational.
             
-            CRITICAL LANGUAGE REQUIREMENT: 
-            - Analyze the language of the case study content below
-            - If the content is in German, write the email in German
-            - If the content is in Spanish, write the email in Spanish  
-            - If the content is in French, write the email in French
-            - If the content is in English, write the email in English
-            - Match the exact language of the case study content
+            CRITICAL LANGUAGE REQUIREMENT (YOU MUST FOLLOW THIS): 
+            - Analyze the language of the SUCCESS STORY CONTEXT below
+            - If the content is in GERMAN, you MUST write the entire email in GERMAN
+            - If the content is in SPANISH, you MUST write the entire email in SPANISH
+            - If the content is in FRENCH, you MUST write the entire email in FRENCH
+            - If the content is in ENGLISH, you MUST write the entire email in ENGLISH
+            - Match the exact language of the case study - do not default to any other language
             
-            SUCCESS STORY:
-            {case_study.title}
-            {clean_summary[:800]}
+            {company_context if company_context else "- When referring to achievements, use 'we' or 'our team' naturally\n- Do NOT use generic placeholder text\n"}
             
-            KEY ACHIEVEMENTS TO MENTION:
-            {metrics_context if has_specific_metrics else "Focus on the most impressive outcomes from the summary above"}
+            SUCCESS STORY CONTEXT:
+            Title: {case_study.title}
+            Summary: {clean_summary[:800]}
             
-            REQUIREMENTS (MANDATORY - output must include all of the following in the detected language):
+            KEY RESULTS: {metrics_context if has_specific_metrics else "Highlight the most impressive outcomes naturally"}
             
-            STRUCTURE (follow this exact format):
-            1) GREETING LINE (mandatory first line):
-               - German: "Liebe Kollegen," or "Hallo Team,"
-               - Spanish: "Estimados colegas," or "Hola equipo,"
-               - French: "Chers collègues," or "Bonjour l'équipe,"
-               - English: "Dear colleagues," or "Hi team,"
+            WRITING INSTRUCTIONS:
+            - Write in YOUR voice, as if you're personally sharing this with your team
+            - Be authentic and excited about what happened
+            - Keep it brief (1-2 short paragraphs max)
+            - Use casual, friendly language appropriate for team communication
+            - Natural flow - don't follow a rigid template
+            - Start with a natural greeting appropriate for the detected language
+            - Share the success story in 1-2 conversational paragraphs
+            - Mention that the full case study is attached as a PDF
+            - Sign off naturally with your name: {user_name or 'Team'}
+            - AVOID "the results" - it sounds robotic and AI-generated. Instead, say what actually happened: "sales went up 30%", "they saved time", "it worked", "their numbers improved", "they saw huge improvements"
+            - NEVER use robotic phrases like "the results", "the outcome", "the solution", "the challenge" - use natural, specific language
             
-            2) EMAIL BODY (2-3 paragraphs about the success story)
+            LANGUAGE-SPECIFIC TONE EXAMPLES:
+            - ENGLISH: "Hey team, wanted to share a great win we just had..." or "Hi everyone, we recently completed..."
+            - GERMAN: "Hallo Team, wollte euch von einem tollen Erfolg berichten..." or "Liebe Kollegen, wir haben gerade..."
+            - SPANISH: "Hola equipo, quería compartir una gran victoria..." or "Hola todos, acabamos de completar..."
+            - FRENCH: "Salut l'équipe, je voulais partager une belle réussite..." or "Bonjour tout le monde, nous venons de..."
             
-            3) PDF ATTACHMENT MENTION (mandatory):
-               - German: "Ich habe die vollständige Fallstudie als PDF angehängt."
-               - Spanish: "He adjuntado el caso de estudio completo en PDF."
-               - French: "J'ai joint l'étude de cas complète en PDF."
-               - English: "I've attached the complete case study as a PDF."
-            
-            4) CLOSING (mandatory):
-               - German: "Mit freundlichen Grüßen,"
-               - Spanish: "Saludos cordiales,"
-               - French: "Cordialement,"
-               - English: "Best regards,"
-            
-            5) SENDER NAME (mandatory last line): {user_name or 'Our Team'}
-            
-            EXAMPLE FORMAT (German):
-            Liebe Kollegen,
-            
-            [Email body content here]
-            
-            Ich habe die vollständige Fallstudie als PDF angehängt.
-            
-            Mit freundlichen Grüßen,
-            [Sender Name]
-            
-            CRITICAL: You MUST include all 5 elements above. Do not skip any of them.
+            Keep it natural, brief, and authentic. Don't sound like a corporate template.
             """
             
             # Use GPT-4 for better language detection and generation
@@ -307,13 +324,20 @@ class EmailService:
         """
         sender_name = user_name or "our team"
         
+        # Get company name if available
+        company_reference = ""
+        if case_study.user and case_study.user.company_name:
+            company_reference = f" we at {case_study.user.company_name}"
+        else:
+            company_reference = " we"
+        
         return f"""Dear Team,
 
-I'm excited to share a success story with you! {sender_name} recently completed a success story that demonstrates some impressive results.
+I'm excited to share a success story with you!{company_reference} recently completed a project that demonstrates some impressive results.
 
 {case_study.title}
 
-This success story showcases how we helped our client achieve significant improvements in their business processes and outcomes. The project involved collaboration between our team and the client to implement innovative solutions that delivered measurable results.
+This success story showcases how{company_reference} helped our client achieve significant improvements in their business processes and outcomes. The project involved collaboration between our team and the client to implement innovative solutions that delivered measurable results.
 
 I've attached the complete success story as a PDF for your review.
 

@@ -58,6 +58,9 @@ def create_app(config_name=None):
     app.config["STRIPE_WEBHOOK_SECRET"] = os.getenv("STRIPE_WEBHOOK_SECRET")
     app.config["STRIPE_SECRET_KEY"] = os.getenv("STRIPE_SECRET_KEY")
     
+    # Calendly configuration
+    app.config["CALENDLY_SCHEDULING_LINK"] = os.getenv("CALENDLY_SCHEDULING_LINK", "")
+    
     # Debug Stripe configuration
     webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
     secret_key = os.getenv("STRIPE_SECRET_KEY")

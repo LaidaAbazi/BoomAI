@@ -5,13 +5,14 @@ from datetime import datetime, UTC
 import base64
 import time
 from app.utils.text_processing import clean_text_for_heygen, validate_heygen_text
+from app.services.ai_service import AIService
 
 class MediaService:
     def __init__(self):
         # HeyGen API configuration
         self.heygen_api_key = os.getenv("HEYGEN_API_KEY")
         self.heygen_api_base_url = "https://api.heygen.com/v2"
-        self.heygen_avatar_id = "Annie_Casual_Standing_Front_2_public" #Amelia_sitting_business_training_front
+        self.heygen_avatar_id = "Giulia_sitting_sofa_front"
         self.heygen_voice_id = "ea5493f87c244e0e99414ca6bd4af709"
         
         # Pictory API configuration
@@ -75,8 +76,9 @@ class MediaService:
             if not self.heygen_api_key:
                 return {"error": "HeyGen API key not configured"}
             
-            # Generate input text
-            input_text = self.generate_heygen_input_text(case_study.final_summary)
+            # Generate input text using AI service (1-minute video)
+            ai_service = AIService()
+            input_text = ai_service.generate_heygen_1min_video_text(case_study.final_summary)
             
             # Validate and clean the input text to prevent mid-word cuts
             if input_text:

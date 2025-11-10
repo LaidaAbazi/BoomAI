@@ -14,7 +14,8 @@ bp = Blueprint('media', __name__, url_prefix='/api')
 # API Configuration
 HEYGEN_API_KEY = os.getenv("HEYGEN_API_KEY")
 HEYGEN_API_BASE_URL = "https://api.heygen.com/v2"
-HEYGEN_AVATAR_ID = "Annie_Casual_Standing_Front_2_public"
+HEYGEN_AVATAR_ID = "Giulia_sitting_sofa_front"
+HEYGEN_NEWSFLASH_AVATAR_ID = "Annie_Casual_Standing_Front_2_public"
 HEYGEN_VOICE_ID = "4754e1ec667544b0bd18cdf4bec7d6a7"
 
 PICTORY_CLIENT_ID = os.getenv("PICTORY_CLIENT_ID")
@@ -24,6 +25,155 @@ PICTORY_API_BASE_URL = "https://api.pictory.ai"
 
 WONDERCRAFT_API_KEY = os.getenv("WONDERCRAFT_API_KEY")
 WONDERCRAFT_API_BASE_URL = "https://api.wondercraft.ai/v1"
+
+@bp.route("/generate_newsflash_video", methods=["POST"])
+@login_required
+@swag_from({
+    'tags': ['Media'],
+    'summary': 'Generate newsflash video',
+    'description': 'Generate a 30-second newsflash video using HeyGen API',
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['case_study_id'],
+                    'properties': {
+                        'case_study_id': {'type': 'integer'}
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Newsflash video generation started',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'video_id': {'type': 'string'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Bad Request'},
+        401: {'description': 'Not authenticated'},
+        404: {'description': 'Case study not found'}
+    }
+})
+def generate_newsflash_video():
+    """Generate 30-second newsflash video using HeyGen API"""
+    try:
+        data = request.get_json()
+        case_study_id = data.get('case_study_id')
+        
+        if not case_study_id:
+            error_response = UserFriendlyErrors.get_case_study_error("missing_data")
+            return jsonify(error_response), 400
+            
+        case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+        if not case_study:
+            error_response = UserFriendlyErrors.get_case_study_error("not_found")
+            return jsonify(error_response), 404
+            
+        if not case_study.final_summary:
+            error_response = UserFriendlyErrors.get_case_study_error("missing_data")
+            return jsonify(error_response), 400
+
+        # Prevent multiple newsflash video generations for the same case study
+        if case_study.newsflash_video_id:
+            error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
+            return jsonify(error_response), 400
+
+        # Generate optimized input text for HeyGen (30-second newsflash video)
+        ai_service = AIService()
+        input_text = ai_service.generate_heygen_newsflash_video_text(case_study.final_summary)
+        if not input_text:
+            error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
+            return jsonify(error_response), 500
+
+        # Prepare the request to HeyGen API V2
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "x-api-key": HEYGEN_API_KEY
+        }
+        
+        payload = {
+            "caption": False,
+            "dimension": {
+                "width": 1280,
+                "height": 720
+            },
+            "video_inputs": [
+                {
+                    "character": {
+                        "type": "avatar",
+                        "avatar_id": HEYGEN_NEWSFLASH_AVATAR_ID,
+                        "scale": 1.0,
+                        "avatar_style": "normal",
+                        "offset": {
+                            "x": 0.0,
+                            "y": 0.0
+                        }
+                    },
+                    "voice": {
+                        "type": "text",
+                        "voice_id": HEYGEN_VOICE_ID,
+                        "input_text": input_text,
+                        "speed": 1.0,
+                        "pitch": 35,
+                        "emotion": "Excited"
+                    },
+                    "background": {
+                        "type": "image",
+                        "url": "https://i.postimg.cc/g0tpPn1y/background3.jpg"
+                    }
+                }
+            ]
+        }
+
+        response = requests.post(
+            f"{HEYGEN_API_BASE_URL}/video/generate",
+            headers=headers,
+            json=payload
+        )
+
+        if response.status_code == 200:
+            video_data = response.json()
+            video_id = video_data.get('data', {}).get('video_id')
+            
+            if not video_id:
+                return jsonify({
+                    "status": "error",
+                    "error": "No video ID received from HeyGen API"
+                }), 500
+            
+            # Update case study with newsflash video information
+            case_study.newsflash_video_id = video_id
+            case_study.newsflash_video_status = 'processing'
+            case_study.newsflash_video_created_at = datetime.now(UTC)
+            db.session.commit()
+            
+            return jsonify({
+                "status": "success",
+                "video_id": video_id,
+                "message": "Newsflash video generation started"
+            })
+        else:
+            error_response = UserFriendlyErrors.get_media_error("api_connection_failed")
+            return jsonify(error_response), response.status_code
+
+    except Exception as e:
+        db.session.rollback()
+        error_response = UserFriendlyErrors.get_general_error("server_error", e)
+        return jsonify(error_response), 500
 
 @bp.route("/generate_video", methods=["POST"])
 @login_required
@@ -90,9 +240,9 @@ def generate_video():
             error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
             return jsonify(error_response), 400
 
-        # Generate optimized input text for HeyGen
+        # Generate optimized input text for HeyGen (1-minute video)
         ai_service = AIService()
-        input_text = ai_service.generate_heygen_input_text(case_study.final_summary)
+        input_text = ai_service.generate_heygen_1min_video_text(case_study.final_summary)
         if not input_text:
             error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
             return jsonify(error_response), 500
@@ -247,44 +397,59 @@ def check_video_status(video_id):
         video_data = response.json()
         
         # Update case study with video status and URL if completed
+        # Check both regular video and newsflash video
         case_study = CaseStudy.query.filter_by(video_id=video_id).first()
+        is_newsflash = False
+        
+        if not case_study:
+            case_study = CaseStudy.query.filter_by(newsflash_video_id=video_id).first()
+            is_newsflash = True
         
         if case_study:
             status = video_data.get("data", {}).get("status")
-            case_study.video_status = status
+            
+            if is_newsflash:
+                case_study.newsflash_video_status = status
+            else:
+                case_study.video_status = status
             
             if status == "completed":
                 video_url = video_data.get("data", {}).get("video_url")
                 if video_url:
-                    case_study.video_url = video_url
+                    if is_newsflash:
+                        case_study.newsflash_video_url = video_url
+                    else:
+                        case_study.video_url = video_url
                     db.session.commit()
                     return jsonify({
                         "status": "completed",
                         "video_url": video_url
                     })
                 else:
+                    db.session.commit()
                     return jsonify({
                         "status": "completed",
                         "message": "Video completed but URL not available yet"
                     })
             elif status == "failed":
                 error = video_data.get("data", {}).get("error")
+                db.session.commit()
                 return jsonify({
                     "status": "failed",
                     "message": f"Video generation failed: {error}" if error else "Video generation failed"
                 })
             elif status in ["processing", "pending"]:
+                db.session.commit()
                 return jsonify({
                     "status": status,
                     "message": "Video is being processed"
                 })
             else:
+                db.session.commit()
                 return jsonify({
                     "status": status,
                     "message": f"Video is {status}"
                 })
-            
-            db.session.commit()
         
         return jsonify(video_data)
             

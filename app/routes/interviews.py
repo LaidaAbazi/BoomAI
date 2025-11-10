@@ -796,12 +796,24 @@ def get_email_draft_route():
         mailto_url = email_service.get_mailto_url(email_draft)
         email_draft["mailto_url"] = mailto_url
         
+        # Save email draft to database automatically after generation
+        try:
+            case_study.email_subject = email_draft.get('subject', '')
+            case_study.email_body = email_draft.get('body', '')
+            db.session.commit()
+            print(f"📧 Email draft saved automatically to database for case study {case_study_id}")
+        except Exception as save_error:
+            db.session.rollback()
+            print(f"⚠️ Warning: Failed to save email draft to database: {str(save_error)}")
+            # Don't fail the request if save fails - the draft was still generated successfully
+        
         return jsonify({
             "status": "success",
             "email_draft": email_draft
         })
         
     except Exception as e:
+        db.session.rollback()
         print(f"Error getting email draft: {str(e)}")
         return jsonify({"status": "error", "message": "Failed to generate email draft"}), 500
 
