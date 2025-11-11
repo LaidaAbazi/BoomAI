@@ -483,8 +483,28 @@ def generate_full_case_study():
                     return parts[1].strip()
             return text.strip()
 
+        # Filter out placeholder/default values that shouldn't be used as client names
+        placeholder_values = ["Client Name", "Company Name", "Unknown", "Unknown Client", ""]
+        # Ensure we have a string and strip whitespace
+        partner_entity_str = str(partner_entity) if partner_entity else ""
+        partner_entity_clean = partner_entity_str.strip()
+        is_placeholder = partner_entity_clean in placeholder_values or len(partner_entity_clean) == 0
+        
+        # Only add client name prefix if we have a real client name, otherwise just use the title
         current_title_core = strip_existing_prefix(case_study.title or "")
-        case_study.title = f"{partner_entity}: {current_title_core}" if partner_entity else current_title_core
+        # If title core is empty after stripping, use the original title (might not have had a prefix)
+        if not current_title_core:
+            current_title_core = (case_study.title or "").strip()
+        
+        print(f"🔍 DEBUG Title Update: partner_entity={repr(partner_entity)}, partner_entity_clean={repr(partner_entity_clean)}, is_placeholder={is_placeholder}")
+        print(f"🔍 DEBUG Title Update: original_title={repr(case_study.title)}, current_title_core={repr(current_title_core)}")
+        
+        if partner_entity_clean and not is_placeholder:
+            case_study.title = f"{partner_entity_clean}: {current_title_core}"
+            print(f"🔍 DEBUG Title Update: ✅ Final title WITH prefix='{case_study.title}'")
+        else:
+            case_study.title = current_title_core
+            print(f"🔍 DEBUG Title Update: ❌ Final title WITHOUT prefix='{case_study.title}' (reason: partner_entity_clean={repr(partner_entity_clean)}, is_placeholder={is_placeholder})")
         
         # Record story creation and update user credits (this is when the story is actually completed)
         # Only count the story once per case study, not on every call to generate_full_case_study

@@ -34,6 +34,11 @@ class CaseStudyResponseSchema(Schema):
     video_status = fields.Str(dump_only=True)
     video_created_at = fields.DateTime(dump_only=True)
     
+    newsflash_video_id = fields.Str(dump_only=True)
+    newsflash_video_url = fields.Str(dump_only=True)
+    newsflash_video_status = fields.Str(dump_only=True)
+    newsflash_video_created_at = fields.DateTime(dump_only=True)
+    
     pictory_storyboard_id = fields.Str(dump_only=True)
     pictory_render_id = fields.Str(dump_only=True)
     pictory_video_url = fields.Str(dump_only=True)

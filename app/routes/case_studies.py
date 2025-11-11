@@ -190,6 +190,10 @@ def get_case_study(case_study_id):
             'video_url': case_study.video_url,
             'video_id': case_study.video_id,
             'video_created_at': case_study.video_created_at.isoformat() if case_study.video_created_at else None,
+            'newsflash_video_url': case_study.newsflash_video_url,
+            'newsflash_video_id': case_study.newsflash_video_id,
+            'newsflash_video_status': case_study.newsflash_video_status,
+            'newsflash_video_created_at': case_study.newsflash_video_created_at.isoformat() if case_study.newsflash_video_created_at else None,
             'pictory_video_url': case_study.pictory_video_url,
             'pictory_storyboard_id': case_study.pictory_storyboard_id,
             'pictory_render_id': case_study.pictory_render_id,
@@ -1084,8 +1088,17 @@ def save_final_summary():
                     return parts[1].strip()
             return text.strip()
 
+        # Filter out placeholder/default values that shouldn't be used as client names
+        placeholder_values = ["Client Name", "Company Name", "Unknown", "Unknown Client"]
+        partner_entity_clean = (partner_entity or "").strip()
+        is_placeholder = partner_entity_clean in placeholder_values or not partner_entity_clean
+        
+        # Only add client name prefix if we have a real client name, otherwise just use the title
         current_title_core = strip_existing_prefix(case_study.title or "")
-        case_study.title = f"{partner_entity}: {current_title_core}" if partner_entity else current_title_core
+        if partner_entity_clean and not is_placeholder:
+            case_study.title = f"{partner_entity_clean}: {current_title_core}"
+        else:
+            case_study.title = current_title_core
 
         db.session.commit()
 
@@ -1162,7 +1175,7 @@ def generate_pdf():
             pdf.set_text_color(0, 0, 0)
             title = case_study.title or "Case Study"
             clean_title = title.encode('latin-1', 'replace').decode('latin-1')
-            pdf.multi_cell(0, 10, title, align='C')
+            pdf.multi_cell(0, 10, clean_title, align='C')
             pdf.ln(10)
 
             # Add final summary content with section headings
@@ -1192,19 +1205,51 @@ def generate_pdf():
             pdf.ln(10)
             summary_text = case_study.final_summary[:1000] + "..." if len(
                 case_study.final_summary) > 1000 else case_study.final_summary
-            pdf.multi_cell(0, 10, summary_text)
+            clean_summary_text = summary_text.encode('latin-1', 'replace').decode('latin-1')
+            pdf.multi_cell(0, 10, clean_summary_text)
 
         # Save PDF to database (not filesystem)
-        pdf_bytes = pdf.output(dest='S')
+        # Generate PDF as bytes - compatible with all FPDF versions
+        try:
+            # Try method 1: output to BytesIO buffer (works with most FPDF versions)
+            pdf_buffer = BytesIO()
+            result = pdf.output(pdf_buffer, 'S')
+            
+            # Handle different FPDF return types
+            if isinstance(result, bytes):
+                pdf_bytes = result
+            elif isinstance(result, str):
+                # Some FPDF versions return string, encode it
+                pdf_bytes = result.encode('latin-1')
+            else:
+                # Buffer method - get value from buffer
+                pdf_bytes = pdf_buffer.getvalue()
+            
+            print(f"📄 PDF generated: {len(pdf_bytes)} bytes")
+            
+            # Validate PDF was generated
+            if not pdf_bytes or len(pdf_bytes) == 0:
+                raise Exception("PDF generation failed: empty PDF buffer")
+            
+            # Validate PDF header (PDF files start with %PDF)
+            if not pdf_bytes.startswith(b'%PDF'):
+                print(f"⚠️ Invalid PDF header. First 20 bytes: {pdf_bytes[:20]}")
+                raise Exception("PDF generation failed: invalid PDF format")
+        except Exception as pdf_gen_error:
+            print(f"❌ Error generating PDF bytes: {str(pdf_gen_error)}")
+            import traceback
+            traceback.print_exc()
+            raise
+        
         case_study.final_summary_pdf_data = pdf_bytes
         db.session.commit()
 
-        # Return the file directly
-        pdf_buffer = BytesIO(pdf_bytes)
-        pdf_buffer.seek(0)
+        # Return the file directly - create a fresh BytesIO from the bytes
+        response_buffer = BytesIO(pdf_bytes)
+        response_buffer.seek(0)
 
         return send_file(
-            pdf_buffer,
+            response_buffer,
             as_attachment=True,
             download_name=f"{case_study.title or 'Case_Study'}.pdf",
             mimetype='application/pdf'
