@@ -207,7 +207,7 @@ Before finalizing the post:
                 "model": "gpt-4",
                 "messages": [{"role": "system", "content": prompt}],
                 "temperature": 0.7,
-                "max_tokens": 220
+                "max_tokens": 210
             }
 
             response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
