@@ -1089,16 +1089,21 @@ def save_final_summary():
             return text.strip()
 
         # Filter out placeholder/default values that shouldn't be used as client names
-        placeholder_values = ["Client Name", "Company Name", "Unknown", "Unknown Client"]
+        placeholder_values = ["Client Name", "Company Name", "Unknown", "Unknown Client", ""]
         partner_entity_clean = (partner_entity or "").strip()
         is_placeholder = partner_entity_clean in placeholder_values or not partner_entity_clean
         
-        # Only add client name prefix if we have a real client name, otherwise just use the title
+        # Get the title core (strip existing prefix if present)
         current_title_core = strip_existing_prefix(case_study.title or "")
+        # If title core is empty after stripping, use the original title (might not have had a prefix)
+        if not current_title_core:
+            current_title_core = (case_study.title or "").strip()
+        
+        # Always add a prefix: use real client name if available, otherwise use "Unknown" as fallback
         if partner_entity_clean and not is_placeholder:
             case_study.title = f"{partner_entity_clean}: {current_title_core}"
         else:
-            case_study.title = current_title_core
+            case_study.title = f"Unknown: {current_title_core}"
 
         db.session.commit()
 

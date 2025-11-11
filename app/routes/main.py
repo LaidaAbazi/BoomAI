@@ -1310,18 +1310,18 @@ def store_solution_provider_session(provider_session_id, cleaned_case_study):
                     return parts[1].strip()
             return text.strip()
 
-        # Format as "Client Name: Title" only if we have a real client name
-        placeholder_values = ["Client Name", "Company Name", "Unknown", "Unknown Client"]
+        # Format as "Client Name: Title" - use real client name if available, otherwise "Unknown" as fallback
+        placeholder_values = ["Client Name", "Company Name", "Unknown", "Unknown Client", ""]
         partner_entity = extracted_names.get("partner_entity") or ""
         partner_entity_clean = partner_entity.strip() if partner_entity else ""
         is_placeholder = partner_entity_clean in placeholder_values or not partner_entity_clean
         
         title_core = strip_existing_prefix(base_title)
-        # Only add client name prefix if we have a real client name, otherwise just use the title
+        # Always add a prefix: use real client name if available, otherwise use "Unknown" as fallback
         if partner_entity_clean and not is_placeholder:
             title = f"{partner_entity_clean}: {title_core}"
         else:
-            title = title_core
+            title = f"Unknown: {title_core}"
         
         print(f"🔍 DEBUG: Extracted title from first line: '{title}'")
         print(f"🔍 DEBUG: First few lines of case study:")
