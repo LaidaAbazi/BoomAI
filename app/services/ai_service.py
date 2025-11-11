@@ -127,44 +127,41 @@ Follow the structure, style, and tone instructions below carefully.
  
 ### **STRUCTURE: The Viral LinkedIn Framework**
  
-1. **HOOK (1–2 lines):**
+1. **HOOK (1 line, max 10 words):**
  
-   * Capture attention in the first two seconds.
-   * The goal: stop the scroll.
-   * Use one of these proven formats:
+   * Capture attention immediately with a thought-provoking question.
+   * Keep it extremely short and punchy.
+   * Example: "What if a piano could change a child's life?"
+   * No hashtags, emojis, or links in the hook.
  
-     * ❓ Thought-provoking question
-     * 💥 Bold statement or data point
-     * 😲 Counterintuitive insight
-     * 💬 Emotional or relatable sentence
-     * 🧠 “Here’s what no one tells you about…”
-   * Keep it short (under 12 words).
-   * No hashtags, emojis (except sparingly), or links in the hook.
+2. **STORY (4–6 very short paragraphs):**
  
-2. **INSIGHT / STORY (3–5 short paragraphs):**
- 
-   * Expand with a **personal story**, **lesson learned**, or **contrarian insight**.
+   * Tell the story in **ultra-short paragraphs** (1–2 sentences each).
    * Use **one idea per paragraph**.
+   * Add **blank lines between paragraphs** for visual breathing room.
    * Write like you speak — simple, human, conversational.
-   * Keep it visually readable (1–3 lines per paragraph).
-   * Sprinkle in curiosity: “Here’s the twist…” / “What happened next surprised me.”
-   * Be authentic and avoid jargon like “synergy,” “game-changer,” or “innovative solutions.”
+   * Keep paragraphs to 1–2 lines maximum.
+   * Use short, punchy sentences (under 12 words each).
+   * Be authentic and avoid jargon like "synergy," "game-changer," or "innovative solutions."
    * Facts and emotions > adjectives and fluff.
+   * Show contrast: "Most schools see X. [Company] saw Y."
  
-3. **TAKEAWAY (1–2 lines):**
+3. **TAKEAWAY (1–2 very short lines):**
  
-   * Summarize the key insight, moral, or “aha” moment.
-   * Give readers something to remember or apply.
-   * Example: “In the end, data doesn’t build trust — people do.”
+   * Summarize the key insight in a memorable, poetic way.
+   * Keep it extremely concise (1–2 sentences max).
+   * Example: "Sometimes, the most powerful tools for change don't run on code. They run on keys."
  
 4. **CLOSING / ENGAGEMENT (1 line):**
  
-   * End with a single **question or call to action** that invites comments.
-   * Examples:
+   * End with a single **question** that invites comments.
+   * Keep it short and natural.
+   * Example: "Would you agree that every school should have access to music education like this?"
  
-     * “What’s your take on this?”
-     * “Have you seen this happen in your industry?”
-     * “Would you agree — or challenge this?”
+5. **HASHTAGS (optional, 3–5 hashtags):**
+ 
+   * Add 3–5 relevant hashtags at the end, separated by spaces.
+   * Example: "#Education #Music #Impact #Inclusion"
  
 ---
  
@@ -172,29 +169,17 @@ Follow the structure, style, and tone instructions below carefully.
  
 * **Tone:** Conversational, expert, and authentic — like a trusted peer, not a marketer.
 * **Readability:** Write at a **middle-school reading level** (short, clear sentences).
-* **Sentence length:** Keep most under **15 words**.
+* **Sentence length:** Keep most under **10–12 words**. Many should be 5–8 words.
+* **Paragraph length:** Maximum 1–2 lines per paragraph. Use lots of white space.
 * **Avoid:** Buzzwords, exclamation overuse, self-congratulation, or forced "corporate" tone.
 * **Avoid robotic words:** NEVER use "Enter" (as in "Enter [company name]") - it sounds AI-generated and robotic. Instead, naturally introduce the company or person: "Meet [company]" or "Here's how [company]..." or just start with the story naturally.
 * **Avoid "the results":** NEVER use "the results" - it sounds robotic and AI-generated. Instead, say what actually happened: "sales went up 30%", "they saved time", "it worked", "their numbers improved", "they saw huge improvements".
-* **Use:** Line breaks for rhythm and white space — readability drives engagement.
+* **Use:** Line breaks for rhythm and white space — readability drives engagement. Add blank lines between paragraphs.
 * **Voice:** Confident, empathetic, and human — share lessons, not lectures.
 * **Emotion:** Include tension or contrast (e.g. "what I expected" vs. "what really happened").
-* **Length:** Aim for **130–200 words total** — optimized for mobile reading.
-* **Titles:** Don't use section titles.
- 
----
- 
-### ⚙️ **ADVANCED VIRAL TRIGGERS (optional but powerful)**
- 
-Incorporate at least **one of the following triggers** to increase engagement:
- 
-* **Relatability:** “This happens to all of us…”
-* **Authority:** “After working with 100+ retailers…”
-* **Surprise:** “Turns out, the opposite was true.”
-* **Vulnerability:** “I almost quit that day.”
-* **Social proof:** “Thousands of brands overlook this.”
-* **Tension:** “Everyone says X, but here’s why that’s wrong.”
-* **Practicality:** “Try this next time — it works.”
+* **Length:** Aim for **80–120 words total** — much shorter and more concise than typical posts. Be extremely concise.
+* **Titles:** Don't use section titles or headers.
+* **Formatting:** Use blank lines between paragraphs to create visual breathing room.
  
 ---
  
@@ -202,12 +187,15 @@ Incorporate at least **one of the following triggers** to increase engagement:
  
 Before finalizing the post:
  
-* [ ] Hook is short, emotional, and curiosity-driven.
-* [ ] Every paragraph fits on a mobile screen without scrolling.
-* [ ] Story feels human, not “marketing copy.”
+* [ ] Hook is extremely short (max 10 words) and curiosity-driven.
+* [ ] Every paragraph is 1–2 lines maximum.
+* [ ] Blank lines between paragraphs for visual breathing room.
+* [ ] Story feels human, not "marketing copy."
 * [ ] One clear insight or takeaway.
 * [ ] Ends with one powerful question — not multiple CTAs.
-* [ ] Zero hashtags or links in the body (add 1–3 hashtags *after* the post if desired).
+* [ ] Total length is 80–120 words (much shorter than typical posts).
+* [ ] 3–5 hashtags at the end (optional but recommended).
+* [ ] Extremely concise — every word counts.
 """
 
             headers = {
@@ -219,7 +207,7 @@ Before finalizing the post:
                 "model": "gpt-4",
                 "messages": [{"role": "system", "content": prompt}],
                 "temperature": 0.7,
-                "max_tokens": 500
+                "max_tokens": 220
             }
 
             response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
