@@ -754,6 +754,28 @@ def generate_client_summary():
             return jsonify({"status": "error", "message": "Transcript is missing."}), 400
         if not token:
             return jsonify({"status": "error", "message": "Missing token"}), 400
+        
+        # Get the case study to extract client name
+        invite = InviteToken.query.filter_by(token=token).first()
+        if not invite:
+            return jsonify({"status": "error", "message": "Invalid token"}), 404
+        
+        case_study = CaseStudy.query.filter_by(id=invite.case_study_id).first()
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Extract client name from case study
+        ai_service = AIService()
+        if case_study.final_summary:
+            extracted_names = ai_service.extract_names_from_case_study(case_study.final_summary)
+        else:
+            provider_interview = case_study.solution_provider_interview
+            if provider_interview and provider_interview.summary:
+                extracted_names = ai_service.extract_names_from_case_study(provider_interview.summary)
+            else:
+                extracted_names = {"partner_entity": "Client"}
+        
+        client_name = extracted_names.get("partner_entity", "Client")
             
         detected_language = detect_language(transcript)
 
@@ -769,28 +791,45 @@ This is a **client voice** case study — the transcript you're given is from th
 ✅ Use only the information provided in the transcript  
 ❌ Do NOT invent or assume missing details
 ❌ Do NOT use section numbers like "Section 1:", "1.", "2.", etc. - just use the section headers directly
+❌ Do NOT use bold formatting (**) for section titles - use plain text with ALL CAPS or Title Case only
 
 ---
 
 ### Structure:
 
-**PROJECT REFLECTION (Client Voice)**  
+PROJECT REFLECTION (Client Voice)
 A warm, professional 3–5 sentence paragraph that shares:  
 - What the project was  
 - What the client's experience was like  
 - The results or value they got  
 - A light personal note if they gave one
 
----
 
-**CLIENT QUOTE**  
+CLIENT QUOTE
 Include a short quote from the client (verbatim if given, otherwise craft one from the content).  
 Make it feel authentic, appreciative, and aligned with their actual words.
+
+
+CLIENT FEEDBACK
+Carefully review the transcript and extract any feedback, suggestions, concerns, or comments the client shared about what the solution provider could do better, what they didn't like, what they'd like to see improved, or any other feedback they want to share with the solution provider.
+
+Format each feedback item as a simple, concise bullet point starting with "{client_name}" followed by the feedback. 
+
+CRITICAL FORMATTING RULES:
+- Each bullet point must be ONE concise sentence only
+- Keep it short and direct - just the raw feedback itself
+- Do NOT add explanations, elaborations, or "This suggests that..." type of commentary
+- Do NOT add context or analysis - just the feedback
+- Use the client's own words when possible, or a very short paraphrase
+- Format: - {client_name} [concise feedback statement]
+- Use the actual client name "{client_name}" directly (no brackets), NOT the word "Client"
+
+If the client did not provide any feedback in the transcript, omit this section entirely (do not include an empty CLIENT FEEDBACK section).
 
 ---
 
 🎯 GOAL:  
-Provide a simple, balanced, human-sounding reflection from the client that complements the full case study.
+Provide a simple, balanced, human-sounding reflection from the client that complements the full case study, including any valuable feedback they shared for the solution provider.
 
 Transcript:
 {transcript}
