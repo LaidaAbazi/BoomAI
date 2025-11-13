@@ -427,7 +427,7 @@ class LinkedInOAuthService:
             db.session.rollback()
             return False
     
-    def create_oauth_state(self, user_id, redirect_uri, content=None, expiration_minutes=10):
+    def create_oauth_state(self, user_id, redirect_uri, content=None, frontend_callback_url=None, expiration_minutes=10):
         """
         Create and store an OAuth state in the database for CSRF protection.
         
@@ -435,6 +435,7 @@ class LinkedInOAuthService:
             user_id: The user ID associated with this OAuth flow
             redirect_uri: The redirect URI that will be used for this OAuth request
             content: Optional content to be posted (stored with state)
+            frontend_callback_url: Optional frontend URL to redirect to after OAuth completes
             expiration_minutes: How long the state should be valid (default: 10 minutes)
         
         Returns:
@@ -450,6 +451,7 @@ class LinkedInOAuthService:
                 user_id=user_id,
                 redirect_uri=redirect_uri,
                 content=content,
+                frontend_callback_url=frontend_callback_url,
                 expires_at=expires_at,
                 used=False
             )
