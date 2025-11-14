@@ -5,31 +5,59 @@ from app.utils.auth_helpers import get_current_user, login_required, get_current
 from flasgger import swag_from
 import secrets
 import os
+from urllib.parse import urlparse
 
 bp = Blueprint('linkedin_oauth', __name__, url_prefix='/linkedin')
+
+# Whitelist of allowed frontend callback URLs
+ALLOWED_FRONTEND_URLS = [
+    'http://localhost:3000',
+    'https://storyboom.ai',
+    'https://boomai.onrender.com',
+    'http://127.0.0.1:10000',
+]
+
+def validate_frontend_callback(url):
+    """
+    Validate that the frontend callback URL origin is in the whitelist.
+    
+    Args:
+        url: The frontend callback URL to validate
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    if not url:
+        return False
+    
+    try:
+        parsed = urlparse(url)
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        return origin in ALLOWED_FRONTEND_URLS
+    except Exception as e:
+        print(f"❌ Error validating frontend callback URL: {str(e)}")
+        return False
 
 @bp.route('/share/init', methods=['POST'])
 @swag_from({
     'tags': ['LinkedIn'],
     'summary': 'Initialize LinkedIn sharing flow',
-    'description': 'Initialize the LinkedIn OAuth sharing flow. Stores content and state in database and generates OAuth URL for authentication. Set return_format="json" to receive JSON response in callback instead of redirect.',
+    'description': 'Initialize the LinkedIn OAuth sharing flow. Stores content and state in database and generates OAuth URL for authentication. After OAuth completes, users are redirected to the provided frontend callback URL.',
     'requestBody': {
         'required': True,
         'content': {
             'application/json': {
                 'schema': {
                     'type': 'object',
-                    'required': ['content'],
+                    'required': ['content', 'frontend_callback_url'],
                     'properties': {
                         'content': {
                             'type': 'string',
                             'description': 'The LinkedIn post content to share'
                         },
-                        'return_format': {
+                        'frontend_callback_url': {
                             'type': 'string',
-                            'enum': ['redirect', 'json'],
-                            'default': 'redirect',
-                            'description': 'Response format: "redirect" (default) redirects to status page, "json" returns JSON response in callback'
+                            'description': 'Frontend URL to redirect to after OAuth completes. Must be from whitelisted origins.'
                         }
                     }
                 }
@@ -54,7 +82,7 @@ bp = Blueprint('linkedin_oauth', __name__, url_prefix='/linkedin')
                 }
             }
         },
-        400: {'description': 'Content is required'},
+        400: {'description': 'Content or frontend_callback_url is required, or frontend_callback_url is not whitelisted'},
         500: {'description': 'Failed to initialize LinkedIn share'}
     }
 })
@@ -62,16 +90,22 @@ def share_init():
     """
     Initialize LinkedIn sharing flow
     Stores content and state in database (not session) for multi-host support
-    
-    Optional: Set return_format='json' to receive JSON response instead of redirect
+    After OAuth completes, users are redirected to the provided frontend callback URL.
     """
     try:
         data = request.get_json()
         content = data.get('content')
-        return_format = data.get('return_format', 'redirect')  # 'json' or 'redirect' (default)
+        frontend_callback_url = data.get('frontend_callback_url')
         
         if not content:
             return jsonify({"error": "Content is required"}), 400
+        
+        if not frontend_callback_url:
+            return jsonify({"error": "frontend_callback_url is required"}), 400
+        
+        # Validate frontend callback URL against whitelist
+        if not validate_frontend_callback(frontend_callback_url):
+            return jsonify({"error": "frontend_callback_url is not from an allowed origin"}), 400
         
         user_id = get_current_user_id()
         
@@ -81,20 +115,15 @@ def share_init():
         request_scheme = request.scheme
         redirect_uri = oauth_service.get_redirect_uri_for_host(request_host, request_scheme)
         
-        # Add return_format to redirect_uri as query parameter (LinkedIn will preserve it)
-        if return_format == 'json':
-            from urllib.parse import urlencode
-            separator = '&' if '?' in redirect_uri else '?'
-            redirect_uri = f"{redirect_uri}{separator}return_format=json"
-        
         print(f"🌐 Using redirect URI: {redirect_uri} for host: {request_host}")
-        print(f"📋 Return format: {return_format}")
+        print(f"🔗 Frontend callback URL: {frontend_callback_url}")
         
-        # Create and store OAuth state in database (with content)
+        # Create and store OAuth state in database (with content and frontend_callback_url)
         state = oauth_service.create_oauth_state(
             user_id=user_id,
             redirect_uri=redirect_uri,
             content=content,
+            frontend_callback_url=frontend_callback_url,
             expiration_minutes=10
         )
         
@@ -124,7 +153,7 @@ def callback():
     """
     Handle OAuth callback from LinkedIn
     Validates state, exchanges code for token, saves token, and automatically posts content to LinkedIn.
-    Then redirects to status page.
+    Then redirects to frontend callback URL.
     """
     try:
         # Get authorization code and state from callback
@@ -132,82 +161,81 @@ def callback():
         state = request.args.get('state')
         error = request.args.get('error')
         
-        # Check if frontend wants JSON response
-        return_format = request.args.get('return_format', 'redirect')
+        user_id = get_current_user_id()
+        print(f"🔐 User ID: {user_id}")
         
         if error:
             print(f"❌ LinkedIn OAuth error: {error}")
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": f"LinkedIn OAuth error: {error}"
-                }), 400
+            # Try to get frontend_callback_url from state if available
+            frontend_callback_url = None
+            if state:
+                try:
+                    oauth_service = LinkedInOAuthService()
+                    oauth_state = oauth_service.validate_oauth_state(state, user_id=user_id)
+                    if oauth_state:
+                        frontend_callback_url = oauth_state.frontend_callback_url
+                except:
+                    pass
+            if frontend_callback_url:
+                from urllib.parse import urlencode
+                error_params = urlencode({'error': error}, doseq=True)
+                return redirect(f"{frontend_callback_url}?{error_params}")
             return redirect(url_for('linkedin_oauth.share_status', error=error))
         
         if not code:
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": "Authorization code not provided"
-                }), 400
+            # Try to get frontend_callback_url from state if available
+            frontend_callback_url = None
+            if state:
+                try:
+                    oauth_service = LinkedInOAuthService()
+                    oauth_state = oauth_service.validate_oauth_state(state, user_id=user_id)
+                    if oauth_state:
+                        frontend_callback_url = oauth_state.frontend_callback_url
+                except:
+                    pass
+            if frontend_callback_url:
+                return redirect(f"{frontend_callback_url}?error=no_code")
             return redirect(url_for('linkedin_oauth.share_status', error='no_code'))
         
         if not state:
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": "State parameter not provided"
-                }), 400
             return redirect(url_for('linkedin_oauth.share_status', error='no_state'))
         
-        user_id = get_current_user_id()
-        print(f"🔐 User ID: {user_id}")
         print(f"🔐 State received: {state[:10]}...")
-
-        # Validate state parameter from database
+        
+        # Validate state parameter from database to get frontend_callback_url
         oauth_service = LinkedInOAuthService()
         oauth_state = oauth_service.validate_oauth_state(state, user_id=user_id)
         
+        # Get frontend callback URL from oauth_state (fallback to error if not available)
+        frontend_callback_url = oauth_state.frontend_callback_url if oauth_state else None
+        
         if not oauth_state:
             print(f"⚠️ Invalid or expired state for user {user_id}")
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": "Invalid or expired OAuth state"
-                }), 400
+            if frontend_callback_url:
+                return redirect(f"{frontend_callback_url}?error=invalid_state")
             return redirect(url_for('linkedin_oauth.share_status', error='invalid_state'))
         
         # Get content from stored state
         content = oauth_state.content
         if not content:
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": "Content not found in OAuth state"
-                }), 400
+            if frontend_callback_url:
+                return redirect(f"{frontend_callback_url}?error=no_content")
             return redirect(url_for('linkedin_oauth.share_status', error='no_content'))
         
-        # Get the redirect_uri that was used for this OAuth request (remove return_format if present)
-        redirect_uri = oauth_state.redirect_uri
-        # Remove return_format from redirect_uri for token exchange (LinkedIn needs exact match)
-        from urllib.parse import urlparse, urlencode, parse_qs
-        parsed = urlparse(redirect_uri)
-        query_params = parse_qs(parsed.query)
-        query_params.pop('return_format', None)  # Remove return_format
-        clean_query = urlencode(query_params, doseq=True)
-        redirect_uri_clean = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-        if clean_query:
-            redirect_uri_clean = f"{redirect_uri_clean}?{clean_query}"
+        # Get frontend callback URL from stored state
+        if not frontend_callback_url:
+            print(f"⚠️ No frontend_callback_url in OAuth state, falling back to status page")
+            frontend_callback_url = None
         
-        # Exchange code for access token (must use the same redirect_uri without return_format)
-        token_data = oauth_service.exchange_code_for_token(code, redirect_uri=redirect_uri_clean)
+        # Get the redirect_uri that was used for this OAuth request
+        redirect_uri = oauth_state.redirect_uri
+        
+        # Exchange code for access token
+        token_data = oauth_service.exchange_code_for_token(code, redirect_uri=redirect_uri)
         
         if not token_data:
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": "Failed to exchange authorization code for access token"
-                }), 500
+            if frontend_callback_url:
+                return redirect(f"{frontend_callback_url}?error=token_exchange_failed")
             return redirect(url_for('linkedin_oauth.share_status', error='token_exchange_failed'))
         
         access_token = token_data.get('access_token')
@@ -216,11 +244,8 @@ def callback():
         user_info = oauth_service.get_user_info(access_token)
 
         if not user_info or not user_info.get('sub'):
-            if return_format == 'json':
-                return jsonify({
-                    "success": False,
-                    "error": "Failed to retrieve user information from LinkedIn"
-                }), 500
+            if frontend_callback_url:
+                return redirect(f"{frontend_callback_url}?error=user_info_failed")
             return redirect(url_for('linkedin_oauth.share_status', error='user_info_failed'))
         
         print(f"📝 LinkedIn OAuth data received for user {user_id}:")
@@ -253,48 +278,40 @@ def callback():
         print(f"📤 Automatically posting content to LinkedIn for user {user_id}...")
         post_result = oauth_service.create_ugc_post(access_token, author_id, content)
         
-        # Check if frontend wants JSON response instead of redirect
-        return_format = request.args.get('return_format', 'redirect')
-        
-        if return_format == 'json':
-            # Return JSON response for frontend to handle
-            if post_result.get('success'):
-                print(f"✅ LinkedIn post created successfully: {post_result.get('post_id')}")
-                return jsonify({
-                    "success": True,
-                    "post_id": post_result.get('post_id'),
-                    "message": "Post created successfully",
-                    "linkedin_member_id": user_info.get('sub'),
-                    "linkedin_name": user_info.get('name')
-                }), 200
-            else:
-                error_msg = post_result.get('error', 'Unknown error')
-                print(f"❌ Failed to create LinkedIn post: {error_msg}")
-                return jsonify({
-                    "success": False,
-                    "error": error_msg,
-                    "status_code": post_result.get('status_code')
-                }), 500
+        # Redirect to frontend callback URL
+        if post_result.get('success'):
+            print(f"✅ LinkedIn post created successfully: {post_result.get('post_id')}")
+            if frontend_callback_url:
+                from urllib.parse import urlencode
+                post_id = post_result.get('post_id', '')
+                success_params = urlencode({'success': 'true', 'post_id': post_id}, doseq=True)
+                return redirect(f"{frontend_callback_url}?{success_params}")
+            return redirect(url_for('linkedin_oauth.share_status', success=True))
         else:
-            # Default: Redirect to status page
-            if post_result.get('success'):
-                print(f"✅ LinkedIn post created successfully: {post_result.get('post_id')}")
-                return redirect(url_for('linkedin_oauth.share_status', success=True))
-            else:
-                error_msg = post_result.get('error', 'Unknown error')
-                print(f"❌ Failed to create LinkedIn post: {error_msg}")
-                return redirect(url_for('linkedin_oauth.share_status', error='post_failed', details=error_msg))
+            error_msg = post_result.get('error', 'Unknown error')
+            print(f"❌ Failed to create LinkedIn post: {error_msg}")
+            if frontend_callback_url:
+                from urllib.parse import urlencode
+                error_params = urlencode({'error': 'post_failed', 'details': error_msg}, doseq=True)
+                return redirect(f"{frontend_callback_url}?{error_params}")
+            return redirect(url_for('linkedin_oauth.share_status', error='post_failed', details=error_msg))
             
     except Exception as e:
         print(f"❌ Error in LinkedIn OAuth callback: {str(e)}")
         import traceback
         traceback.print_exc()
-        return_format = request.args.get('return_format', 'redirect')
-        if return_format == 'json':
-            return jsonify({
-                "success": False,
-                "error": f"Callback processing failed: {str(e)}"
-            }), 500
+        # Try to get frontend_callback_url from state if available
+        try:
+            state = request.args.get('state')
+            if state:
+                oauth_service = LinkedInOAuthService()
+                oauth_state = oauth_service.validate_oauth_state(state, user_id=get_current_user_id())
+                if oauth_state and oauth_state.frontend_callback_url:
+                    from urllib.parse import urlencode
+                    error_params = urlencode({'error': 'callback_failed', 'details': str(e)}, doseq=True)
+                    return redirect(f"{oauth_state.frontend_callback_url}?{error_params}")
+        except:
+            pass
         return redirect(url_for('linkedin_oauth.share_status', error='callback_failed'))
 
 @bp.route('/share/form')

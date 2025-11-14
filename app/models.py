@@ -49,7 +49,6 @@ class User(db.Model):
     extra_credits = Column(Integer, default=0)
     last_reset_date = Column(Date, nullable=True)
 
-
     
     # Subscription status
     has_active_subscription = Column(Boolean, default=False)
@@ -326,6 +325,7 @@ class OAuthState(db.Model):
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     redirect_uri = Column(String(500), nullable=False)  # Store the redirect URI used
     content = Column(Text, nullable=True)  # Optional: store content to be posted
+    frontend_callback_url = Column(String(500), nullable=True)  # Frontend URL to redirect to after OAuth
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=False)  # State expiration time
     used = Column(Boolean, default=False)  # Mark as used after successful validation

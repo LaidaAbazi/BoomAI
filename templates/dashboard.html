@@ -2041,10 +2041,13 @@
               const res = await fetch('/linkedin/share/init', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: postContent })
+                body: JSON.stringify({ content: postContent, frontend_callback_url: window.location.href })
               });
               
               const data = await res.json();
+
+              console.log('LinkedIn share response:', data);
+              console.log('LinkedIn share oauth_url:', data.oauth_url);
               
               if (data.success && data.oauth_url) {
                 // Redirect to LinkedIn OAuth

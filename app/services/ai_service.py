@@ -116,57 +116,115 @@ class AIService:
                 return "AI service not available for LinkedIn post generation."
             
             prompt = f"""
+
+           ### ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+
+1. DO NOT output any section labels.  
+   Forbidden labels include: "HOOK", "STORY", "TAKEAWAY", "CLOSING", "HASHTAGS", or any variation (lowercase, uppercase, bold, with or without colons).  
+   If the model outputs ANY label, the output is invalid.
+
+2. FIRST LINE = Hook.  
+   - Max 10 words.  
+   - NO emojis, NO hashtags, NO links.  
+   - One sentence only.
+
+3. STORY = 4 to 6 paragraphs.  
+   - Each paragraph 1 to 3 sentences maximum.  
+   - Each sentence MUST appear on its own line.  
+   - No paragraph may exceed 2 lines total on screen.  
+   - No labels, no bullets, no numbering.  
+   - No emojis in more than 3 total sentences in the entire post.
+
+4. LANGUAGE RULE: Use the same language as the case study.
+
+5. LENGTH RULE: Total post length MUST be between 80 and 120 words (inclusive).  
+   The model must self-check and keep within this range.
+   
+
+6. FORBIDDEN WORDS & PHRASES:  
+   - NEVER use “the results”, “the result?”, or “the impact”.  
+   - NEVER use “the solution?” as a phrase.  
+   - NEVER use “Enter [company]”.  
+   - Avoid robotic phrasing like: “This wasn’t a simple task.” “They succeeded.” “A single solution…”.
+
+7. TAKEAWAY = 1 to 2 lines only.  
+   Short, poetic, memorable. No labels.
+
+8. CLOSING = EXACTLY one question.  
+   One line only. No emojis.
+
+9. HASHTAGS = 3 to 5 hashtags on the last line.  
+   Only plain hashtags. No emojis. No section labels.
+
+10. NO markdown formatting:  
+    - No bold  
+    - No italics  
+    - No headers (#, ##, ###)  
+    - No lists  
+    - No colons after labels (since labels are forbidden entirely)
+
+11. EMOJI RULE: The post MUST use **between 1 and 3 emojis total** (inclusive).
+- Emojis CANNOT appear in the hook.
+- Emojis may appear only inside the story paragraphs or takeaway.
+
+
+If the model violates ANY rule above, regenerate until compliant.
+
+
         Act as a **LinkedIn content strategist and viral copywriter** with a proven record of creating high-engagement posts that drive massive reach, discussion, and shares among professionals.
- **IMPORTANT: Write the LinkedIn post in the same language as the case study content below.**
+ **IMPORTANT: Write the LinkedIn post in the same language as the case study content below.**
+
 
 Write a **scroll-stopping LinkedIn post** on the following story shown between '<<' and '>>':
- 
+ 
 '<<'{case_study_text}'>>'
- 
+ 
 Follow the structure, style, and tone instructions below carefully.
- 
+ 
 ### **STRUCTURE: The Viral LinkedIn Framework**
- 
+ 
 1. **HOOK (1 line, max 10 words):**
- 
-   * Capture attention immediately with a thought-provoking question.
-   * Keep it extremely short and punchy.
-   * Example: "What if a piano could change a child's life?"
-   * No hashtags, emojis, or links in the hook.
- 
+ 
+   * Capture attention immediately with a thought-provoking question.
+   * Keep it extremely short and punchy.
+   * Example: "What if a piano could change a child's life?"
+   * No hashtags, emojis, or links in the hook.
+ 
 2. **STORY (4–6 very short paragraphs):**
- 
-   * Tell the story in **ultra-short paragraphs** (1–2 sentences each).
-   * Use **one idea per paragraph**.
-   * Add **blank lines between paragraphs** for visual breathing room.
-   * Write like you speak — simple, human, conversational.
-   * Keep paragraphs to 1–2 lines maximum.
-   * Use short, punchy sentences (under 12 words each).
-   * Be authentic and avoid jargon like "synergy," "game-changer," or "innovative solutions."
-   * Facts and emotions > adjectives and fluff.
-   * Show contrast: "Most schools see X. [Company] saw Y."
- 
+ 
+ - Tell the story in ultra-short paragraphs (1–3 sentences each).
+- Use one idea per paragraph.
+- Add blank lines between paragraphs for visual breathing room and to preserve paragraph context.
+- Format each sentence in the paragraph on a separate line, so sentences within a paragraph appear line-  by-line, but paragraphs are not broken up beyond that.
+- Write like you speak — simple, human, conversational.
+- Keep sentences short and punchy (5–12 words each).
+- Be authentic and avoid jargon like "synergy," "game-changer," or "innovative solutions."
+- Facts and emotions > adjectives and fluff.
+- Show contrast: "Most schools see X. [Company] saw Y."
+- Include NO MORE THAN 3 emojis total per ENTIRE POST.
+
+ 
 3. **TAKEAWAY (1–2 very short lines):**
- 
-   * Summarize the key insight in a memorable, poetic way.
-   * Keep it extremely concise (1–2 sentences max).
-   * Example: "Sometimes, the most powerful tools for change don't run on code. They run on keys."
- 
+ 
+   * Summarize the key insight in a memorable, poetic way.
+   * Keep it extremely concise (1–2 sentences max).
+   * Example: "Sometimes, the most powerful tools for change don't run on code. They run on keys."
+ 
 4. **CLOSING / ENGAGEMENT (1 line):**
- 
-   * End with a single **question** that invites comments.
-   * Keep it short and natural.
-   * Example: "Would you agree that every school should have access to music education like this?"
- 
+ 
+   * End with a single **question** that invites comments.
+   * Keep it short and natural.
+   * Example: "Would you agree that every school should have access to music education like this?"
+ 
 5. **HASHTAGS (optional, 3–5 hashtags):**
- 
-   * Add 3–5 relevant hashtags at the end, separated by spaces.
-   * Example: "#Education #Music #Impact #Inclusion"
- 
+ 
+   * Add 3–5 relevant hashtags at the end, separated by spaces.
+   * Example: "#Education #Music #Impact #Inclusion"
+ 
 ---
- 
+ 
 ### 🧭 **STYLE GUIDELINES**
- 
+ 
 * **Tone:** Conversational, expert, and authentic — like a trusted peer, not a marketer.
 * **Readability:** Write at a **middle-school reading level** (short, clear sentences).
 * **Sentence length:** Keep most under **10–12 words**. Many should be 5–8 words.
@@ -180,13 +238,13 @@ Follow the structure, style, and tone instructions below carefully.
 * **Length:** Aim for **80–120 words total** — much shorter and more concise than typical posts. Be extremely concise.
 * **Titles:** Don't use section titles or headers.
 * **Formatting:** Use blank lines between paragraphs to create visual breathing room.
- 
+ 
 ---
- 
+ 
 ### ✅ **Final Output Checklist**
- 
+ 
 Before finalizing the post:
- 
+ 
 * [ ] Hook is extremely short (max 10 words) and curiosity-driven.
 * [ ] Every paragraph is 1–2 lines maximum.
 * [ ] Blank lines between paragraphs for visual breathing room.
@@ -196,6 +254,7 @@ Before finalizing the post:
 * [ ] Total length is 80–120 words (much shorter than typical posts).
 * [ ] 3–5 hashtags at the end (optional but recommended).
 * [ ] Extremely concise — every word counts.
+
 """
 
 
