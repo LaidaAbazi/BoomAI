@@ -445,9 +445,10 @@ def send_email(to, link):
         first_name = user.first_name if user and hasattr(user, 'first_name') and user.first_name else "there"
         msg.body = (
             f"Hi {first_name},\n\n"
-            "Thank you for signing up for Storyboom.ai! To complete your registration and access your account, "
-            "please verify your email address by visiting the link below:\n\n"
+            "Thank you for signing up for Storyboom.ai!\n\n"
+            "To complete your registration and access your account, please verify your email address by clicking the link below:\n\n"
             f"{link}\n\n"
+            "Please note: This verification link will expire in 1 hour for security purposes, so please verify your email as soon as possible.\n\n"
             "If you did not create an account with us, you can safely ignore this message.\n\n"
             "Best regards,\n"
             "The Storyboom team"
