@@ -277,6 +277,43 @@ class Feedback(db.Model):
             'feedback_summary': self.feedback_summary
         }
 
+class StoryFeedback(db.Model):
+    __tablename__ = 'story_feedbacks'
+    id = Column(Integer, primary_key=True)
+    case_study_id = Column(Integer, ForeignKey('case_studies.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    is_thumbs_up = Column(Boolean, nullable=False)  # True for thumbs up, False for thumbs down
+    is_thumbs_down = Column(Boolean, nullable=False, default=False)  # True for thumbs down, False for thumbs up
+    feedback_text = Column(Text, nullable=True)  # Optional text feedback (can be provided with or without thumbs down)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    case_study = relationship('CaseStudy', backref='story_feedbacks')
+    user = relationship('User', backref='story_feedbacks')
+    
+    # Unique constraint: one feedback per user per story
+    __table_args__ = (
+        db.UniqueConstraint('case_study_id', 'user_id', name='uq_story_feedback_user'),
+    )
+    
+    def __init__(self, **kwargs):
+        # Automatically set is_thumbs_down based on is_thumbs_up
+        if 'is_thumbs_up' in kwargs:
+            kwargs['is_thumbs_down'] = not kwargs['is_thumbs_up']
+        super().__init__(**kwargs)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'case_study_id': self.case_study_id,
+            'user_id': self.user_id,
+            'is_thumbs_up': self.is_thumbs_up,
+            'is_thumbs_down': self.is_thumbs_down,
+            'feedback_text': self.feedback_text,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
 class OAuthState(db.Model):
     """
     Store OAuth state values for CSRF protection across multiple hosts.

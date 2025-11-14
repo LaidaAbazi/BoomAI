@@ -198,6 +198,7 @@ Before finalizing the post:
 * [ ] Extremely concise — every word counts.
 """
 
+
             headers = {
                 "Authorization": f"Bearer {self.openai_api_key}",
                 "Content-Type": "application/json"

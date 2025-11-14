@@ -345,9 +345,6 @@ class CaseStudyService:
                 
                 CRITICAL: The case study content should start directly with the HERO STATEMENT. Do NOT include any title, headline, or company name formatting at the beginning of the content. If the first line looks like a title or contains company names in ALL CAPS, skip it and start with the actual story content.
 
-                **INSTRUCTIONS FOR GENERATING QUOTES HIGHLIGHTS:**
-                After writing the complete case study (sections 1-10), add a separate "QUOTES HIGHLIGHTS" section below it. This section will be extracted into metadata and should NOT be part of the main story content. Include 2-3 additional impactful quotes from both client and provider that were not used in the main story.
- 
                 Now, here is the input:
  
                 Provider Summary:
@@ -439,37 +436,9 @@ class CaseStudyService:
                 CRITICAL: The case study content should start directly with the HERO STATEMENT. Do NOT include any title, headline, or company name formatting at the beginning of the content. If the first line looks like a title or contains company names in ALL CAPS, skip it and start with the actual story content.
  
                 Now, here is the input:
- 
+
                 Provider Summary:
                 {provider_summary}
-                        
-
-                **IMPORTANT QUOTE STRUCTURE:**
-                1. **Main Story Quotes** (Only these should appear in the main story):
-                    - Include exactly ONE impactful quote from the provider in the "Testimonial/Provider Reflection" section
-                    - Create a realistic client quote for the "Customer/Client Reflection" section based on the provider's description
-                    - These should be the most powerful, representative quotes
-                    - Keep them concise and impactful
-
-                2. **Additional Quotes** (These will appear ONLY in the meta data):
-                    - After the main story, provide a section titled "Quotes Highlights"
-                    - Include 2-3 additional meaningful quotes that were NOT used in the main story
-                    - These should be different from the main quotes above
-                    - Format each as:
-                      - **Provider:** "Their exact words or close paraphrase"
-                    - Focus on quotes that:
-                      - Highlight specific results or metrics
-                      - Show unique insights about the collaboration
-                      - Express satisfaction or key learnings
-                      - Reveal interesting challenges overcome
-
-                Example of Additional Quotes (for meta data only):
-                - **Provider:** "The client's feedback helped us refine the solution in unexpected ways."
-
-                **CRITICAL: The "Quotes Highlights" section should NOT appear in the main story content. It should be a separate section that gets extracted into metadata only.**
-
-                **INSTRUCTIONS FOR GENERATING QUOTES HIGHLIGHTS:**
-                After writing the complete case study (sections 1-10), add a separate "QUOTES HIGHLIGHTS" section below it. This section will be extracted into metadata and should NOT be part of the main story content. Include 2-3 additional provider quotes that were not used in the main story.
                 """
 
             headers = {

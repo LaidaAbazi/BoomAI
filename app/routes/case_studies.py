@@ -3,12 +3,12 @@ import os
 import json
 import re
 import uuid
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timezone
 from fpdf import FPDF
 from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label
+from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, StoryFeedback
 from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required, subscription_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
@@ -71,6 +71,12 @@ def get_case_studies():
         case_studies_data = []
         
         for case_study in case_studies:
+            # Get user's feedback for this story
+            user_feedback = StoryFeedback.query.filter_by(
+                case_study_id=case_study.id,
+                user_id=user_id
+            ).first()
+            
             case_study_data = {
                 'id': case_study.id,
                 'title': case_study.title,
@@ -103,6 +109,7 @@ def get_case_studies():
                 'linkedin_post': case_study.linkedin_post,
                 'email_subject': case_study.email_subject,
                 'email_body': case_study.email_body,
+                'user_feedback': user_feedback.to_dict() if user_feedback else None,
             }
             case_studies_data.append(case_study_data)
         
@@ -1452,4 +1459,307 @@ def check_case_study_status(case_study_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@bp.route('/case_studies/<int:case_study_id>/feedback', methods=['POST'])
+@login_required
+@swag_from({
+    'tags': ['Story Feedback'],
+    'summary': 'Submit feedback for a specific story',
+    'description': 'Submit or update feedback (thumbs up/down) for a story. Text feedback is optional for both thumbs up and thumbs down.',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study/story'
+        }
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'required': ['is_thumbs_up'],
+                    'properties': {
+                        'is_thumbs_up': {
+                            'type': 'boolean',
+                            'description': 'True for thumbs up, False for thumbs down'
+                        },
+                        'feedback_text': {
+                            'type': 'string',
+                            'description': 'Optional text feedback explaining what can be improved. Can be provided for both thumbs up and thumbs down.'
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {
+            'description': 'Feedback submitted/updated successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'},
+                            'feedback': {
+                                'type': 'object',
+                                'properties': {
+                                    'id': {'type': 'integer'},
+                                    'case_study_id': {'type': 'integer'},
+                                    'user_id': {'type': 'integer'},
+                                    'is_thumbs_up': {'type': 'boolean'},
+                                    'is_thumbs_down': {'type': 'boolean'},
+                                    'feedback_text': {'type': 'string', 'nullable': True},
+                                    'created_at': {'type': 'string', 'format': 'date-time'},
+                                    'updated_at': {'type': 'string', 'format': 'date-time'}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            'description': 'Bad request - missing required fields or invalid data',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'Story not found',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'},
+        500: {
+            'description': 'Internal server error',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
+def submit_story_feedback(case_study_id):
+    """Submit feedback for a specific story"""
+    try:
+        user_id = get_current_user_id()
+        
+        # Verify the case study exists and belongs to the user
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        if not case_study:
+            return jsonify({'success': False, 'message': 'Story not found'}), 404
+        
+        data = request.get_json()
+        is_thumbs_up = data.get('is_thumbs_up')
+        feedback_text = data.get('feedback_text', '').strip()
+        
+        if is_thumbs_up is None:
+            return jsonify({'success': False, 'message': 'is_thumbs_up is required'}), 400
+        
+        # Check if feedback already exists
+        existing_feedback = StoryFeedback.query.filter_by(
+            case_study_id=case_study_id,
+            user_id=user_id
+        ).first()
+        
+        if existing_feedback:
+            # If clicking the same feedback type again without text, remove it (toggle off)
+            # For thumbs up: if same type, remove
+            # For thumbs down: if same type AND no text provided, remove (toggle off)
+            if existing_feedback.is_thumbs_up == is_thumbs_up:
+                if is_thumbs_up:
+                    # Thumbs up: always toggle off if clicking same
+                    db.session.delete(existing_feedback)
+                    db.session.commit()
+                    return jsonify({
+                        'success': True,
+                        'message': 'Feedback removed successfully',
+                        'feedback': None
+                    })
+                else:
+                    # Thumbs down: only toggle off if no text provided (button click to remove)
+                    # If text is provided, update the feedback text
+                    if not feedback_text:
+                        db.session.delete(existing_feedback)
+                        db.session.commit()
+                        return jsonify({
+                            'success': True,
+                            'message': 'Feedback removed successfully',
+                            'feedback': None
+                        })
+                    else:
+                        # Update the feedback text
+                        existing_feedback.feedback_text = feedback_text
+                        existing_feedback.updated_at = datetime.now(UTC)
+                        db.session.commit()
+                        return jsonify({
+                            'success': True,
+                            'message': 'Feedback updated successfully',
+                            'feedback': existing_feedback.to_dict()
+                        })
+            else:
+                # Update existing feedback to different type
+                existing_feedback.is_thumbs_up = is_thumbs_up
+                existing_feedback.is_thumbs_down = not is_thumbs_up  # Keep in sync
+                existing_feedback.feedback_text = feedback_text if feedback_text else None
+                existing_feedback.updated_at = datetime.now(UTC)
+                db.session.commit()
+                return jsonify({
+                    'success': True,
+                    'message': 'Feedback updated successfully',
+                    'feedback': existing_feedback.to_dict()
+                })
+        else:
+            # Create new feedback
+            # Text is optional for both thumbs up and thumbs down
+            feedback = StoryFeedback(
+                case_study_id=case_study_id,
+                user_id=user_id,
+                is_thumbs_up=is_thumbs_up,
+                feedback_text=feedback_text if feedback_text else None
+            )
+            db.session.add(feedback)
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': 'Feedback submitted successfully',
+                'feedback': feedback.to_dict()
+            })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@bp.route('/case_studies/<int:case_study_id>/feedback', methods=['GET'])
+@login_required
+@swag_from({
+    'tags': ['Story Feedback'],
+    'summary': 'Get feedback for a specific story',
+    'description': 'Retrieve the current user\'s feedback for a specific story',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study/story'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Feedback retrieved successfully (or null if no feedback exists)',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'feedback': {
+                                'type': 'object',
+                                'nullable': True,
+                                'properties': {
+                                    'id': {'type': 'integer'},
+                                    'case_study_id': {'type': 'integer'},
+                                    'user_id': {'type': 'integer'},
+                                    'is_thumbs_up': {'type': 'boolean'},
+                                    'is_thumbs_down': {'type': 'boolean'},
+                                    'feedback_text': {'type': 'string', 'nullable': True},
+                                    'created_at': {'type': 'string', 'format': 'date-time'},
+                                    'updated_at': {'type': 'string', 'format': 'date-time'}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'Story not found',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        401: {'description': 'Not authenticated'},
+        500: {
+            'description': 'Internal server error',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'success': {'type': 'boolean'},
+                            'message': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
+def get_story_feedback(case_study_id):
+    """Get feedback for a specific story"""
+    try:
+        user_id = get_current_user_id()
+        
+        # Verify the case study exists and belongs to the user
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        if not case_study:
+            return jsonify({'success': False, 'message': 'Story not found'}), 404
+        
+        # Get user's feedback for this story
+        feedback = StoryFeedback.query.filter_by(
+            case_study_id=case_study_id,
+            user_id=user_id
+        ).first()
+        
+        if feedback:
+            return jsonify({
+                'success': True,
+                'feedback': feedback.to_dict()
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'feedback': None
+            })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 

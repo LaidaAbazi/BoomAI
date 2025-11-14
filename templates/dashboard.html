@@ -3743,6 +3743,336 @@ The email has been sent automatically from your account with PDF attachment.`);
         }
       }
       renderTabContent();
+      
+      // --- STORY FEEDBACK SECTION ---
+      const feedbackSection = document.createElement('div');
+      feedbackSection.className = 'story-feedback-section';
+      feedbackSection.style.marginTop = '30px';
+      feedbackSection.style.padding = '20px';
+      feedbackSection.style.borderTop = '2px solid #e2e8f0';
+      feedbackSection.style.borderRadius = '12px';
+      feedbackSection.style.backgroundColor = '#f8fafc';
+      feedbackSection.style.position = 'relative';
+      feedbackSection.style.width = '100%';
+      feedbackSection.style.boxSizing = 'border-box';
+      
+      const feedbackTitle = document.createElement('h3');
+      feedbackTitle.textContent = 'Was this story helpful?';
+      feedbackTitle.style.marginBottom = '16px';
+      feedbackTitle.style.color = '#1e293b';
+      feedbackTitle.style.fontSize = '1.1rem';
+      feedbackTitle.style.fontWeight = '600';
+      feedbackSection.appendChild(feedbackTitle);
+      
+      const feedbackButtonsContainer = document.createElement('div');
+      feedbackButtonsContainer.style.display = 'flex';
+      feedbackButtonsContainer.style.gap = '12px';
+      feedbackButtonsContainer.style.alignItems = 'center';
+      
+      const thumbsUpBtn = document.createElement('button');
+      thumbsUpBtn.id = `thumbsUp-${story.id}`;
+      thumbsUpBtn.innerHTML = '<i class="fas fa-thumbs-up"></i>';
+      thumbsUpBtn.style.padding = '10px 20px';
+      thumbsUpBtn.style.border = '2px solid #e2e8f0';
+      thumbsUpBtn.style.borderRadius = '8px';
+      thumbsUpBtn.style.backgroundColor = '#fff';
+      thumbsUpBtn.style.cursor = 'pointer';
+      thumbsUpBtn.style.fontSize = '1.2rem';
+      thumbsUpBtn.style.transition = 'all 0.2s';
+      thumbsUpBtn.style.color = '#64748b';
+      
+      const thumbsDownBtn = document.createElement('button');
+      thumbsDownBtn.id = `thumbsDown-${story.id}`;
+      thumbsDownBtn.innerHTML = '<i class="fas fa-thumbs-down"></i>';
+      thumbsDownBtn.style.padding = '10px 20px';
+      thumbsDownBtn.style.border = '2px solid #e2e8f0';
+      thumbsDownBtn.style.borderRadius = '8px';
+      thumbsDownBtn.style.backgroundColor = '#fff';
+      thumbsDownBtn.style.cursor = 'pointer';
+      thumbsDownBtn.style.fontSize = '1.2rem';
+      thumbsDownBtn.style.transition = 'all 0.2s';
+      thumbsDownBtn.style.color = '#64748b';
+      
+      // Feedback text input (hidden by default)
+      const feedbackTextContainer = document.createElement('div');
+      feedbackTextContainer.id = `feedbackTextContainer-${story.id}`;
+      feedbackTextContainer.style.display = 'none';
+      feedbackTextContainer.style.marginTop = '16px';
+      feedbackTextContainer.style.position = 'relative';
+      feedbackTextContainer.style.width = '100%';
+      feedbackTextContainer.style.zIndex = '1';
+      
+      const feedbackTextarea = document.createElement('textarea');
+      feedbackTextarea.id = `feedbackText-${story.id}`;
+      feedbackTextarea.placeholder = 'Optional: Add feedback text (thumbs down already saved)...';
+      feedbackTextarea.style.width = '100%';
+      feedbackTextarea.style.minHeight = '100px';
+      feedbackTextarea.style.padding = '12px';
+      feedbackTextarea.style.border = '2px solid #e2e8f0';
+      feedbackTextarea.style.borderRadius = '8px';
+      feedbackTextarea.style.fontSize = '0.95rem';
+      feedbackTextarea.style.fontFamily = 'inherit';
+      feedbackTextarea.style.resize = 'vertical';
+      feedbackTextarea.style.position = 'relative';
+      feedbackTextarea.style.zIndex = '1';
+      feedbackTextarea.style.backgroundColor = '#fff';
+      feedbackTextarea.style.boxSizing = 'border-box';
+      feedbackTextarea.style.outline = 'none';
+      feedbackTextarea.style.transition = 'none';
+      feedbackTextarea.style.transform = 'none';
+      
+      // Prevent any unwanted movement on focus
+      feedbackTextarea.addEventListener('focus', (e) => {
+        e.stopPropagation();
+        feedbackTextarea.style.position = 'relative';
+        feedbackTextarea.style.transform = 'none';
+        feedbackTextContainer.style.position = 'relative';
+        feedbackTextContainer.style.transform = 'none';
+      });
+      
+      feedbackTextarea.addEventListener('blur', (e) => {
+        e.stopPropagation();
+      });
+      
+      const submitFeedbackBtn = document.createElement('button');
+      submitFeedbackBtn.id = `submitFeedback-${story.id}`;
+      submitFeedbackBtn.textContent = 'Update Feedback';
+      submitFeedbackBtn.style.marginTop = '12px';
+      submitFeedbackBtn.style.padding = '10px 24px';
+      submitFeedbackBtn.style.backgroundColor = '#06B6D4';
+      submitFeedbackBtn.style.color = '#fff';
+      submitFeedbackBtn.style.border = 'none';
+      submitFeedbackBtn.style.borderRadius = '8px';
+      submitFeedbackBtn.style.cursor = 'pointer';
+      submitFeedbackBtn.style.fontWeight = '600';
+      submitFeedbackBtn.style.transition = 'all 0.2s';
+      
+      feedbackTextContainer.appendChild(feedbackTextarea);
+      feedbackTextContainer.appendChild(submitFeedbackBtn);
+      
+      // Load existing feedback
+      let currentFeedback = story.user_feedback || null;
+      
+      function updateFeedbackUI() {
+        if (currentFeedback) {
+          if (currentFeedback.is_thumbs_up) {
+            // Thumbs up is active
+            thumbsUpBtn.style.backgroundColor = '#10B981';
+            thumbsUpBtn.style.borderColor = '#10B981';
+            thumbsUpBtn.style.color = '#fff';
+            thumbsUpBtn.style.display = 'inline-block';
+            thumbsDownBtn.style.display = 'none'; // Hide thumbs down when thumbs up is active
+            feedbackTextContainer.style.display = 'none';
+          } else {
+            // Thumbs down is active
+            thumbsDownBtn.style.backgroundColor = '#EF4444';
+            thumbsDownBtn.style.borderColor = '#EF4444';
+            thumbsDownBtn.style.color = '#fff';
+            thumbsDownBtn.style.display = 'inline-block'; // Keep visible so user can toggle off
+            thumbsUpBtn.style.display = 'none'; // Hide thumbs up when thumbs down is active
+            feedbackTextContainer.style.display = 'block';
+            if (currentFeedback.feedback_text) {
+              feedbackTextarea.value = currentFeedback.feedback_text;
+            }
+          }
+        } else {
+          // No feedback - show both buttons
+          thumbsUpBtn.style.backgroundColor = '#fff';
+          thumbsUpBtn.style.borderColor = '#e2e8f0';
+          thumbsUpBtn.style.color = '#64748b';
+          thumbsDownBtn.style.backgroundColor = '#fff';
+          thumbsDownBtn.style.borderColor = '#e2e8f0';
+          thumbsDownBtn.style.color = '#64748b';
+          thumbsUpBtn.style.display = 'inline-block';
+          thumbsDownBtn.style.display = 'inline-block';
+          feedbackTextContainer.style.display = 'none';
+          feedbackTextarea.value = '';
+        }
+      }
+      
+      // Thumbs up handler
+      thumbsUpBtn.onclick = async () => {
+        try {
+          // If already thumbs up, toggle it off (remove feedback)
+          if (currentFeedback && currentFeedback.is_thumbs_up) {
+            // Toggle off - remove feedback
+            const res = await fetch(`/api/case_studies/${story.id}/feedback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ is_thumbs_up: true })
+            });
+            const data = await res.json();
+            if (data.success) {
+              currentFeedback = data.feedback; // Will be null
+              updateFeedbackUI();
+              await fetchStories();
+            } else {
+              alert('Failed to remove feedback: ' + data.message);
+            }
+          } else {
+            // Set thumbs up
+            const res = await fetch(`/api/case_studies/${story.id}/feedback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ is_thumbs_up: true })
+            });
+            const data = await res.json();
+            if (data.success) {
+              currentFeedback = data.feedback;
+              updateFeedbackUI();
+              await fetchStories();
+            } else {
+              alert('Failed to submit feedback: ' + data.message);
+            }
+          }
+        } catch (error) {
+          console.error('Error submitting feedback:', error);
+          alert('Failed to submit feedback. Please try again.');
+        }
+      };
+      
+      // Thumbs down handler - auto-save on click
+      thumbsDownBtn.onclick = async () => {
+        // If already thumbs down, toggle it off (remove feedback)
+        if (currentFeedback && !currentFeedback.is_thumbs_up) {
+          try {
+            const res = await fetch(`/api/case_studies/${story.id}/feedback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                is_thumbs_up: false,
+                feedback_text: currentFeedback.feedback_text || ''
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              currentFeedback = data.feedback; // Will be null
+              updateFeedbackUI();
+              feedbackTextarea.value = '';
+              await fetchStories();
+            } else {
+              alert('Failed to remove feedback: ' + data.message);
+            }
+          } catch (error) {
+            console.error('Error removing feedback:', error);
+            alert('Failed to remove feedback. Please try again.');
+          }
+        } else {
+          // Auto-save thumbs down immediately (without text)
+          try {
+            thumbsDownBtn.disabled = true;
+            thumbsDownBtn.textContent = 'Saving...';
+            
+            const res = await fetch(`/api/case_studies/${story.id}/feedback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                is_thumbs_up: false,
+                feedback_text: ''  // No text initially
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              currentFeedback = data.feedback;
+              updateFeedbackUI();
+              // Show text input for optional additional feedback
+              feedbackTextContainer.style.display = 'block';
+              feedbackTextarea.focus();
+              await fetchStories();
+            } else {
+              alert('Failed to submit feedback: ' + data.message);
+            }
+          } catch (error) {
+            console.error('Error submitting feedback:', error);
+            alert('Failed to submit feedback. Please try again.');
+          } finally {
+            thumbsDownBtn.disabled = false;
+            thumbsDownBtn.innerHTML = '<i class="fas fa-thumbs-down"></i>';
+          }
+        }
+      };
+      
+      // Submit feedback handler (update text for existing thumbs down)
+      submitFeedbackBtn.onclick = async () => {
+        const feedbackText = feedbackTextarea.value.trim();
+        // Update the existing thumbs down feedback with text
+        
+        try {
+          submitFeedbackBtn.disabled = true;
+          submitFeedbackBtn.textContent = 'Updating...';
+          
+          const res = await fetch(`/api/case_studies/${story.id}/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              is_thumbs_up: false,
+              feedback_text: feedbackText || ''  // Update with text (or empty to remove text)
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            currentFeedback = data.feedback;
+            updateFeedbackUI();
+            submitFeedbackBtn.textContent = 'Updated ✓';
+            submitFeedbackBtn.style.backgroundColor = '#10B981';
+            // Refresh stories to get updated feedback
+            await fetchStories();
+            
+            // Reset button after 2 seconds
+            setTimeout(() => {
+              submitFeedbackBtn.textContent = 'Update Feedback';
+              submitFeedbackBtn.style.backgroundColor = '#06B6D4';
+            }, 2000);
+          } else {
+            alert('Failed to update feedback: ' + data.message);
+            submitFeedbackBtn.disabled = false;
+            submitFeedbackBtn.textContent = 'Update Feedback';
+          }
+        } catch (error) {
+          console.error('Error updating feedback:', error);
+          alert('Failed to update feedback. Please try again.');
+          submitFeedbackBtn.disabled = false;
+          submitFeedbackBtn.textContent = 'Update Feedback';
+        }
+      };
+      
+      // Hover effects
+      thumbsUpBtn.onmouseenter = () => {
+        if (!currentFeedback || !currentFeedback.is_thumbs_up) {
+          thumbsUpBtn.style.backgroundColor = '#f0fdf4';
+          thumbsUpBtn.style.borderColor = '#10B981';
+        }
+      };
+      thumbsUpBtn.onmouseleave = () => {
+        if (!currentFeedback || !currentFeedback.is_thumbs_up) {
+          thumbsUpBtn.style.backgroundColor = '#fff';
+          thumbsUpBtn.style.borderColor = '#e2e8f0';
+        }
+      };
+      
+      thumbsDownBtn.onmouseenter = () => {
+        if (!currentFeedback || !currentFeedback.is_thumbs_up) {
+          thumbsDownBtn.style.backgroundColor = '#fef2f2';
+          thumbsDownBtn.style.borderColor = '#EF4444';
+        }
+      };
+      thumbsDownBtn.onmouseleave = () => {
+        if (!currentFeedback || !currentFeedback.is_thumbs_up) {
+          thumbsDownBtn.style.backgroundColor = '#fff';
+          thumbsDownBtn.style.borderColor = '#e2e8f0';
+        }
+      };
+      
+      feedbackButtonsContainer.appendChild(thumbsUpBtn);
+      feedbackButtonsContainer.appendChild(thumbsDownBtn);
+      feedbackSection.appendChild(feedbackButtonsContainer);
+      feedbackSection.appendChild(feedbackTextContainer);
+      
+      // Initialize UI with existing feedback
+      updateFeedbackUI();
+      
+      card.appendChild(feedbackSection);
+      
       main.appendChild(card);
 
       // Add the meta data popup container at the end of the card
