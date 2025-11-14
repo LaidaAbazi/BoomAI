@@ -512,11 +512,12 @@ def generate_full_case_study():
         from app.models import User
         user = User.query.get(user_id)
         if user and not case_study.story_counted:
+            # CREDIT CHECK COMMENTED OUT - Keep for future use
             # Check if user can create a story (has active subscription and credits)
-            if not user.can_create_story():
-                return jsonify({"error": "No credits left. Please purchase extra credits to continue."}), 400
+            # if not user.can_create_story():
+            #     return jsonify({"error": "No credits left. Please purchase extra credits to continue."}), 400
             
-            # Record the story creation
+            # Record the story creation (still tracking for future use)
             user.record_story_creation()
             case_study.story_counted = True  # Mark this case study as counted
             print(f"✅ Story creation recorded for user {user_id}. Stories used this month: {user.stories_used_this_month}")

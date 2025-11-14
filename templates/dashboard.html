@@ -1180,11 +1180,21 @@
       <div id="userDropdownMenu" class="user-dropdown-menu hidden">
         <div class="dropdown-section">
           <h4 style="margin: 0 0 8px 0; color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Subscription</h4>
-                <a href="#" onclick="openMonthlySubscription()" class="dropdown-payment-btn monthly-btn">
+                <!-- STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use -->
+                <!-- <a href="#" onclick="openMonthlySubscription()" class="dropdown-payment-btn monthly-btn">
+                  <i class="fas fa-crown" style="margin-right: 8px;"></i>
+                  Monthly Plan - $99/month
+                </a> -->
+                <a href="#" onclick="alert('Stripe payment integration is currently disabled. Please contact support for subscription.'); return false;" class="dropdown-payment-btn monthly-btn">
                   <i class="fas fa-crown" style="margin-right: 8px;"></i>
                   Monthly Plan - $99/month
                 </a>
-                <a href="#" onclick="openExtraCredits()" class="dropdown-payment-btn extra-btn">
+                <!-- STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use -->
+                <!-- <a href="#" onclick="openExtraCredits()" class="dropdown-payment-btn extra-btn">
+                  <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
+                  Buy Extra Stories - $6.90
+                </a> -->
+                <a href="#" onclick="alert('Stripe payment integration is currently disabled. Please contact support for extra credits.'); return false;" class="dropdown-payment-btn extra-btn">
                   <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
                   Buy Extra Stories - $6.90
                 </a>
@@ -4316,118 +4326,142 @@ The email has been sent automatically from your account with PDF attachment.`);
         if (response.ok) {
           creditStatus = await response.json();
           updateCreditStatusDisplay();
-        } else if (response.status === 403) {
-          // User needs subscription, but stay on dashboard and show message
-          console.log('User needs subscription but staying on dashboard');
-          creditStatus = { needs_subscription: true, stories_used_this_month: 0, extra_credits: 0 };
-          updateCreditStatusDisplay();
-        }
+        } 
+        // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+        // else if (response.status === 403) {
+        //   // User needs subscription, but stay on dashboard and show message
+        //   console.log('User needs subscription but staying on dashboard');
+        //   creditStatus = { needs_subscription: true, stories_used_this_month: 0, extra_credits: 0 };
+        //   updateCreditStatusDisplay();
+        // }
       } catch (error) {
         console.error('Error fetching credit status:', error);
       }
     }
 
     function updateCreditStatusDisplay() {
+      // CREDIT STATUS DISPLAY COMMENTED OUT - Keep for future use
+      // Hide credit status banner since subscription and credit checks are disabled
       const banner = document.getElementById('creditStatusBanner');
-      const statusText = document.getElementById('creditStatusText');
-      const buyLink = document.getElementById('buyCreditsLink');
-      
-      if (!creditStatus) return;
-      
-      // Show banner if user needs subscription or can buy extra credits
-      if (creditStatus.needs_subscription) {
-        banner.style.display = 'block';
-        statusText.innerHTML = 'You need an active subscription to create stories.<br><small>Subscribe for $99/month and get 10 stories included. Stories reset monthly.</small>';
-        buyLink.textContent = 'Subscribe for $99/month';
-        buyLink.href = '#';
-        buyLink.onclick = function(e) { e.preventDefault(); openMonthlySubscription(); };
-      } else if (creditStatus.can_buy_extra_credits) {
-        banner.style.display = 'block';
-        statusText.innerHTML = `You've used all 10 included stories this month.<br><small>You have ${creditStatus.extra_credits} extra credits remaining. Extra credits don't expire but you can only buy them after using all monthly stories.</small>`;
-        buyLink.textContent = 'Buy Extra Stories for $6.90';
-        buyLink.href = '#';
-        buyLink.onclick = function(e) { e.preventDefault(); openExtraCredits(); };
-      } else {
-        // Show remaining stories with expiration info
-        const remaining = 10 - creditStatus.stories_used_this_month;
-        banner.style.display = 'block';
-        statusText.innerHTML = `You have ${remaining} stories remaining this month.<br><small>Monthly stories reset on the 1st of each month. Extra credits don't expire.</small>`;
-        buyLink.style.display = 'none';
+      if (banner) {
+        banner.style.display = 'none';
       }
+      
+      // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+      // Show banner if user needs subscription or can buy extra credits
+      // const statusText = document.getElementById('creditStatusText');
+      // const buyLink = document.getElementById('buyCreditsLink');
+      // 
+      // if (!creditStatus) return;
+      // 
+      // if (creditStatus.needs_subscription) {
+      //   banner.style.display = 'block';
+      //   statusText.innerHTML = 'You need an active subscription to create stories.<br><small>Subscribe for $99/month and get 10 stories included. Stories reset monthly.</small>';
+      //   buyLink.textContent = 'Subscribe for $99/month';
+      //   buyLink.href = '#';
+      //   buyLink.onclick = function(e) { e.preventDefault(); openMonthlySubscription(); };
+      // } else if (creditStatus.can_buy_extra_credits) {
+      //   banner.style.display = 'block';
+      //   statusText.innerHTML = `You've used all 10 included stories this month.<br><small>You have ${creditStatus.extra_credits} extra credits remaining. Extra credits don't expire but you can only buy them after using all monthly stories.</small>`;
+      //   buyLink.textContent = 'Buy Extra Stories for $6.90';
+      //   buyLink.href = '#';
+      //   buyLink.onclick = function(e) { e.preventDefault(); openExtraCredits(); };
+      // } else {
+      //   // Show remaining stories with expiration info
+      //   const remaining = 10 - creditStatus.stories_used_this_month;
+      //   banner.style.display = 'block';
+      //   statusText.innerHTML = `You have ${remaining} stories remaining this month.<br><small>Monthly stories reset on the 1st of each month. Extra credits don't expire.</small>`;
+      //   buyLink.style.display = 'none';
+      // }
       
       // Update user dropdown buttons based on credit status
       updateUserDropdownButtons();
     }
     
     function updateUserDropdownButtons() {
+      // SUBSCRIPTION/CREDIT BUTTONS COMMENTED OUT - Keep for future use
+      // Hide subscription and credit purchase buttons since they're disabled
       const monthlyBtn = document.querySelector('.monthly-btn');
       const extraBtn = document.querySelector('.extra-btn');
       
-      if (!creditStatus) return;
-      
-      // Show monthly button if user needs subscription or hasn't used all 10 stories yet
       if (monthlyBtn) {
-        if (creditStatus.needs_subscription || creditStatus.stories_used_this_month < 10) {
-          monthlyBtn.style.display = 'block';
-          monthlyBtn.innerHTML = '<i class="fas fa-crown" style="margin-right: 8px;"></i>Monthly Plan - $99/month';
-        } else {
-          monthlyBtn.style.display = 'none';
-        }
+        monthlyBtn.style.display = 'none';
+      }
+      if (extraBtn) {
+        extraBtn.style.display = 'none';
       }
       
-      // Show extra credits button only if user has subscription and can buy extra credits
-      if (extraBtn) {
-        if (creditStatus.has_active_subscription && creditStatus.can_buy_extra_credits) {
-          extraBtn.style.display = 'block';
-          extraBtn.innerHTML = '<i class="fas fa-plus-circle" style="margin-right: 8px;"></i>Buy Extra Stories - $6.90';
-        } else {
-          extraBtn.style.display = 'none';
-        }
-      }
+      // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+      // if (!creditStatus) return;
+      // 
+      // // Show monthly button if user needs subscription or hasn't used all 10 stories yet
+      // if (monthlyBtn) {
+      //   if (creditStatus.needs_subscription || creditStatus.stories_used_this_month < 10) {
+      //     monthlyBtn.style.display = 'block';
+      //     monthlyBtn.innerHTML = '<i class="fas fa-crown" style="margin-right: 8px;"></i>Monthly Plan - $99/month';
+      //   } else {
+      //     monthlyBtn.style.display = 'none';
+      //   }
+      // }
+      // 
+      // // Show extra credits button only if user has subscription and can buy extra credits
+      // if (extraBtn) {
+      //   if (creditStatus.has_active_subscription && creditStatus.can_buy_extra_credits) {
+      //     extraBtn.style.display = 'block';
+      //     extraBtn.innerHTML = '<i class="fas fa-plus-circle" style="margin-right: 8px;"></i>Buy Extra Stories - $6.90';
+      //   } else {
+      //     extraBtn.style.display = 'none';
+      //   }
+      // }
     }
 
     async function checkCanCreateStory() {
-      if (!creditStatus) {
-        await fetchCreditStatus();
-      }
-      return creditStatus ? creditStatus.can_create_story : false;
+      // CREDIT CHECK COMMENTED OUT - Keep for future use
+      // Always allow story creation regardless of credits
+      // if (!creditStatus) {
+      //   await fetchCreditStatus();
+      // }
+      // return creditStatus ? creditStatus.can_create_story : false;
+      return true;  // Allow unlimited story creation
     }
     
+    // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
     // Global error handler for subscription errors
     function handleApiError(response) {
-      if (response.status === 403) {
-        const data = response.json();
-        if (data && data.needs_subscription) {
-          window.location.href = '/subscription-required';
-          return true;
-        }
-      }
+      // if (response.status === 403) {
+      //   const data = response.json();
+      //   if (data && data.needs_subscription) {
+      //     window.location.href = '/subscription-required';
+      //     return true;
+      //   }
+      // }
       return false;
     }
     
+    // STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
     // Payment functions with user metadata
-    function openMonthlySubscription() {
-      const userId = getCurrentUserId();
-      console.log('DEBUG: User ID from getCurrentUserId():', userId);
-      
-      if (!userId) {
-        alert('Please log in to subscribe');
-        return;
-      }
-      
-      // Use Payment Link with client_reference_id (this works!)
-      const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800'; // Monthly subscription URL
-      const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
-      console.log('DEBUG: Monthly subscription URL:', urlWithUser);
-      window.open(urlWithUser, '_blank');
-      
-      // Show a message to manually activate subscription
-      setTimeout(() => {
-        if (confirm('After completing payment, click OK to manually activate your subscription.')) {
-          activateSubscriptionManually(userId);
-        }
-      }, 2000);
-    }
+    // function openMonthlySubscription() {
+    //   const userId = getCurrentUserId();
+    //   console.log('DEBUG: User ID from getCurrentUserId():', userId);
+    //   
+    //   if (!userId) {
+    //     alert('Please log in to subscribe');
+    //     return;
+    //   }
+    //   
+    //   // Use Payment Link with client_reference_id (this works!)
+    //   const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800'; // Monthly subscription URL
+    //   const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+    //   console.log('DEBUG: Monthly subscription URL:', urlWithUser);
+    //   window.open(urlWithUser, '_blank');
+    //   
+    //   // Show a message to manually activate subscription
+    //   setTimeout(() => {
+    //     if (confirm('After completing payment, click OK to manually activate your subscription.')) {
+    //       activateSubscriptionManually(userId);
+    //     }
+    //   }, 2000);
+    // }
     
     function activateSubscriptionManually(userId) {
       fetch('/api/test/activate-subscription', {
@@ -4452,29 +4486,30 @@ The email has been sent automatically from your account with PDF attachment.`);
       });
     }
     
-    function openExtraCredits() {
-      const userId = getCurrentUserId();
-      console.log('🔍 DEBUG: getCurrentUserId() returned:', userId);
-      
-      if (!userId) {
-        alert('Please log in to buy extra credits');
-        return;
-      }
-      
-      // Use the extra credits payment link with client_reference_id
-      const baseUrl = 'https://buy.stripe.com/test_28E3cnav35BL8nH2Ip8k801'; // Replace with your extra credits link
-      const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
-      console.log('🔍 DEBUG: Extra credits payment URL:', urlWithUser);
-      console.log('🔍 DEBUG: User ID being passed:', userId);
-      window.open(urlWithUser, '_blank');
-      
-      // Show a message to manually activate extra credits if needed
-      setTimeout(() => {
-        if (confirm('After completing payment, if extra credits are not automatically added, click OK to manually add them.')) {
-          activateExtraCreditsManually(userId);
-        }
-      }, 3000);
-    }
+    // STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
+    // function openExtraCredits() {
+    //   const userId = getCurrentUserId();
+    //   console.log('🔍 DEBUG: getCurrentUserId() returned:', userId);
+    //   
+    //   if (!userId) {
+    //     alert('Please log in to buy extra credits');
+    //     return;
+    //   }
+    //   
+    //   // Use the extra credits payment link with client_reference_id
+    //   const baseUrl = 'https://buy.stripe.com/test_28E3cnav35BL8nH2Ip8k801'; // Replace with your extra credits link
+    //   const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+    //   console.log('🔍 DEBUG: Extra credits payment URL:', urlWithUser);
+    //   console.log('🔍 DEBUG: User ID being passed:', userId);
+    //   window.open(urlWithUser, '_blank');
+    //   
+    //   // Show a message to manually activate extra credits if needed
+    //   setTimeout(() => {
+    //     if (confirm('After completing payment, if extra credits are not automatically added, click OK to manually add them.')) {
+    //       activateExtraCreditsManually(userId);
+    //     }
+    //   }, 3000);
+    // }
     
     function activateExtraCreditsManually(userId) {
       fetch('/api/test/add-extra-credits', {
@@ -4552,17 +4587,22 @@ The email has been sent automatically from your account with PDF attachment.`);
 
     document.getElementById('searchInput').oninput = renderStories;
     document.getElementById('tellStoryBtn').onclick = async () => {
-      const canCreate = await checkCanCreateStory();
-      if (canCreate) {
-        window.location.href = '/index';
-      } else {
-        // Show appropriate message based on subscription status
-        if (creditStatus && creditStatus.needs_subscription) {
-          alert('You need an active subscription to create stories. Please subscribe to get started.');
-        } else {
-          alert('You have no story credits remaining. Please purchase extra credits to continue.');
-        }
-      }
+      // CREDIT CHECK COMMENTED OUT - Keep for future use
+      // Always allow story creation
+      // const canCreate = await checkCanCreateStory();
+      // if (canCreate) {
+      //   window.location.href = '/index';
+      // } else {
+      //   // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+      //   // Show appropriate message based on subscription status
+      //   // if (creditStatus && creditStatus.needs_subscription) {
+      //   //   alert('You need an active subscription to create stories. Please subscribe to get started.');
+      //   // } else {
+      //   //   alert('You have no story credits remaining. Please purchase extra credits to continue.');
+      //   // }
+      //   alert('You have no story credits remaining. Please purchase extra credits to continue.');
+      // }
+      window.location.href = '/index';  // Always allow story creation
     };
     setupLabelDropdown();
     fetchUser();

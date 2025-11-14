@@ -189,24 +189,29 @@
   </div>
   
   <script>
+    // STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
+    // function openSubscription() {
+    //   // Get user ID from data attribute
+    //   const container = document.querySelector('.subscription-container');
+    //   const userId = container.getAttribute('data-user-id');
+    //   
+    //   console.log('DEBUG: User ID from subscription wall:', userId);
+    //   
+    //   if (!userId || userId === 'null') {
+    //     alert('Please log in to subscribe');
+    //     window.location.href = '/login';
+    //     return;
+    //   }
+    //   
+    //   // Use client_reference_id approach (this works with Payment Links!)
+    //   const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
+    //   const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+    //   console.log('DEBUG: Payment URL with user ID:', urlWithUser);
+    //   window.open(urlWithUser, '_blank');
+    // }
+    
     function openSubscription() {
-      // Get user ID from data attribute
-      const container = document.querySelector('.subscription-container');
-      const userId = container.getAttribute('data-user-id');
-      
-      console.log('DEBUG: User ID from subscription wall:', userId);
-      
-      if (!userId || userId === 'null') {
-        alert('Please log in to subscribe');
-        window.location.href = '/login';
-        return;
-      }
-      
-      // Use client_reference_id approach (this works with Payment Links!)
-      const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
-      const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
-      console.log('DEBUG: Payment URL with user ID:', urlWithUser);
-      window.open(urlWithUser, '_blank');
+      alert('Stripe payment integration is currently disabled. Please contact support for subscription.');
     }
     
     function activateSubscriptionManually() {

@@ -58,6 +58,8 @@ def login_or_token_required(f):
 
 def subscription_required(f):
     """Decorator to require active subscription for routes"""
+    # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+    # This decorator now allows all authenticated users regardless of subscription status
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user_id = get_current_user_id()
@@ -69,12 +71,13 @@ def subscription_required(f):
             session.clear()
             return jsonify({"error": "User not found"}), 401
         
-        if not user.has_active_subscription:
-            return jsonify({
-                "error": "Active subscription required",
-                "needs_subscription": True,
-                "message": "You need an active subscription to access this feature"
-            }), 403
+        # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+        # if not user.has_active_subscription:
+        #     return jsonify({
+        #         "error": "Active subscription required",
+        #         "needs_subscription": True,
+        #         "message": "You need an active subscription to access this feature"
+        #     }), 403
         
         return f(*args, **kwargs)
     return decorated_function 

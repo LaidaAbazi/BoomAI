@@ -54,18 +54,20 @@ def create_app(config_name=None):
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev_jwt_secret")
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     
+    # STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
     # Stripe configuration
-    app.config["STRIPE_WEBHOOK_SECRET"] = os.getenv("STRIPE_WEBHOOK_SECRET")
-    app.config["STRIPE_SECRET_KEY"] = os.getenv("STRIPE_SECRET_KEY")
+    # app.config["STRIPE_WEBHOOK_SECRET"] = os.getenv("STRIPE_WEBHOOK_SECRET")
+    # app.config["STRIPE_SECRET_KEY"] = os.getenv("STRIPE_SECRET_KEY")
     
     # Calendly configuration
     app.config["CALENDLY_SCHEDULING_LINK"] = os.getenv("CALENDLY_SCHEDULING_LINK", "")
     
+    # STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
     # Debug Stripe configuration
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-    secret_key = os.getenv("STRIPE_SECRET_KEY")
-    print(f"DEBUG: STRIPE_WEBHOOK_SECRET loaded: {webhook_secret[:10] if webhook_secret else 'None'}...")
-    print(f"DEBUG: STRIPE_SECRET_KEY loaded: {secret_key[:10] if secret_key else 'None'}...")
+    # webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+    # secret_key = os.getenv("STRIPE_SECRET_KEY")
+    # print(f"DEBUG: STRIPE_WEBHOOK_SECRET loaded: {webhook_secret[:10] if webhook_secret else 'None'}...")
+    # print(f"DEBUG: STRIPE_SECRET_KEY loaded: {secret_key[:10] if secret_key else 'None'}...")
     
     # Flasgger configuration
     app.config['SWAGGER'] = {

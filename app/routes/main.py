@@ -180,7 +180,8 @@ def create_session():
     return jsonify(response.json())
 
 @bp.route("/save_transcript", methods=["POST"])
-@subscription_required
+# SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+# @subscription_required
 @swag_from({
     'tags': ['Real-time Interviews'],
     'summary': 'Save provider interview transcript',
@@ -377,7 +378,8 @@ def save_client_transcript():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/generate_summary", methods=["POST"])
-@subscription_required
+# SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+# @subscription_required
 @swag_from({
     'tags': ['Interviews'],
     'summary': 'Generate interview summary',
@@ -640,7 +642,8 @@ def generate_summary():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/save_provider_summary", methods=["POST"])
-@subscription_required
+# SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+# @subscription_required
 def save_provider_summary():
     """Save provider summary"""
     try:

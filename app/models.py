@@ -53,6 +53,8 @@ class User(db.Model):
     # Subscription status
     has_active_subscription = Column(Boolean, default=False)
     subscription_start_date = Column(Date, nullable=True)
+    
+    
 
 
     case_studies = relationship('CaseStudy', back_populates='user')
@@ -61,9 +63,13 @@ class User(db.Model):
 
     def can_create_story(self):
         """Check if user can create a story (has active subscription and credits)"""
-        if not self.has_active_subscription:
-            return False
-        return self.stories_used_this_month < 10 or self.extra_credits > 0
+        # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+        # if not self.has_active_subscription:
+        #     return False
+        # CREDIT CHECK COMMENTED OUT - Keep for future use
+        # Now allows story creation regardless of subscription and credits
+        # return self.stories_used_this_month < 10 or self.extra_credits > 0
+        return True  # Allow unlimited story creation
     
     def can_buy_extra_credits(self):
         """Check if user can buy extra credits (must have used all 10 monthly stories)"""
@@ -71,10 +77,15 @@ class User(db.Model):
     
     def needs_subscription(self):
         """Check if user needs to subscribe to monthly plan"""
-        return not self.has_active_subscription
+        # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+        # return not self.has_active_subscription
+        # Now always returns False since subscription is not required
+        return False
 
     def record_story_creation(self):
         """Record story creation and update counters"""
+        # CREDIT CHECK COMMENTED OUT - Keep for future use
+        # Still tracking usage for analytics, but not blocking
         if self.stories_used_this_month < 10:
             # Use monthly allowance
             self.stories_used_this_month += 1
@@ -83,7 +94,10 @@ class User(db.Model):
             self.extra_credits -= 1
             self.stories_used_this_month += 1
         else:
-            raise ValueError("No credits left")
+            # CREDIT CHECK COMMENTED OUT - Keep for future use
+            # No longer raising error, just incrementing counter for tracking
+            # raise ValueError("No credits left")
+            self.stories_used_this_month += 1  # Still track usage even without credits
 
     def add_extra_credits(self, quantity):
         """Add extra story credits"""
