@@ -1,6 +1,5 @@
-from flask import Blueprint, redirect, request, jsonify, session
+from flask import Blueprint, redirect, request, jsonify, session, url_for, current_app
 from flask_mail import Message
-from sqlalchemy import create_engine
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime, timedelta
@@ -10,10 +9,7 @@ from app.schemas.user_schemas import UserCreateSchema, UserLoginSchema
 from marshmallow import ValidationError
 from app.utils.error_messages import UserFriendlyErrors
 import os
-from sqlalchemy.orm.session import sessionmaker
 from app import serializer, mail
-from sqlalchemy.engine.create import create_engine
-from flask import url_for, current_app
 from flasgger import swag_from
 import logging
 
@@ -359,16 +355,6 @@ def api_user():
     user_dto = UserMapper.model_to_dto(user)
     return jsonify({"user": user_dto}) 
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./case_study.db")
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-)
-
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 
 @bp.route('/verify/<token>', methods=['GET'])
 @swag_from({
@@ -410,30 +396,25 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     }
 })
 def verify(token):
-    local_session = SessionLocal()
     try:
         email = serializer.loads(token, salt='email-confirm', max_age=3600)
     except Exception as e:
         print("DEBUG: Token error:", e)
         return 'Invalid or expired token.'
 
-    user = local_session.query(User).filter_by(email=email).first()
-
+    user = User.query.filter_by(email=email).first()
 
     if user:
-        if user.is_verified:  # type: ignore
-            local_session.close()
+        if user.is_verified:
             return 'Account already verified.'
 
-        user.is_verified = True  # type: ignore
-        local_session.commit()
+        user.is_verified = True
+        db.session.commit()
 
         session['user_id'] = user.id
 
-        local_session.close()
         return redirect('/dashboard', 302)
 
-    local_session.close()
     return 'User not found.'
 
 
