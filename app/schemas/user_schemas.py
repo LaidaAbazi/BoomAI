@@ -8,6 +8,7 @@ class UserCreateSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True, validate=validate.Length(min=8))
     company_name = fields.Str(validate=validate.Length(max=255))
+    invite_token = fields.Str(validate=validate.Length(max=255))  # Optional: for employee signup via invite
 
 class UserLoginSchema(Schema):
     """Schema for user login"""
@@ -21,6 +22,8 @@ class UserResponseSchema(Schema):
     last_name = fields.Str()
     email = fields.Email()
     company_name = fields.Str()
+    role = fields.Str()  # 'owner' or 'employee'
+    company_id = fields.Int()  # Company ID the user belongs to
     created_at = fields.DateTime(dump_only=True)
     last_login = fields.DateTime(dump_only=True)
     stories_used_this_month = fields.Int()

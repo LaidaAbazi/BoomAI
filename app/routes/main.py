@@ -6,7 +6,8 @@ import json
 from datetime import datetime, timedelta, UTC
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken
 from app.utils.text_processing import clean_text, detect_language
-from app.utils.auth_helpers import get_current_user_id, subscription_required
+from app.utils.language_utils import detect_and_normalize_language
+from app.utils.auth_helpers import get_current_user_id, subscription_required, owner_required
 from app.services.ai_service import AIService
 from flasgger import swag_from
 import logging
@@ -82,11 +83,51 @@ def verification():
 @bp.route("/dashboard")
 def dashboard():
     """Serve the dashboard page - requires authentication only"""
+    from app.models import User
+    import stripe
+    
     user_id = get_current_user_id()
+    
+    # If no user_id in session but we have a Stripe session_id, try to restore session
+    if not user_id:
+        session_id = request.args.get('session_id')
+        if session_id:
+            try:
+                # Get Stripe secret key
+                secret_key = current_app.config.get('STRIPE_SECRET_KEY')
+                if secret_key:
+                    stripe.api_key = secret_key
+                    
+                    # Retrieve the checkout session from Stripe
+                    checkout_session = stripe.checkout.Session.retrieve(session_id)
+                    
+                    # Get user_id from client_reference_id or metadata
+                    user_id_from_session = checkout_session.get('client_reference_id')
+                    if not user_id_from_session:
+                        user_id_from_session = checkout_session.get('metadata', {}).get('user_id')
+                    
+                    if user_id_from_session:
+                        # Convert to int if it's a string
+                        if isinstance(user_id_from_session, str):
+                            try:
+                                user_id_from_session = int(user_id_from_session)
+                            except ValueError:
+                                pass
+                        
+                        # Verify user exists and restore session
+                        user = User.query.get(user_id_from_session)
+                        if user:
+                            session['user_id'] = user.id
+                            user_id = user.id
+                            print(f"Restored session for user {user_id} from Stripe checkout session")
+            except Exception as e:
+                print(f"Error restoring session from Stripe: {str(e)}")
+                # Continue to normal auth check
+    
+    # Normal authentication check
     if not user_id:
         return redirect(url_for('main.login'))
     
-    from app.models import User
     user = User.query.get(user_id)
     if not user:
         session.clear()
@@ -180,8 +221,7 @@ def create_session():
     return jsonify(response.json())
 
 @bp.route("/save_transcript", methods=["POST"])
-# SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-# @subscription_required
+@subscription_required
 @swag_from({
     'tags': ['Real-time Interviews'],
     'summary': 'Save provider interview transcript',
@@ -378,8 +418,7 @@ def save_client_transcript():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/generate_summary", methods=["POST"])
-# SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-# @subscription_required
+@subscription_required
 @swag_from({
     'tags': ['Interviews'],
     'summary': 'Generate interview summary',
@@ -430,8 +469,9 @@ def generate_summary():
         if not transcript:
             return jsonify({"status": "error", "message": "Transcript is missing."}), 400
 
-        # Detect language from transcript
+        # Detect and normalize language from transcript
         detected_language = detect_language(transcript)
+        normalized_language = detect_and_normalize_language(transcript)
         
         # Use the detected language in the prompt
         prompt = f"""
@@ -628,7 +668,7 @@ def generate_summary():
         
         # First save to DB and get case_study_id
         provider_session_id = str(uuid.uuid4())  # Generate a session ID now
-        case_study_id = store_solution_provider_session(provider_session_id, cleaned)
+        case_study_id = store_solution_provider_session(provider_session_id, cleaned, normalized_language)
 
         return jsonify({
             "status": "success",
@@ -642,8 +682,7 @@ def generate_summary():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @bp.route("/save_provider_summary", methods=["POST"])
-# SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-# @subscription_required
+@subscription_required
 def save_provider_summary():
     """Save provider summary"""
     try:
@@ -671,6 +710,10 @@ def save_provider_summary():
 
         # Update summary
         interview.summary = updated_summary
+
+        # Detect and store language if not already set
+        if not case_study.language:
+            case_study.language = detect_and_normalize_language(updated_summary)
 
         # Extract names from the new summary (but don't change the title format)
         ai_service = AIService()
@@ -1324,7 +1367,7 @@ def get_provider_transcript():
 #         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Helper functions
-def store_solution_provider_session(provider_session_id, cleaned_case_study):
+def store_solution_provider_session(provider_session_id, cleaned_case_study, language=None):
     """Store solution provider session"""
     try:
         ai_service = AIService()
@@ -1372,8 +1415,10 @@ def store_solution_provider_session(provider_session_id, cleaned_case_study):
         
         case_study = CaseStudy(
             user_id=user.id,
+            company_id=user.company_id,  # Scope to user's company
             title=title,
-            final_summary=None  # We fill this later, after full doc is generated
+            final_summary=None,  # We fill this later, after full doc is generated
+            language=language  # Store detected language
         )
         db.session.add(case_study)
         db.session.commit()

@@ -2,8 +2,8 @@ from flask import Blueprint, redirect, request, jsonify, session, url_for, curre
 from flask_mail import Message
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.exc import IntegrityError, OperationalError
-from datetime import datetime, timedelta
-from app.models import db, User
+from datetime import datetime, timedelta, timezone
+from app.models import db, User, Company, CompanyInvite
 from app.mappers.user_mapper import UserMapper
 from app.schemas.user_schemas import UserCreateSchema, UserLoginSchema
 from marshmallow import ValidationError
@@ -35,7 +35,8 @@ bp = Blueprint('auth', __name__, url_prefix='/api')
                         'last_name': {'type': 'string', 'minLength': 1, 'maxLength': 100},
                         'email': {'type': 'string', 'format': 'email'},
                         'password': {'type': 'string', 'minLength': 8},
-                        'company_name': {'type': 'string', 'maxLength': 255}
+                        'company_name': {'type': 'string', 'maxLength': 255},
+                        'invite_token': {'type': 'string', 'description': 'Optional: Invite token for employee signup'}
                     }
                 }
             }
@@ -105,11 +106,84 @@ def api_signup():
             error_response = UserFriendlyErrors.get_general_error("database_error", query_error)
             return jsonify(error_response), 500
         
+        # Check for invite token (from validated data or URL params)
+        invite_token = validated_data.get('invite_token') or request.args.get('invite_token')
+        invite = None
+        
+        if invite_token:
+            # Validate invite token
+            invite = CompanyInvite.query.filter_by(
+                token=invite_token,
+                used=False
+            ).first()
+            
+            if not invite:
+                error_response = UserFriendlyErrors.get_auth_error("invalid_invite")
+                return jsonify(error_response), 400
+            
+            # Check if invite is expired
+            if invite.expires_at < datetime.now(timezone.utc):
+                error_response = UserFriendlyErrors.get_auth_error("invite_expired")
+                return jsonify(error_response), 400
+            
+            # Check if email matches invite
+            if invite.email.lower() != validated_data['email'].lower():
+                error_response = UserFriendlyErrors.get_auth_error("invite_email_mismatch")
+                return jsonify(error_response), 400
+        
         # Create new user using mapper
         try:
             new_user = UserMapper.dto_to_model(validated_data)
             logger.info(f"User model created, attempting to save to database...")
-            db.session.add(new_user)
+            
+            if invite:
+                # Employee signup via invite
+                # Get the company to set company_name
+                company = Company.query.get(invite.company_id)
+                if not company:
+                    error_response = UserFriendlyErrors.get_general_error("database_error")
+                    return jsonify(error_response), 500
+                
+                # Employee signup via invite
+                new_user.role = 'employee'
+                new_user.company_id = invite.company_id
+                new_user.company_name = company.name  # Set company name from company
+                db.session.add(new_user)
+                db.session.flush()  # Flush to get user ID
+                
+                # Mark invite as used
+                invite.used = True
+                invite.accepted_at = datetime.now(timezone.utc)
+                
+                logger.info(f"Employee user created via invite: {new_user.email}, company_id: {invite.company_id}, company_name: {company.name}")
+            else:
+                # Owner signup - create company
+                # Derive company name from user's company_name field or email
+                company_name = validated_data.get('company_name', '').strip()
+                if not company_name:
+                    company_name = f"{validated_data.get('first_name', '')} {validated_data.get('last_name', '')}".strip()
+                    if not company_name:
+                        company_name = f"{validated_data['email'].split('@')[0]}'s Company"
+                
+                # Create user first (without company_id initially)
+                new_user.role = 'owner'
+                new_user.company_name = company_name  # Set company name for owner
+                db.session.add(new_user)
+                db.session.flush()  # Flush to get user ID
+                
+                # Now create company with the user's ID as owner
+                new_company = Company(
+                    name=company_name,
+                    owner_user_id=new_user.id  # Set owner_user_id when creating company
+                )
+                db.session.add(new_company)
+                db.session.flush()  # Flush to get company ID
+                
+                # Now link user to company
+                new_user.company_id = new_company.id
+                
+                logger.info(f"Owner user and company created: {new_user.email}, company_id: {new_company.id}, company_name: {company_name}")
+            
             db.session.commit()
             logger.info(f"User created successfully: {new_user.email}")
         except IntegrityError as integrity_error:
@@ -245,7 +319,7 @@ def api_login():
             return jsonify(error_response), 401
         
         # Check if account is locked
-        if user.account_locked_until and user.account_locked_until > datetime.utcnow():
+        if user.account_locked_until and user.account_locked_until > datetime.now(timezone.utc):
             error_response = UserFriendlyErrors.get_auth_error("account_locked")
             return jsonify(error_response), 423
         
@@ -260,7 +334,7 @@ def api_login():
             
             # Lock account if too many failed attempts
             if user.failed_login_attempts >= 5:
-                user.account_locked_until = datetime.utcnow() + timedelta(minutes=15)
+                user.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
             
             db.session.commit()
             error_response = UserFriendlyErrors.get_auth_error("invalid_credentials")
@@ -269,12 +343,14 @@ def api_login():
         # Reset failed login attempts on successful login
         user.failed_login_attempts = 0
         user.account_locked_until = None
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
         db.session.commit()
         
-        # Store user info in session
+        # Store user info in session (including role and company_id)
         session['user_id'] = user.id
         session['user_email'] = user.email
+        session['user_role'] = user.role
+        session['company_id'] = user.company_id
         
         # Return response using mapper
         user_dto = UserMapper.model_to_dto(user)
@@ -412,6 +488,9 @@ def verify(token):
         db.session.commit()
 
         session['user_id'] = user.id
+        session['user_email'] = user.email
+        session['user_role'] = user.role
+        session['company_id'] = user.company_id
 
         return redirect('/dashboard', 302)
 

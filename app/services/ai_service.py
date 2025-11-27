@@ -337,14 +337,28 @@ Before finalizing the post:
         except Exception as e:
             return f"Error generating HeyGen input: {str(e)}"
     
-    def generate_heygen_newsflash_video_text(self, case_study_summary: str) -> str:
+    def generate_heygen_newsflash_video_text(self, case_study_summary: str, language: str = "English") -> str:
         """Generate input text for 30-second HeyGen newsflash video"""
         if not self.openai_api_key:
             return "AI service not available - API key not configured"
         
+        # Get language-specific phrases
+        breaking_news_phrases = {
+            "English": "Breaking News!",
+            "Spanish": "¡Noticia de Última Hora!",
+            "Portuguese": "Notícia de Última Hora!",
+            "French": "Dernières Nouvelles!",
+            "German": "Eilmeldung!",
+            "Italian": "Notizia dell'Ultimo Minuto!",
+            "Swedish": "Senaste Nytt!"
+        }
+        breaking_news = breaking_news_phrases.get(language, "Breaking News!")
+        
         prompt = f"""
+        **CRITICAL: Write the ENTIRE script EXCLUSIVELY in {language}. Every single word must be in {language}.**
+        
         Create an exciting news flash style script based on this case study.
-        Make it sound like breaking news with energy and excitement. Use phrases like "Breaking News!", "Amazing Results!", "Incredible Success!"
+        Make it sound like breaking news with energy and excitement. Use phrases like "{breaking_news}", "Amazing Results!", "Incredible Success!" (all in {language})
         
         **CRITICAL TIMING REQUIREMENT:**
         - The script MUST be exactly 30 seconds (30 seconds) when spoken at normal conversational pace
@@ -355,16 +369,16 @@ Before finalizing the post:
         - Prioritize impact while maintaining the exact 30-second duration
         
         **Requirements:**
-        - Write it as if you're a news anchor delivering breaking news
+        - Write it as if you're a news anchor delivering breaking news in {language}
         - Sound energetic and exciting - like breaking news
-        - Use phrases like "Breaking News!", "Amazing Results!", "Incredible Success!"
+        - Use phrases like "{breaking_news}", "Amazing Results!", "Incredible Success!" (all translated to {language})
         - Keep it concise but thrilling
         - Focus on the key highlights: what challenge was solved, how it was solved, and what happened
-        - Use natural, everyday language - avoid corporate jargon
+        - Use natural, everyday {language} - avoid corporate jargon
         - Make it feel like genuine breaking news, not a script written by AI
         
         **Style:**
-        - Start with an attention-grabbing hook like "Breaking News!"
+        - Start with an attention-grabbing hook like "{breaking_news}"
         - Tell the story in a way that feels urgent and exciting
         - Use varied sentence structure - mix short punchy sentences with longer flowing ones
         - Include natural emphasis and excitement
@@ -372,9 +386,9 @@ Before finalizing the post:
         
         Case study: {case_study_summary[:1500]}
         
-        **IMPORTANT:** After writing the script, count the words. If it exceeds 75 words, rewrite it to be shorter. If it's below 70 words, expand it slightly. The final script MUST be between 70-75 words (exactly 30 seconds).
+        **IMPORTANT:** After writing the script, count the words. If it exceeds 75 words, rewrite it to be shorter. If it's below 70 words, expand it slightly. The final script MUST be between 70-75 words (exactly 30 seconds) AND must be entirely in {language}.
         
-        Write ONLY the script text - no labels, no formatting, just the natural spoken words:
+        Write ONLY the script text in {language} - no labels, no formatting, just the natural spoken words:
         """
         
         try:
@@ -417,20 +431,21 @@ Before finalizing the post:
                     
                     # Regenerate with stricter prompt emphasizing word limit
                     strict_prompt = f"""
-                    Rewrite this script to be EXACTLY 70-75 words (exactly 30 seconds).
+                    Rewrite this script to be EXACTLY 70-75 words (exactly 30 seconds) in {language}.
                     
                     Current script ({word_count} words):
                     {generated_text}
                     
                     Requirements:
                     - MUST be 70-75 words (currently {issue})
+                    - MUST be entirely in {language}
                     - Keep the energetic, breaking news tone
-                    - Use phrases like "Breaking News!", "Amazing Results!", "Incredible Success!"
+                    - Use phrases like "{breaking_news}", "Amazing Results!", "Incredible Success!" (all in {language})
                     - Focus on key highlights: challenge, solution, impact
                     - {instruction}
                     - The script must be exactly 30 seconds when spoken
                     
-                    Rewrite the script:
+                    Rewrite the script in {language}:
                     """
                     
                     strict_data = {
@@ -460,12 +475,14 @@ Before finalizing the post:
         except Exception as e:
             return f"Error generating HeyGen newsflash video text: {str(e)}"
     
-    def generate_heygen_1min_video_text(self, case_study_summary: str) -> str:
+    def generate_heygen_1min_video_text(self, case_study_summary: str, language: str = "English") -> str:
         """Generate input text for 1-minute HeyGen video - brief, human-sounding success story"""
         if not self.openai_api_key:
             return "AI service not available - API key not configured"
         
         prompt = f"""
+        **CRITICAL: Write the ENTIRE script EXCLUSIVELY in {language}. Every single word must be in {language}.**
+        
         Transform this case study into a natural, conversational video script that tells a compelling success story.
         
         **CRITICAL TIMING REQUIREMENT:**
@@ -477,15 +494,15 @@ Before finalizing the post:
         - Prioritize impact while maintaining the exact 1-minute duration
         
         **Requirements:**
-        - Write it as if you're a real person genuinely excited about sharing a success story you witnessed
+        - Write it as if you're a real person genuinely excited about sharing a success story you witnessed (in {language})
         - Sound completely human and conversational - like you're talking to a friend about something cool that happened
         - Do NOT use section names, headers, or labels (no "Introduction:", "Challenge:", "Solution:", etc.)
         - Do NOT just read the summary verbatim - tell the story naturally in your own words
         - Use excited but professional tone - enthusiastic but credible, like a real person would speak
-        - Make it flow naturally from one thought to the next - use natural transitions like "so", "and", "but", "you know"
+        - Make it flow naturally from one thought to the next - use natural transitions appropriate for {language}
         - Focus on the key highlights: what challenge was solved, how it was solved, and what happened
-        - Use natural, everyday language - avoid corporate jargon, AI-sounding phrases, or overly polished language
-        - Use contractions when natural (I'm, we're, they've, it's) - real people use contractions
+        - Use natural, everyday {language} - avoid corporate jargon, AI-sounding phrases, or overly polished language
+        - Use contractions when natural (appropriate for {language}) - real people use contractions
         - Make it feel like a genuine story being told by a real person, not a script written by AI
         - Be concise - use shorter sentences and cut unnecessary words to stay within the word limit
         - Use natural human expressions and phrasing - sound like someone actually talking, not reading from a script
@@ -546,9 +563,9 @@ Before finalizing the post:
         - If needed, adjust earlier content to make room for the ending, but NEVER omit it
         - The script must be read from start to finish - the ending is never optional
         
-        **IMPORTANT:** After writing the script, count the words. If it exceeds 150 words, rewrite it to be shorter while maintaining the natural, human tone. If it's below 140 words, expand it slightly. The final script MUST be between 140-150 words (exactly 1 minute) AND must include a complete ending. NEVER truncate or cut off the ending - the script must always be read until the end.
+        **IMPORTANT:** After writing the script, count the words. If it exceeds 150 words, rewrite it to be shorter while maintaining the natural, human tone. If it's below 140 words, expand it slightly. The final script MUST be between 140-150 words (exactly 1 minute) AND must include a complete ending AND must be entirely in {language}. NEVER truncate or cut off the ending - the script must always be read until the end.
         
-        Write ONLY the script text - no labels, no formatting, just the natural spoken words:
+        Write ONLY the script text in {language} - no labels, no formatting, just the natural spoken words:
         """
         
         try:
@@ -597,34 +614,35 @@ Before finalizing the post:
                     
                     # Regenerate with stricter prompt emphasizing word limit and complete ending
                     strict_prompt = f"""
-                    Rewrite this script to be EXACTLY 140-150 words (exactly 1 minute) and ensure it has a complete ending.
+                    Rewrite this script to be EXACTLY 140-150 words (exactly 1 minute) and ensure it has a complete ending in {language}.
                     
                     Current script ({word_count} words):
                     {generated_text}
                     
                     Requirements:
                     - MUST be 140-150 words (currently {issue})
+                    - MUST be entirely in {language}
                     - MUST end with a complete sentence (period, exclamation, or question mark)
                     - Keep the natural, human tone - sound like a real person telling a story, not AI
-                    - NEVER use "Enter" (as in "Enter [company name]") - it sounds AI-generated and robotic. Instead, naturally introduce: "Meet [company]" or "Here's how [company]..." or just start with the story naturally.
-                    - NEVER use robotic phrases like "the results", "the outcome", "the solution", "the challenge"
-                    - Instead of "the results were amazing" → say "they saw huge improvements" or "it worked really well"
-                    - Instead of "the solution was implemented" → say "we did this" or "they tried this approach"
-                    - Instead of "the outcome exceeded expectations" → say "it went way better than they thought"
-                    - Use natural, everyday language - avoid AI-sounding phrases like "amazing results", "incredible success"
-                    - Use contractions naturally (I'm, we're, they've, it's) - real people use contractions
-                    - NEVER use hardcoded-sounding phrases like "the best part", "honestly", "you know" when used formulaically - these sound AI-generated and repetitive
-                    - Use natural human expressions sparingly and authentically - "so", "and", "but" are natural, but avoid overusing "honestly", "you know", "I mean" as they can sound formulaic
+                    - NEVER use "Enter" (as in "Enter [company name]") - it sounds AI-generated and robotic. Instead, naturally introduce: "Meet [company]" or "Here's how [company]..." or just start with the story naturally (in {language}).
+                    - NEVER use robotic phrases like "the results", "the outcome", "the solution", "the challenge" (translated to {language})
+                    - Instead of "the results were amazing" → say "they saw huge improvements" or "it worked really well" (in {language})
+                    - Instead of "the solution was implemented" → say "we did this" or "they tried this approach" (in {language})
+                    - Instead of "the outcome exceeded expectations" → say "it went way better than they thought" (in {language})
+                    - Use natural, everyday {language} - avoid AI-sounding phrases like "amazing results", "incredible success"
+                    - Use contractions naturally (appropriate for {language}) - real people use contractions
+                    - NEVER use hardcoded-sounding phrases when used formulaically - these sound AI-generated and repetitive
+                    - Use natural human expressions sparingly and authentically - appropriate for {language}
                     - Avoid corporate jargon or overly polished language - sound like a real person talking
                     - Avoid formulaic patterns that sound repeated or hardcoded - make each ending unique and natural
-                    - Use active voice - "we helped them" not "assistance was provided"
-                    - Be specific - "sales went up 30%" not "positive results were achieved"
+                    - Use active voice - appropriate for {language}
+                    - Be specific - use concrete examples in {language}
                     - Include a complete ending that concludes the story properly
                     - {instruction}
                     - The script must be exactly 1 minute when spoken
                     - Make it sound like someone actually talking, not reading from a script
                     
-                    Rewrite the script:
+                    Rewrite the script in {language}:
                     """
                     
                     strict_data = {
@@ -695,22 +713,22 @@ Before finalizing the post:
         except Exception as e:
             return f"Error generating Pictory scenes: {str(e)}"
     
-    def generate_podcast_prompt(self, final_summary):
+    def generate_podcast_prompt(self, final_summary, language="English"):
         """Use OpenAI to summarize the case study into a short, clean version for Wondercraft."""
         try:
             # Use OpenAI to create a concise summary of the case study
-            openai_prompt = f"""Summarize this business case study in exactly 150 words or less. Make it clear, engaging, and include:
+            openai_prompt = f"""Summarize this business case study in exactly 150 words or less in {language}. Make it clear, engaging, and include:
 - Client name and challenge
 - Solution provided  
 - Key results/impact
 - Main lessons learned
 
-Write it in a natural, conversational style that would work well for a podcast. Remove any formatting, headers, or technical jargon.
+Write it in a natural, conversational style in {language} that would work well for a podcast. Remove any formatting, headers, or technical jargon.
 
 Case study:
 {final_summary}
 
-Return ONLY the 150-word summary, nothing else."""
+Return ONLY the 150-word summary in {language}, nothing else."""
 
             headers = {
                 "Authorization": f"Bearer {self.openai_api_key}",
@@ -746,7 +764,7 @@ Return ONLY the 150-word summary, nothing else."""
                     # Create the full prompt with instructions for Wondercraft
                     full_prompt = f"""Make the conversation energetic, positive, and excited throughout - not over the top, just genuinely enthusiastic.
 
-Create an exactly 5-minute business podcast between only two persons about this success story no other voices. Make it conversational and engaging.
+Create an exactly 5-minute business podcast between only two persons about this success story in {language}. Make it conversational and engaging. The entire conversation must be in {language}.
 
 CRITICAL NAMING: Use two speakers with these exact names and genders: Jimmy (male) and Emma (female). Prefix every line of dialogue with the speaker's name followed by a colon, like "Jimmy:" or "Emma:". Start the conversation with Jimmy speaking first, then alternate naturally. Do NOT use labels like "Speaker 1" or "Speaker 2" anywhere.
 

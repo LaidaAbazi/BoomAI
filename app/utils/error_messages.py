@@ -15,7 +15,10 @@ class UserFriendlyErrors:
         "user_not_found": "User account not found. Please contact support.",
         "email_verification_failed": "Email verification failed. Please try again or contact support.",
         "not_verified": "Please check your email for verification before logging in.",
-        "network_error": "Connection problem. Please check your internet and try again."
+        "network_error": "Connection problem. Please check your internet and try again.",
+        "invalid_invite": "This invitation link is invalid or has already been used.",
+        "invite_expired": "This invitation has expired. Please ask for a new invitation.",
+        "invite_email_mismatch": "This invitation was sent to a different email address. Please use the email address that received the invitation."
     }
     
     # Case study errors

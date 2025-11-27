@@ -2,11 +2,12 @@ from flask import Blueprint, request, jsonify, send_file, Response
 import requests
 import os
 from datetime import datetime, UTC
-from app.models import db, CaseStudy
-from app.utils.auth_helpers import get_current_user_id, login_required
+from app.models import db, CaseStudy, User
+from app.utils.auth_helpers import get_current_user_id, login_required, owner_required
 from app.services.ai_service import AIService
 from app.services.media_service import MediaService
 from app.utils.error_messages import UserFriendlyErrors
+from app.utils.language_utils import detect_and_normalize_language, get_heygen_voice_id, get_wondercraft_language
 from flasgger import swag_from
 
 bp = Blueprint('media', __name__, url_prefix='/api')
@@ -28,6 +29,7 @@ WONDERCRAFT_API_BASE_URL = "https://api.wondercraft.ai/v1"
 
 @bp.route("/generate_newsflash_video", methods=["POST"])
 @login_required
+@owner_required
 @swag_from({
     'tags': ['Media'],
     'summary': 'Generate newsflash video',
@@ -76,11 +78,24 @@ def generate_newsflash_video():
         if not case_study_id:
             error_response = UserFriendlyErrors.get_case_study_error("missing_data")
             return jsonify(error_response), 400
-            
+        
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             error_response = UserFriendlyErrors.get_case_study_error("not_found")
             return jsonify(error_response), 404
+        
+        # Verify company access: owners can generate booms for any company story
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                error_response = UserFriendlyErrors.get_case_study_error("not_found")
+                return jsonify(error_response), 404
+        else:
+            # Employees cannot generate booms
+            error_response = UserFriendlyErrors.get_general_error("permission_denied")
+            return jsonify(error_response), 403
             
         if not case_study.final_summary:
             error_response = UserFriendlyErrors.get_case_study_error("missing_data")
@@ -91,9 +106,17 @@ def generate_newsflash_video():
             error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
             return jsonify(error_response), 400
 
-        # Generate optimized input text for HeyGen (30-second newsflash video)
+        # Detect and store language if not already stored
+        if not case_study.language:
+            case_study.language = detect_and_normalize_language(case_study.final_summary)
+            db.session.commit()
+
+        # Get language-specific voice ID
+        voice_id = get_heygen_voice_id(case_study.language)
+
+        # Generate optimized input text for HeyGen (30-second newsflash video) in the correct language
         ai_service = AIService()
-        input_text = ai_service.generate_heygen_newsflash_video_text(case_study.final_summary)
+        input_text = ai_service.generate_heygen_newsflash_video_text(case_study.final_summary, language=case_study.language)
         if not input_text:
             error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
             return jsonify(error_response), 500
@@ -125,7 +148,7 @@ def generate_newsflash_video():
                     },
                     "voice": {
                         "type": "text",
-                        "voice_id": HEYGEN_VOICE_ID,
+                        "voice_id": voice_id,  # Use language-specific voice
                         "input_text": input_text,
                         "speed": 1.0,
                         "pitch": 35,
@@ -177,6 +200,7 @@ def generate_newsflash_video():
 
 @bp.route("/generate_video", methods=["POST"])
 @login_required
+@owner_required
 @swag_from({
     'tags': ['Media'],
     'summary': 'Generate video',
@@ -225,11 +249,24 @@ def generate_video():
         if not case_study_id:
             error_response = UserFriendlyErrors.get_case_study_error("missing_data")
             return jsonify(error_response), 400
-            
+        
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             error_response = UserFriendlyErrors.get_case_study_error("not_found")
             return jsonify(error_response), 404
+        
+        # Verify company access: owners can generate booms for any company story
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                error_response = UserFriendlyErrors.get_case_study_error("not_found")
+                return jsonify(error_response), 404
+        else:
+            # Employees cannot generate booms
+            error_response = UserFriendlyErrors.get_general_error("permission_denied")
+            return jsonify(error_response), 403
             
         if not case_study.final_summary:
             error_response = UserFriendlyErrors.get_case_study_error("missing_data")
@@ -240,9 +277,17 @@ def generate_video():
             error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
             return jsonify(error_response), 400
 
-        # Generate optimized input text for HeyGen (1-minute video)
+        # Detect and store language if not already stored
+        if not case_study.language:
+            case_study.language = detect_and_normalize_language(case_study.final_summary)
+            db.session.commit()
+
+        # Get language-specific voice ID
+        voice_id = get_heygen_voice_id(case_study.language)
+
+        # Generate optimized input text for HeyGen (1-minute video) in the correct language
         ai_service = AIService()
-        input_text = ai_service.generate_heygen_1min_video_text(case_study.final_summary)
+        input_text = ai_service.generate_heygen_1min_video_text(case_study.final_summary, language=case_study.language)
         if not input_text:
             error_response = UserFriendlyErrors.get_media_error("video_generation_failed")
             return jsonify(error_response), 500
@@ -274,7 +319,7 @@ def generate_video():
                     },
                     "voice": {
                         "type": "text",
-                        "voice_id": HEYGEN_VOICE_ID,
+                        "voice_id": voice_id,  # Use language-specific voice
                         "input_text": input_text,
                         "speed": 1.0,
                         "pitch": 35,
@@ -460,6 +505,7 @@ def check_video_status(video_id):
 
 @bp.route("/generate_pictory_video", methods=["POST"])
 @login_required
+@owner_required
 def generate_pictory_video():
     """Generate Pictory video"""
     try:
@@ -468,10 +514,21 @@ def generate_pictory_video():
         
         if not case_study_id:
             return jsonify({"error": "Case study ID is required"}), 400
-            
+        
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"error": "Case study not found"}), 404
+        
+        # Verify company access: owners can generate booms for any company story
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"error": "Case study not found"}), 404
+        else:
+            # Employees cannot generate booms
+            return jsonify({"error": "Only owners can generate booms"}), 403
             
         if not case_study.final_summary:
             return jsonify({"error": "Final summary is required for video generation"}), 400
@@ -749,10 +806,21 @@ def generate_podcast():
         
         if not case_study_id:
             return jsonify({"error": "Case study ID is required"}), 400
-            
+        
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"error": "Case study not found"}), 404
+        
+        # Verify company access: owners can generate booms for any company story
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"error": "Case study not found"}), 404
+        else:
+            # Employees cannot generate booms
+            return jsonify({"error": "Only owners can generate booms"}), 403
             
         if not case_study.final_summary:
             return jsonify({"error": "Final summary is required for podcast generation"}), 400
@@ -769,9 +837,17 @@ def generate_podcast():
             case_study.podcast_created_at = None
             db.session.commit()
 
-        # Generate podcast prompt
+        # Detect and store language if not already stored
+        if not case_study.language:
+            case_study.language = detect_and_normalize_language(case_study.final_summary)
+            db.session.commit()
+
+        # Get WonderCraft-compatible language
+        wondercraft_language = get_wondercraft_language(case_study.language)
+
+        # Generate podcast prompt with language awareness
         ai_service = AIService()
-        podcast_prompt = ai_service.generate_podcast_prompt(case_study.final_summary)
+        podcast_prompt = ai_service.generate_podcast_prompt(case_study.final_summary, language=wondercraft_language)
         if not podcast_prompt:
             return jsonify({"error": "Failed to generate podcast prompt"}), 500
 

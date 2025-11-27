@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import session, jsonify, request, redirect, url_for
-from app.models import User, InviteToken
+from app.models import User, InviteToken, Company
 
 def get_current_user_id():
     """Get current user ID from session"""
@@ -58,8 +58,6 @@ def login_or_token_required(f):
 
 def subscription_required(f):
     """Decorator to require active subscription for routes"""
-    # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-    # This decorator now allows all authenticated users regardless of subscription status
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user_id = get_current_user_id()
@@ -71,7 +69,7 @@ def subscription_required(f):
             session.clear()
             return jsonify({"error": "User not found"}), 401
         
-        # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+        # TEMPORARILY DISABLED - Subscription check
         # if not user.has_active_subscription:
         #     return jsonify({
         #         "error": "Active subscription required",
@@ -80,4 +78,32 @@ def subscription_required(f):
         #     }), 403
         
         return f(*args, **kwargs)
-    return decorated_function 
+    return decorated_function
+
+def owner_required(f):
+    """Decorator to require owner role for routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_id = get_current_user_id()
+        if not user_id:
+            return jsonify({"error": "Authentication required"}), 401
+        
+        user = User.query.get(user_id)
+        if not user:
+            session.clear()
+            return jsonify({"error": "User not found"}), 401
+        
+        if user.role != 'owner':
+            return jsonify({
+                "error": "Owner access required",
+                "message": "Only company owners can perform this action"
+            }), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+def require_same_company(user, company_id):
+    """Check if user belongs to the same company"""
+    if not user.company_id:
+        return False
+    return user.company_id == company_id

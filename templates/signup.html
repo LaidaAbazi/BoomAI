@@ -178,6 +178,77 @@
     const submitBtn = document.getElementById('submitBtn');
     const errorDiv = document.getElementById('signupError');
 
+    // Check for invite token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteToken = urlParams.get('invite_token');
+    const emailInput = document.querySelector('input[name="email"]');
+    
+    // If invite token exists, hide company field, fetch invite details, and auto-fill email
+    if (inviteToken) {
+      const companyInput = document.querySelector('input[name="company"]');
+      if (companyInput) {
+        companyInput.style.display = 'none';
+        companyInput.removeAttribute('required');
+      }
+      
+      // Fetch invite details to get email and company name
+      fetch(`/api/companies/invites/validate/${inviteToken}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.valid) {
+            // Auto-fill email field
+            if (emailInput) {
+              emailInput.value = data.email;
+              emailInput.readOnly = true;
+              emailInput.style.backgroundColor = '#f3f4f6';
+              emailInput.style.cursor = 'not-allowed';
+            }
+            
+            // Add invite message with company name
+            const inviteMsg = document.createElement('div');
+            inviteMsg.style.padding = '12px';
+            inviteMsg.style.backgroundColor = '#e0e7ff';
+            inviteMsg.style.borderRadius = '8px';
+            inviteMsg.style.marginBottom = '16px';
+            inviteMsg.style.color = '#312e81';
+            inviteMsg.style.fontSize = '0.9rem';
+            inviteMsg.innerHTML = `🎉 You've been invited to join <strong>${data.company_name}</strong>! Complete your account setup below.`;
+            const form = document.getElementById('signupForm');
+            form.insertBefore(inviteMsg, form.firstChild);
+          } else {
+            // Invalid or expired invite
+            const errorMsg = document.createElement('div');
+            errorMsg.style.padding = '12px';
+            errorMsg.style.backgroundColor = '#fee2e2';
+            errorMsg.style.borderRadius = '8px';
+            errorMsg.style.marginBottom = '16px';
+            errorMsg.style.color = '#dc2626';
+            errorMsg.style.fontSize = '0.9rem';
+            errorMsg.innerHTML = `❌ ${data.error || 'Invalid or expired invite link'}`;
+            const form = document.getElementById('signupForm');
+            form.insertBefore(errorMsg, form.firstChild);
+            
+            // Disable form submission
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Invalid Invite';
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching invite details:', error);
+          // Show generic invite message if fetch fails
+          const inviteMsg = document.createElement('div');
+          inviteMsg.style.padding = '12px';
+          inviteMsg.style.backgroundColor = '#e0e7ff';
+          inviteMsg.style.borderRadius = '8px';
+          inviteMsg.style.marginBottom = '16px';
+          inviteMsg.style.color = '#312e81';
+          inviteMsg.style.fontSize = '0.9rem';
+          inviteMsg.innerHTML = '🎉 You\'ve been invited to join a company! Complete your account setup below.';
+          const form = document.getElementById('signupForm');
+          form.insertBefore(inviteMsg, form.firstChild);
+        });
+    }
+
     function togglePassword() {
       const type = password.type === 'password' ? 'text' : 'password';
       password.type = type;
@@ -236,9 +307,18 @@
         first_name: form.first_name.value,
         last_name: form.last_name.value,
         email: form.email.value,
-        company_name: form.company.value,
         password: form.password.value
       };
+      
+      // Only include company_name if no invite token (owners create company)
+      if (!inviteToken && form.company.value) {
+        data.company_name = form.company.value;
+      }
+      
+      // Include invite_token if present
+      if (inviteToken) {
+        data.invite_token = inviteToken;
+      }
 
       try {
         const res = await fetch('/api/signup', {

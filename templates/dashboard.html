@@ -1166,6 +1166,339 @@
     .faq-modal::-webkit-scrollbar-thumb:hover {
       background: #312E81;
     }
+    
+    /* Subscription Management Modal Styles */
+    .subscription-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .subscription-modal-overlay.hidden {
+      display: none;
+    }
+    .subscription-modal {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .subscription-modal-header {
+      padding: 28px 32px;
+      border-bottom: 1px solid #E0E7FF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      z-index: 10;
+    }
+    .subscription-modal-header h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #312E81;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+    }
+    .subscription-close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #888;
+      cursor: pointer;
+      padding: 4px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .subscription-close-btn:hover {
+      background: #f3f4f6;
+      color: #312E81;
+    }
+    .subscription-modal-body {
+      padding: 24px 32px 32px 32px;
+    }
+    .subscription-loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 1.1rem;
+    }
+    .subscription-loading i {
+      font-size: 2rem;
+      color: #06B6D4;
+      margin-bottom: 16px;
+    }
+    .subscription-error {
+      text-align: center;
+      padding: 40px;
+      color: #DC2626;
+    }
+    .subscription-error i {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    .subscription-section {
+      margin-bottom: 32px;
+    }
+    .subscription-section h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #312E81;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .subscription-section h3 i {
+      color: #06B6D4;
+    }
+    .subscription-status-card {
+      background: #F8FAFC;
+      border: 1px solid #E0E7FF;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #E0E7FF;
+    }
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    .status-label {
+      font-weight: 600;
+      color: #666;
+      font-size: 0.95rem;
+    }
+    .status-value {
+      font-weight: 700;
+      color: #312E81;
+      font-size: 1rem;
+    }
+    .status-value.warning {
+      color: #DC2626;
+    }
+    .status-value.active {
+      color: #10B981;
+    }
+    .status-value.canceled {
+      color: #F59E0B;
+    }
+    .subscription-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .action-btn {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .action-btn.portal-btn {
+      background: linear-gradient(135deg, #06B6D4 0%, #312E81 100%);
+      color: white;
+    }
+    .action-btn.cancel-btn {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+    .action-btn.cancel-btn:hover {
+      background: #FECACA;
+    }
+    .action-btn.reactivate-btn {
+      background: #D1FAE5;
+      color: #10B981;
+    }
+    .action-btn.reactivate-btn:hover {
+      background: #A7F3D0;
+    }
+    .action-btn.secondary-btn {
+      background: #F3F4F6;
+      color: #312E81;
+      margin-bottom: 16px;
+    }
+    .action-btn.secondary-btn:hover {
+      background: #E5E7EB;
+    }
+    /* Cancel Options Modal */
+    .cancel-options-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10002;
+    }
+    .cancel-options-modal.hidden {
+      display: none;
+    }
+    .cancel-options-content {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    .cancel-options-content h4 {
+      margin: 0 0 8px 0;
+      font-size: 1.5rem;
+      color: #312E81;
+    }
+    .cancel-options-content p {
+      margin: 0 0 24px 0;
+      color: #666;
+    }
+    .cancel-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .cancel-option-btn {
+      padding: 16px;
+      border: 2px solid #E0E7FF;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+    }
+    .cancel-option-btn:hover {
+      border-color: #06B6D4;
+      background: #F0FDFA;
+    }
+    .cancel-option-btn i {
+      font-size: 1.5rem;
+      color: #06B6D4;
+    }
+    .cancel-option-btn strong {
+      display: block;
+      color: #312E81;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .cancel-option-btn small {
+      display: block;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    .cancel-options-close {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #E0E7FF;
+      border-radius: 8px;
+      background: white;
+      color: #312E81;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cancel-options-close:hover {
+      background: #F3F4F6;
+    }
+    /* Invoice List */
+    .invoices-list {
+      margin-top: 16px;
+    }
+    .invoice-item {
+      background: #F8FAFC;
+      border: 1px solid #E0E7FF;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .invoice-item-info {
+      flex: 1;
+    }
+    .invoice-item-info strong {
+      display: block;
+      color: #312E81;
+      margin-bottom: 4px;
+    }
+    .invoice-item-info small {
+      color: #666;
+      font-size: 0.85rem;
+    }
+    .invoice-item-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .invoice-btn {
+      padding: 8px 16px;
+      border: 1px solid #06B6D4;
+      border-radius: 6px;
+      background: white;
+      color: #06B6D4;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .invoice-btn:hover {
+      background: #06B6D4;
+      color: white;
+    }
+    .subscription-modal::-webkit-scrollbar {
+      width: 8px;
+    }
+    .subscription-modal::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 20px;
+    }
+    .subscription-modal::-webkit-scrollbar-thumb {
+      background: #06B6D4;
+      border-radius: 20px;
+    }
+    .subscription-modal::-webkit-scrollbar-thumb:hover {
+      background: #312E81;
+    }
   </style>
 </head>
 <body>
@@ -1180,21 +1513,15 @@
       <div id="userDropdownMenu" class="user-dropdown-menu hidden">
         <div class="dropdown-section">
           <h4 style="margin: 0 0 8px 0; color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Subscription</h4>
-                <!-- STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use -->
-                <!-- <a href="#" onclick="openMonthlySubscription()" class="dropdown-payment-btn monthly-btn">
-                  <i class="fas fa-crown" style="margin-right: 8px;"></i>
-                  Monthly Plan - $99/month
-                </a> -->
-                <a href="#" onclick="alert('Stripe payment integration is currently disabled. Please contact support for subscription.'); return false;" class="dropdown-payment-btn monthly-btn">
+                <a href="#" onclick="openManageSubscription()" class="dropdown-payment-btn" id="manageSubscriptionBtn" style="display: none;">
+                  <i class="fas fa-cog" style="margin-right: 8px;"></i>
+                  Manage Subscription
+                </a>
+                <a href="#" onclick="openMonthlySubscription()" class="dropdown-payment-btn monthly-btn" id="subscribeBtn">
                   <i class="fas fa-crown" style="margin-right: 8px;"></i>
                   Monthly Plan - $99/month
                 </a>
-                <!-- STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use -->
-                <!-- <a href="#" onclick="openExtraCredits()" class="dropdown-payment-btn extra-btn">
-                  <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
-                  Buy Extra Stories - $6.90
-                </a> -->
-                <a href="#" onclick="alert('Stripe payment integration is currently disabled. Please contact support for extra credits.'); return false;" class="dropdown-payment-btn extra-btn">
+                <a href="#" onclick="openExtraCredits()" class="dropdown-payment-btn extra-btn">
                   <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
                   Buy Extra Stories - $6.90
                 </a>
@@ -1204,6 +1531,95 @@
       </div>
     </div>
   </div>
+  
+  <!-- Subscription Management Modal -->
+  <div id="subscriptionModal" class="subscription-modal-overlay hidden">
+    <div class="subscription-modal">
+      <div class="subscription-modal-header">
+        <h2><i class="fas fa-crown" style="margin-right: 10px; color: #F59E0B;"></i>Subscription Management</h2>
+        <button class="subscription-close-btn" onclick="closeSubscriptionModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="subscription-modal-body">
+        <div id="subscriptionLoading" class="subscription-loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading subscription information...
+        </div>
+        <div id="subscriptionContent" class="subscription-content" style="display: none;">
+          <!-- Subscription Status Section -->
+          <div class="subscription-section">
+            <h3><i class="fas fa-info-circle"></i> Subscription Status</h3>
+            <div class="subscription-status-card">
+              <div class="status-item">
+                <span class="status-label">Status:</span>
+                <span id="subscriptionStatus" class="status-value">-</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Current Period:</span>
+                <span id="currentPeriod" class="status-value">-</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Next Billing Date:</span>
+                <span id="nextBillingDate" class="status-value">-</span>
+              </div>
+              <div id="cancelationInfo" class="status-item" style="display: none;">
+                <span class="status-label">Cancellation Date:</span>
+                <span id="cancellationDate" class="status-value warning">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions Section -->
+          <div class="subscription-section">
+            <h3><i class="fas fa-cog"></i> Actions</h3>
+            <div class="subscription-actions">
+              <button id="reactivateBtn" class="action-btn reactivate-btn" onclick="reactivateSubscription()" style="display: none;">
+                <i class="fas fa-redo"></i> Reactivate Subscription
+              </button>
+              <button id="cancelAtPeriodEndBtn" class="action-btn cancel-btn" onclick="showCancelOptions()" style="display: none;">
+                <i class="fas fa-ban"></i> Cancel Subscription
+              </button>
+              <button class="action-btn portal-btn" onclick="openStripePortal()">
+                <i class="fas fa-external-link-alt"></i> Open Stripe Customer Portal
+              </button>
+            </div>
+          </div>
+
+          <!-- Cancel Options Modal (nested) -->
+          <div id="cancelOptionsModal" class="cancel-options-modal hidden">
+            <div class="cancel-options-content">
+              <h4>Cancel Subscription</h4>
+              <p>Your subscription will be cancelled at the end of your current billing period. You'll keep access until then.</p>
+              <div class="cancel-options">
+                <button class="cancel-option-btn" onclick="cancelSubscription(true)">
+                  <i class="fas fa-calendar-check"></i>
+                  <div>
+                    <strong>Cancel at Period End</strong>
+                    <small>Keep access until the end of your billing period</small>
+                  </div>
+                </button>
+              </div>
+              <button class="cancel-options-close" onclick="hideCancelOptions()">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Invoice History Section -->
+          <div class="subscription-section">
+            <h3><i class="fas fa-file-invoice"></i> Invoice History</h3>
+            <button class="action-btn secondary-btn" onclick="loadInvoices()">
+              <i class="fas fa-sync-alt"></i> Load Invoices
+            </button>
+            <div id="invoicesList" class="invoices-list"></div>
+          </div>
+        </div>
+        <div id="subscriptionError" class="subscription-error" style="display: none;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p id="subscriptionErrorMessage"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="dashboard-container" data-user-id="{{ user_id|tojson|safe if user_id else 'null' }}">
     <div class="sidebar">
       <button id="tellStoryBtn" class="tell-story-btn"><span>TELL THE STORY</span> <span><i class="fas fa-sparkles"></i></span></button>
@@ -1211,7 +1627,12 @@
       <!-- Credit Status Banner -->
       <div id="creditStatusBanner" class="credit-status-banner" style="display: none; margin: 16px 24px; padding: 12px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid #F59E0B; border-radius: 8px; color: #92400E; font-size: 0.9rem; text-align: center;">
         <div id="creditStatusText"></div>
-        <a id="buyCreditsLink" href="#" target="_blank" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #F59E0B; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">Buy Extra Stories for $6.90</a>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px;">
+          <a id="buyCreditsLink" href="#" target="_blank" style="display: inline-block; padding: 6px 12px; background: #F59E0B; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">Buy Extra Stories for $6.90</a>
+          <button id="manageSubscriptionBannerBtn" onclick="openManageSubscription()" style="display: none; padding: 6px 12px; background: #06B6D4; color: white; border: none; border-radius: 4px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+            <i class="fas fa-cog" style="margin-right: 4px;"></i>Manage Subscription
+          </button>
+        </div>
       </div>
       
       <div class="sidebar-header">STORIES</div>
@@ -1341,15 +1762,349 @@
     let currentVideoId = null;
     let videoStatusCheckInterval = null;
     let podcastStatusCheckInterval = null;  // Add this line
+    let currentUserRole = null;
+    let currentUserCompanyId = null;
 
     async function fetchUser() {
       const res = await fetch('/api/user');
       if (res.status === 401) { window.location.href = '/login'; return; }
       const data = await res.json();
       if (data.user) {
-        document.getElementById('userName').textContent = `Hi, ${data.user.first_name} ${data.user.last_name}`.trim();
+        currentUserRole = data.user.role || 'owner'; // Store role, default to owner for backward compatibility
+        currentUserCompanyId = data.user.company_id; // Store company_id
+        
+        // Update user name display with role badge
+        const userNameEl = document.getElementById('userName');
+        if (currentUserRole === 'owner') {
+          userNameEl.textContent = `Hi, ${data.user.first_name} ${data.user.last_name}`.trim();
+          userNameEl.innerHTML += ' <span style="font-size: 0.75rem; background: #312E81; color: #fff; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">Owner</span>';
+        } else {
+          userNameEl.textContent = `Hi, ${data.user.first_name} ${data.user.last_name}`.trim();
+          userNameEl.innerHTML += ' <span style="font-size: 0.75rem; background: #64748b; color: #fff; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">Employee</span>';
+        }
+        
+        // Render invite section if owner, hide for employees
+        if (currentUserRole === 'owner') {
+          renderInviteSection();
+        } else {
+          // Remove invite section if employee
+          const existingSection = document.getElementById('inviteSection');
+          if (existingSection) {
+            existingSection.remove();
+          }
+          // Add employee welcome message
+          renderEmployeeWelcome();
+        }
       } else {
         document.getElementById('userName').textContent = 'Hi, User';
+      }
+    }
+
+    function renderEmployeeWelcome() {
+      // Remove existing welcome if present
+      const existingWelcome = document.getElementById('employeeWelcome');
+      if (existingWelcome) {
+        existingWelcome.remove();
+      }
+
+      const sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+
+      const welcomeSection = document.createElement('div');
+      welcomeSection.id = 'employeeWelcome';
+      welcomeSection.style.marginTop = '16px';
+      welcomeSection.style.padding = '16px';
+      welcomeSection.style.backgroundColor = '#e0e7ff';
+      welcomeSection.style.borderRadius = '8px';
+      welcomeSection.style.marginLeft = '24px';
+      welcomeSection.style.marginRight = '24px';
+      welcomeSection.style.border = '1px solid #c7d2fe';
+
+      const welcomeText = document.createElement('div');
+      welcomeText.style.color = '#312e81';
+      welcomeText.style.fontSize = '0.9rem';
+      welcomeText.style.lineHeight = '1.5';
+      welcomeText.innerHTML = `
+        <div style="fontWeight: 600; marginBottom: 8px;">👋 Welcome!</div>
+        <div style="fontSize: 0.85rem;">You can create and manage your own stories. Contact your company owner to generate booms (videos/podcasts) for your stories.</div>
+      `;
+      welcomeSection.appendChild(welcomeText);
+
+      // Insert after stories header
+      const storiesHeader = sidebar.querySelector('.sidebar-header');
+      if (storiesHeader && storiesHeader.nextSibling) {
+        sidebar.insertBefore(welcomeSection, storiesHeader.nextSibling);
+      } else {
+        sidebar.insertBefore(welcomeSection, sidebar.querySelector('.search-bar'));
+      }
+    }
+
+    function renderInviteSection() {
+      // Only render for owners
+      if (currentUserRole !== 'owner') {
+        // Remove invite section if employee somehow has it
+        const existingSection = document.getElementById('inviteSection');
+        if (existingSection) {
+          existingSection.remove();
+        }
+        return;
+      }
+
+      // Remove existing invite section if present
+      const existingSection = document.getElementById('inviteSection');
+      if (existingSection) {
+        existingSection.remove();
+      }
+
+      const sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+
+      const inviteSection = document.createElement('div');
+      inviteSection.id = 'inviteSection';
+      inviteSection.style.marginTop = '24px';
+      inviteSection.style.padding = '16px';
+      inviteSection.style.backgroundColor = '#f8fafc';
+      inviteSection.style.borderRadius = '8px';
+      inviteSection.style.marginLeft = '24px';
+      inviteSection.style.marginRight = '24px';
+
+      const inviteHeader = document.createElement('div');
+      inviteHeader.className = 'sidebar-header';
+      inviteHeader.textContent = 'TEAM MANAGEMENT';
+      inviteHeader.style.marginBottom = '12px';
+      inviteSection.appendChild(inviteHeader);
+
+      const inviteBtn = document.createElement('button');
+      inviteBtn.textContent = '➕ Invite Employee';
+      inviteBtn.style.width = '100%';
+      inviteBtn.style.background = 'linear-gradient(90deg, #312E81 0%, #4F46E5 100%)';
+      inviteBtn.style.color = '#fff';
+      inviteBtn.style.border = 'none';
+      inviteBtn.style.borderRadius = '8px';
+      inviteBtn.style.padding = '10px 16px';
+      inviteBtn.style.fontSize = '0.9rem';
+      inviteBtn.style.fontWeight = '600';
+      inviteBtn.style.cursor = 'pointer';
+      inviteBtn.style.transition = 'all 0.2s';
+      inviteBtn.onclick = () => showInviteModal();
+      inviteSection.appendChild(inviteBtn);
+
+      // Insert after integrations section
+      const integrationsHeader = sidebar.querySelector('.sidebar-header:last-of-type');
+      if (integrationsHeader && integrationsHeader.nextSibling) {
+        sidebar.insertBefore(inviteSection, integrationsHeader.nextSibling);
+      } else {
+        sidebar.appendChild(inviteSection);
+      }
+    }
+
+    async function showInviteModal() {
+      // Create modal
+      const modal = document.createElement('div');
+      modal.id = 'inviteModal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      modal.style.display = 'flex';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+      modal.style.zIndex = '1000';
+
+      const modalContent = document.createElement('div');
+      modalContent.style.backgroundColor = '#fff';
+      modalContent.style.borderRadius = '12px';
+      modalContent.style.padding = '24px';
+      modalContent.style.width = '90%';
+      modalContent.style.maxWidth = '500px';
+      modalContent.style.maxHeight = '80vh';
+      modalContent.style.overflow = 'auto';
+
+      const title = document.createElement('h2');
+      title.textContent = 'Invite Employee';
+      title.style.marginBottom = '20px';
+      title.style.color = '#312E81';
+      modalContent.appendChild(title);
+
+      const form = document.createElement('form');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        if (!email) {
+          alert('Please enter an email address');
+          return;
+        }
+
+        inviteBtn.disabled = true;
+        inviteBtn.textContent = 'Sending...';
+
+        try {
+          const res = await fetch('/api/companies/invites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert('Invite sent successfully!');
+            emailInput.value = '';
+            modal.remove();
+            loadInvitesList();
+          } else {
+            alert(data.error || 'Failed to send invite');
+          }
+        } catch (error) {
+          alert('Error sending invite: ' + error.message);
+        } finally {
+          inviteBtn.disabled = false;
+          inviteBtn.textContent = 'Send Invite';
+        }
+      };
+
+      const emailLabel = document.createElement('label');
+      emailLabel.textContent = 'Employee Email';
+      emailLabel.style.display = 'block';
+      emailLabel.style.marginBottom = '8px';
+      emailLabel.style.fontWeight = '600';
+      emailLabel.style.color = '#1e293b';
+      form.appendChild(emailLabel);
+
+      const emailInput = document.createElement('input');
+      emailInput.type = 'email';
+      emailInput.required = true;
+      emailInput.placeholder = 'employee@example.com';
+      emailInput.style.width = '100%';
+      emailInput.style.padding = '10px';
+      emailInput.style.border = '1px solid #e2e8f0';
+      emailInput.style.borderRadius = '6px';
+      emailInput.style.marginBottom = '20px';
+      emailInput.style.fontSize = '1rem';
+      form.appendChild(emailInput);
+
+      const inviteBtn = document.createElement('button');
+      inviteBtn.type = 'submit';
+      inviteBtn.textContent = 'Send Invite';
+      inviteBtn.style.width = '100%';
+      inviteBtn.style.background = 'linear-gradient(90deg, #312E81 0%, #4F46E5 100%)';
+      inviteBtn.style.color = '#fff';
+      inviteBtn.style.border = 'none';
+      inviteBtn.style.borderRadius = '8px';
+      inviteBtn.style.padding = '12px';
+      inviteBtn.style.fontSize = '1rem';
+      inviteBtn.style.fontWeight = '600';
+      inviteBtn.style.cursor = 'pointer';
+      form.appendChild(inviteBtn);
+
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'Close';
+      closeBtn.style.width = '100%';
+      closeBtn.style.marginTop = '12px';
+      closeBtn.style.background = '#e2e8f0';
+      closeBtn.style.color = '#1e293b';
+      closeBtn.style.border = 'none';
+      closeBtn.style.borderRadius = '8px';
+      closeBtn.style.padding = '12px';
+      closeBtn.style.fontSize = '1rem';
+      closeBtn.style.fontWeight = '600';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.onclick = () => modal.remove();
+      form.appendChild(closeBtn);
+
+      modalContent.appendChild(form);
+
+      // Add invites list
+      const invitesList = document.createElement('div');
+      invitesList.id = 'invitesList';
+      invitesList.style.marginTop = '24px';
+      modalContent.appendChild(invitesList);
+
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+
+      // Load invites list
+      loadInvitesList(invitesList);
+
+      // Close on background click
+      modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+      };
+    }
+
+    async function loadInvitesList(container) {
+      if (!container) {
+        container = document.getElementById('invitesList');
+      }
+      if (!container) return;
+
+      try {
+        const res = await fetch('/api/companies/invites');
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        const data = await res.json();
+        if (data.success && data.invites) {
+          container.innerHTML = '<h3 style="marginBottom: 12px; color: #312E81;">Pending Invites</h3>';
+          if (data.invites.length === 0) {
+            container.innerHTML += '<p style="color: #64748b;">No pending invites</p>';
+          } else {
+            data.invites.forEach(invite => {
+              const inviteItem = document.createElement('div');
+              inviteItem.style.padding = '12px';
+              inviteItem.style.marginBottom = '8px';
+              inviteItem.style.backgroundColor = '#f8fafc';
+              inviteItem.style.borderRadius = '6px';
+              inviteItem.style.display = 'flex';
+              inviteItem.style.justifyContent = 'space-between';
+              inviteItem.style.alignItems = 'center';
+
+              const inviteInfo = document.createElement('div');
+              inviteInfo.innerHTML = `
+                <div style="fontWeight: 600; color: #1e293b;">${invite.email}</div>
+                <div style="fontSize: 0.85rem; color: #64748b; marginTop: 4px;">
+                  ${invite.used ? 'Accepted' : invite.expires_at ? `Expires: ${new Date(invite.expires_at).toLocaleDateString()}` : 'Pending'}
+                </div>
+              `;
+              inviteItem.appendChild(inviteInfo);
+
+              if (!invite.used) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.style.padding = '6px 12px';
+                cancelBtn.style.background = '#fee2e2';
+                cancelBtn.style.color = '#dc2626';
+                cancelBtn.style.border = 'none';
+                cancelBtn.style.borderRadius = '6px';
+                cancelBtn.style.cursor = 'pointer';
+                cancelBtn.style.fontSize = '0.85rem';
+                cancelBtn.onclick = async () => {
+                  if (confirm('Cancel this invite?')) {
+                    try {
+                      const res = await fetch(`/api/companies/invites/${invite.id}`, {
+                        method: 'DELETE'
+                      });
+                      if (res.ok) {
+                        loadInvitesList(container);
+                      } else {
+                        alert('Failed to cancel invite');
+                      }
+                    } catch (error) {
+                      alert('Error canceling invite: ' + error.message);
+                    }
+                  }
+                };
+                inviteItem.appendChild(cancelBtn);
+              }
+
+              container.appendChild(inviteItem);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading invites:', error);
       }
     }
 
@@ -1514,6 +2269,151 @@
       titleContainer.appendChild(editIcon);
       titleContainer.appendChild(titleInput);
       
+      // Add creator info for owners viewing employee stories
+      if (currentUserRole === 'owner' && story.created_by) {
+        const creatorInfo = document.createElement('div');
+        creatorInfo.className = 'creator-info';
+        creatorInfo.style.marginTop = '8px';
+        creatorInfo.style.marginBottom = '12px';
+        creatorInfo.style.padding = '8px 12px';
+        creatorInfo.style.backgroundColor = '#e0e7ff';
+        creatorInfo.style.borderRadius = '6px';
+        creatorInfo.style.fontSize = '0.9rem';
+        creatorInfo.style.color = '#312e81';
+        creatorInfo.innerHTML = `👤 Created by: <strong>${story.created_by.first_name} ${story.created_by.last_name}</strong> (${story.created_by.email})`;
+        titleContainer.appendChild(creatorInfo);
+      }
+      
+      // Add submit button for employees (only if not submitted)
+      if (currentUserRole === 'employee' && !story.submitted) {
+        const submitContainer = document.createElement('div');
+        submitContainer.style.marginTop = '12px';
+        submitContainer.style.marginBottom = '12px';
+        
+        const submitBtn = document.createElement('button');
+        submitBtn.className = 'submit-story-btn';
+        submitBtn.id = `submitBtn-${story.id}`;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Owner';
+        submitBtn.style.background = 'linear-gradient(90deg, #3B82F6 0%, #2563EB 100%)';
+        submitBtn.style.color = '#fff';
+        submitBtn.style.border = 'none';
+        submitBtn.style.borderRadius = '8px';
+        submitBtn.style.padding = '10px 20px';
+        submitBtn.style.fontSize = '0.95rem';
+        submitBtn.style.fontWeight = '600';
+        submitBtn.style.cursor = 'pointer';
+        submitBtn.style.transition = 'all 0.2s';
+        submitBtn.style.display = 'flex';
+        submitBtn.style.alignItems = 'center';
+        submitBtn.style.gap = '8px';
+        submitBtn.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.2)';
+        
+        submitBtn.onclick = async () => {
+          if (!confirm('Are you sure you want to submit this story to the owner? You will not be able to edit it after submission.')) {
+            return;
+          }
+          
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+          
+          try {
+            const res = await fetch(`/api/case_studies/${story.id}/submit`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await res.json();
+            
+            if (res.status === 403) {
+              alert('Only employees can submit stories');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Owner';
+              return;
+            }
+            
+            if (res.status === 400) {
+              alert(data.message || 'Story already submitted');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Owner';
+              return;
+            }
+            
+            if (data.status === 'success') {
+              // Update story object
+              story.submitted = true;
+              story.submitted_at = data.submitted_at;
+              
+              // Hide submit button
+              submitBtn.style.display = 'none';
+              
+              // Show submitted badge
+              const submittedBadge = document.createElement('div');
+              submittedBadge.className = 'submitted-badge';
+              submittedBadge.style.marginTop = '12px';
+              submittedBadge.style.padding = '8px 12px';
+              submittedBadge.style.backgroundColor = '#10b981';
+              submittedBadge.style.color = '#fff';
+              submittedBadge.style.borderRadius = '6px';
+              submittedBadge.style.fontSize = '0.9rem';
+              submittedBadge.style.fontWeight = '600';
+              submittedBadge.style.display = 'flex';
+              submittedBadge.style.alignItems = 'center';
+              submittedBadge.style.gap = '8px';
+              submittedBadge.innerHTML = '<i class="fas fa-check-circle"></i> Submitted to Owner';
+              submitContainer.appendChild(submittedBadge);
+              
+              // Disable edit functionality
+              titleDisplay.style.cursor = 'not-allowed';
+              editIcon.style.cursor = 'not-allowed';
+              editIcon.style.opacity = '0.5';
+              titleDisplay.onclick = null;
+              editIcon.onclick = null;
+              
+              alert('Story submitted successfully! You can no longer edit it.');
+            } else {
+              alert('Failed to submit story: ' + (data.message || 'Unknown error'));
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Owner';
+            }
+          } catch (error) {
+            console.error('Error submitting story:', error);
+            alert('Failed to submit story. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Owner';
+          }
+        };
+        
+        submitContainer.appendChild(submitBtn);
+        titleContainer.appendChild(submitContainer);
+      }
+      
+      // Show submitted badge if already submitted (for employees)
+      if (currentUserRole === 'employee' && story.submitted) {
+        const submittedBadge = document.createElement('div');
+        submittedBadge.className = 'submitted-badge';
+        submittedBadge.style.marginTop = '12px';
+        submittedBadge.style.marginBottom = '12px';
+        submittedBadge.style.padding = '8px 12px';
+        submittedBadge.style.backgroundColor = '#10b981';
+        submittedBadge.style.color = '#fff';
+        submittedBadge.style.borderRadius = '6px';
+        submittedBadge.style.fontSize = '0.9rem';
+        submittedBadge.style.fontWeight = '600';
+        submittedBadge.style.display = 'flex';
+        submittedBadge.style.alignItems = 'center';
+        submittedBadge.style.gap = '8px';
+        const submittedDate = story.submitted_at ? new Date(story.submitted_at).toLocaleDateString() : '';
+        submittedBadge.innerHTML = `<i class="fas fa-check-circle"></i> Submitted to Owner${submittedDate ? ' on ' + submittedDate : ''}`;
+        titleContainer.appendChild(submittedBadge);
+        
+        // Disable edit functionality for submitted stories
+        titleDisplay.style.cursor = 'not-allowed';
+        editIcon.style.cursor = 'not-allowed';
+        editIcon.style.opacity = '0.5';
+        titleDisplay.onclick = null;
+        editIcon.onclick = null;
+      }
+      
       // Edit title functionality
       let isEditing = false;
       
@@ -1600,23 +2500,42 @@
         const chip = document.createElement('span');
         chip.className = 'label-chip';
         chip.textContent = l.name;
-        // Remove button
+        // Remove button (disabled for submitted stories - employees)
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-label-btn';
         removeBtn.textContent = '×';
+        if (currentUserRole === 'employee' && story.submitted) {
+          removeBtn.style.opacity = '0.5';
+          removeBtn.style.cursor = 'not-allowed';
+        }
         removeBtn.onclick = async (e) => {
           e.stopPropagation();
+          if (currentUserRole === 'employee' && story.submitted) {
+            alert('Cannot edit submitted story. Please contact your owner to make changes.');
+            return;
+          }
           await fetch(`/api/case_studies/${story.id}/labels/${l.id}`, { method: 'DELETE' });
           await fetchAndRender();
         };
         chip.appendChild(removeBtn);
         editLabels.appendChild(chip);
       });
-      // Add label input
+      // Add label input (disabled for submitted stories - employees)
       const addInput = document.createElement('input');
       addInput.className = 'edit-label-input';
       addInput.placeholder = 'Add label...';
+      if (currentUserRole === 'employee' && story.submitted) {
+        addInput.disabled = true;
+        addInput.placeholder = 'Cannot add labels to submitted story';
+        addInput.style.opacity = '0.5';
+        addInput.style.cursor = 'not-allowed';
+      }
       addInput.onkeydown = async (e) => {
+        if (currentUserRole === 'employee' && story.submitted) {
+          e.preventDefault();
+          alert('Cannot edit submitted story. Please contact your owner to make changes.');
+          return;
+        }
         if (e.key === 'Enter' && addInput.value.trim()) {
           await fetch(`/api/case_studies/${story.id}/labels`, {
             method: 'POST',
@@ -1700,7 +2619,12 @@
           richTextDisplay.style.overflowY = 'auto';
           richTextDisplay.style.whiteSpace = 'pre-wrap';
           richTextDisplay.style.lineHeight = '1.6';
-          richTextDisplay.contentEditable = true;
+          // Disable editing if story is submitted (for employees)
+          richTextDisplay.contentEditable = !(currentUserRole === 'employee' && story.submitted);
+          if (currentUserRole === 'employee' && story.submitted) {
+            richTextDisplay.style.cursor = 'not-allowed';
+            richTextDisplay.style.opacity = '0.7';
+          }
           richTextDisplay.style.display = 'none'; // Hide initially
           tabContent.appendChild(richTextDisplay);
 
@@ -1966,20 +2890,22 @@
             }
           }
 
-          // Add input event listener for auto-save
-          richTextDisplay.addEventListener('input', () => {
-            // Update rawText with the current content
-            rawText = richTextDisplay.innerText;
-            // Update the hidden textarea
-            textarea.value = rawText;
-            scheduleAutoSave();
-          });
+          // Add input event listener for auto-save (only if not submitted)
+          if (!(currentUserRole === 'employee' && story.submitted)) {
+            richTextDisplay.addEventListener('input', () => {
+              // Update rawText with the current content
+              rawText = richTextDisplay.innerText;
+              // Update the hidden textarea
+              textarea.value = rawText;
+              scheduleAutoSave();
+            });
 
-          // Add blur event listener for immediate save
-          richTextDisplay.addEventListener('blur', async () => {
-            clearTimeout(autoSaveTimeout);
-            await saveFinalSummary();
-          });
+            // Add blur event listener for immediate save
+            richTextDisplay.addEventListener('blur', async () => {
+              clearTimeout(autoSaveTimeout);
+              await saveFinalSummary();
+            });
+          }
 
           // Initialize names and display
           extractNamesFromFinalSummary();
@@ -2646,26 +3572,44 @@
               podcastSection.appendChild(retryContainer);
             }
           } else {
-            // Show the generate button if no podcast exists
-            const podcastBtn = document.createElement('button');
-            podcastBtn.className = 'action-btn generate-podcast-btn';
-            podcastBtn.id = `podcastBtn-${story.id}`;
-            podcastBtn.innerHTML = '<i class="fas fa-microphone"></i> Generate Podcast';
-            podcastBtn.style.background = 'linear-gradient(90deg, #10B981 0%, #34D399 100%)';
-            podcastBtn.style.color = '#fff';
-            podcastBtn.style.border = 'none';
-            podcastBtn.style.borderRadius = '10px';
-            podcastBtn.style.padding = '12px 24px';
-            podcastBtn.style.fontSize = '1rem';
-            podcastBtn.style.fontWeight = '600';
-            podcastBtn.style.cursor = 'pointer';
-            podcastBtn.style.transition = 'all 0.2s';
-            podcastBtn.style.display = 'flex';
-            podcastBtn.style.alignItems = 'center';
-            podcastBtn.style.gap = '8px';
-            podcastBtn.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.15)';
-            podcastBtn.onclick = () => generatePodcast(story.id);
-            podcastSection.appendChild(podcastBtn);
+            // Show the generate button if no podcast exists - only for owners
+            if (currentUserRole === 'owner') {
+              const podcastBtn = document.createElement('button');
+              podcastBtn.className = 'action-btn generate-podcast-btn';
+              podcastBtn.id = `podcastBtn-${story.id}`;
+              podcastBtn.innerHTML = '<i class="fas fa-microphone"></i> Generate Podcast';
+              podcastBtn.style.background = 'linear-gradient(90deg, #10B981 0%, #34D399 100%)';
+              podcastBtn.style.color = '#fff';
+              podcastBtn.style.border = 'none';
+              podcastBtn.style.borderRadius = '10px';
+              podcastBtn.style.padding = '12px 24px';
+              podcastBtn.style.fontSize = '1rem';
+              podcastBtn.style.fontWeight = '600';
+              podcastBtn.style.cursor = 'pointer';
+              podcastBtn.style.transition = 'all 0.2s';
+              podcastBtn.style.display = 'flex';
+              podcastBtn.style.alignItems = 'center';
+              podcastBtn.style.gap = '8px';
+              podcastBtn.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.15)';
+              podcastBtn.onclick = () => generatePodcast(story.id);
+              podcastSection.appendChild(podcastBtn);
+            } else {
+              // Show info message for employees
+              const infoMsg = document.createElement('div');
+              infoMsg.style.padding = '16px';
+              infoMsg.style.backgroundColor = '#eff6ff';
+              infoMsg.style.border = '1px solid #93c5fd';
+              infoMsg.style.borderRadius = '8px';
+              infoMsg.style.color = '#1e40af';
+              infoMsg.style.fontSize = '0.9rem';
+              infoMsg.style.textAlign = 'center';
+              infoMsg.innerHTML = `
+                <div style="fontSize: 1.5rem; marginBottom: 8px;">🎙️</div>
+                <div style="fontWeight: 600; marginBottom: 4px;">Podcast Generation</div>
+                <div style="fontSize: 0.85rem; lineHeight: 1.5;">Only company owners can generate booms. Contact your company owner to create a podcast for this story.</div>
+              `;
+              podcastSection.appendChild(infoMsg);
+            }
           }
 
           tabContent.appendChild(podcastSection);
@@ -2712,13 +3656,31 @@
               startVideoStatusCheck(story.video_id, story.id);
             }
           } else {
-            // Show the generate button if no video exists
-            const videoBtn = document.createElement('button');
-            videoBtn.className = 'action-btn generate-video-btn';
-            videoBtn.id = `videoBtn-${story.id}`;
-            videoBtn.innerHTML = '<i class="fas fa-video"></i> Generate Video';
-            videoBtn.onclick = () => generateVideo(story.id);
-            videoSection.appendChild(videoBtn);
+            // Show the generate button if no video exists - only for owners
+            if (currentUserRole === 'owner') {
+              const videoBtn = document.createElement('button');
+              videoBtn.className = 'action-btn generate-video-btn';
+              videoBtn.id = `videoBtn-${story.id}`;
+              videoBtn.innerHTML = '<i class="fas fa-video"></i> Generate Video';
+              videoBtn.onclick = () => generateVideo(story.id);
+              videoSection.appendChild(videoBtn);
+            } else {
+              // Show info message for employees
+              const infoMsg = document.createElement('div');
+              infoMsg.style.padding = '16px';
+              infoMsg.style.backgroundColor = '#eff6ff';
+              infoMsg.style.border = '1px solid #93c5fd';
+              infoMsg.style.borderRadius = '8px';
+              infoMsg.style.color = '#1e40af';
+              infoMsg.style.fontSize = '0.9rem';
+              infoMsg.style.textAlign = 'center';
+              infoMsg.innerHTML = `
+                <div style="fontSize: 1.5rem; marginBottom: 8px;">🎬</div>
+                <div style="fontWeight: 600; marginBottom: 4px;">Video Generation</div>
+                <div style="fontSize: 0.85rem; lineHeight: 1.5;">Only company owners can generate booms. Contact your company owner to create a video for this story.</div>
+              `;
+              videoSection.appendChild(infoMsg);
+            }
           }
 
           tabContent.appendChild(videoSection);
@@ -2768,13 +3730,31 @@
               startNewsflashVideoStatusCheck(story.newsflash_video_id, story.id);
             }
           } else {
-            // Show the generate newsflash video button if no video exists
-            const newsflashVideoBtn = document.createElement('button');
-            newsflashVideoBtn.className = 'action-btn generate-newsflash-video-btn';
-            newsflashVideoBtn.id = `newsflashVideoBtn-${story.id}`;
-            newsflashVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Newsflash Video (30s)';
-            newsflashVideoBtn.onclick = () => generateNewsflashVideo(story.id);
-            newsflashVideoSection.appendChild(newsflashVideoBtn);
+            // Show the generate newsflash video button if no video exists - only for owners
+            if (currentUserRole === 'owner') {
+              const newsflashVideoBtn = document.createElement('button');
+              newsflashVideoBtn.className = 'action-btn generate-newsflash-video-btn';
+              newsflashVideoBtn.id = `newsflashVideoBtn-${story.id}`;
+              newsflashVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Newsflash Video (30s)';
+              newsflashVideoBtn.onclick = () => generateNewsflashVideo(story.id);
+              newsflashVideoSection.appendChild(newsflashVideoBtn);
+            } else {
+              // Show info message for employees
+              const infoMsg = document.createElement('div');
+              infoMsg.style.padding = '16px';
+              infoMsg.style.backgroundColor = '#eff6ff';
+              infoMsg.style.border = '1px solid #93c5fd';
+              infoMsg.style.borderRadius = '8px';
+              infoMsg.style.color = '#1e40af';
+              infoMsg.style.fontSize = '0.9rem';
+              infoMsg.style.textAlign = 'center';
+              infoMsg.innerHTML = `
+                <div style="fontSize: 1.5rem; marginBottom: 8px;">⚡</div>
+                <div style="fontWeight: 600; marginBottom: 4px;">Newsflash Video</div>
+                <div style="fontSize: 0.85rem; lineHeight: 1.5;">Only company owners can generate booms. Contact your company owner to create a newsflash video for this story.</div>
+              `;
+              newsflashVideoSection.appendChild(infoMsg);
+            }
           }
 
           tabContent.appendChild(newsflashVideoSection);
@@ -2825,13 +3805,31 @@
               startPictoryVideoStatusCheck(story.pictory_storyboard_id, story.id);
             }
           } else {
-            // Show the generate Pictory video button if no video exists
-            const pictoryVideoBtn = document.createElement('button');
-            pictoryVideoBtn.className = 'action-btn generate-pictory-video-btn';
-            pictoryVideoBtn.id = `pictoryVideoBtn-${story.id}`;
-            pictoryVideoBtn.innerHTML = '<i class="fas fa-film"></i> Generate Short-Form Video';
-            pictoryVideoBtn.onclick = () => generatePictoryVideo(story.id);
-            pictoryVideoSection.appendChild(pictoryVideoBtn);
+            // Show the generate Pictory video button if no video exists - only for owners
+            if (currentUserRole === 'owner') {
+              const pictoryVideoBtn = document.createElement('button');
+              pictoryVideoBtn.className = 'action-btn generate-pictory-video-btn';
+              pictoryVideoBtn.id = `pictoryVideoBtn-${story.id}`;
+              pictoryVideoBtn.innerHTML = '<i class="fas fa-film"></i> Generate Short-Form Video';
+              pictoryVideoBtn.onclick = () => generatePictoryVideo(story.id);
+              pictoryVideoSection.appendChild(pictoryVideoBtn);
+            } else {
+              // Show info message for employees
+              const infoMsg = document.createElement('div');
+              infoMsg.style.padding = '16px';
+              infoMsg.style.backgroundColor = '#eff6ff';
+              infoMsg.style.border = '1px solid #93c5fd';
+              infoMsg.style.borderRadius = '8px';
+              infoMsg.style.color = '#1e40af';
+              infoMsg.style.fontSize = '0.9rem';
+              infoMsg.style.textAlign = 'center';
+              infoMsg.innerHTML = `
+                <div style="fontSize: 1.5rem; marginBottom: 8px;">🎞️</div>
+                <div style="fontWeight: 600; marginBottom: 4px;">Short-Form Video</div>
+                <div style="fontSize: 0.85rem; lineHeight: 1.5;">Only company owners can generate booms. Contact your company owner to create a short-form video for this story.</div>
+              `;
+              pictoryVideoSection.appendChild(infoMsg);
+            }
           }
 
           tabContent.appendChild(pictoryVideoSection);
@@ -2845,7 +3843,20 @@
           const saveBtn = document.createElement('button');
           saveBtn.className = 'save-btn';
           saveBtn.textContent = 'Save Final Changes';
+          // Disable save button for submitted stories (employees)
+          if (currentUserRole === 'employee' && story.submitted) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.5';
+            saveBtn.style.cursor = 'not-allowed';
+            saveBtn.title = 'Cannot edit submitted story';
+          }
           saveBtn.onclick = async () => {
+            // Check if story is submitted (for employees)
+            if (currentUserRole === 'employee' && story.submitted) {
+              alert('Cannot edit submitted story. Please contact your owner to make changes.');
+              return;
+            }
+            
             const summary = tabContent.querySelector('textarea').value;
             const res = await fetch('/save_final_summary', {
               method: 'POST',
@@ -4326,190 +5337,523 @@ The email has been sent automatically from your account with PDF attachment.`);
         if (response.ok) {
           creditStatus = await response.json();
           updateCreditStatusDisplay();
-        } 
-        // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-        // else if (response.status === 403) {
-        //   // User needs subscription, but stay on dashboard and show message
-        //   console.log('User needs subscription but staying on dashboard');
-        //   creditStatus = { needs_subscription: true, stories_used_this_month: 0, extra_credits: 0 };
-        //   updateCreditStatusDisplay();
-        // }
+        } else if (response.status === 403) {
+          // User needs subscription, but stay on dashboard and show message
+          console.log('User needs subscription but staying on dashboard');
+          creditStatus = { needs_subscription: true, stories_used_this_month: 0, extra_credits: 0 };
+          updateCreditStatusDisplay();
+        }
       } catch (error) {
         console.error('Error fetching credit status:', error);
       }
     }
 
     function updateCreditStatusDisplay() {
-      // CREDIT STATUS DISPLAY COMMENTED OUT - Keep for future use
-      // Hide credit status banner since subscription and credit checks are disabled
       const banner = document.getElementById('creditStatusBanner');
-      if (banner) {
-        banner.style.display = 'none';
-      }
+      const statusText = document.getElementById('creditStatusText');
+      const buyLink = document.getElementById('buyCreditsLink');
       
-      // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+      if (!creditStatus) return;
+      
       // Show banner if user needs subscription or can buy extra credits
-      // const statusText = document.getElementById('creditStatusText');
-      // const buyLink = document.getElementById('buyCreditsLink');
-      // 
-      // if (!creditStatus) return;
-      // 
-      // if (creditStatus.needs_subscription) {
-      //   banner.style.display = 'block';
-      //   statusText.innerHTML = 'You need an active subscription to create stories.<br><small>Subscribe for $99/month and get 10 stories included. Stories reset monthly.</small>';
-      //   buyLink.textContent = 'Subscribe for $99/month';
-      //   buyLink.href = '#';
-      //   buyLink.onclick = function(e) { e.preventDefault(); openMonthlySubscription(); };
-      // } else if (creditStatus.can_buy_extra_credits) {
-      //   banner.style.display = 'block';
-      //   statusText.innerHTML = `You've used all 10 included stories this month.<br><small>You have ${creditStatus.extra_credits} extra credits remaining. Extra credits don't expire but you can only buy them after using all monthly stories.</small>`;
-      //   buyLink.textContent = 'Buy Extra Stories for $6.90';
-      //   buyLink.href = '#';
-      //   buyLink.onclick = function(e) { e.preventDefault(); openExtraCredits(); };
-      // } else {
-      //   // Show remaining stories with expiration info
-      //   const remaining = 10 - creditStatus.stories_used_this_month;
-      //   banner.style.display = 'block';
-      //   statusText.innerHTML = `You have ${remaining} stories remaining this month.<br><small>Monthly stories reset on the 1st of each month. Extra credits don't expire.</small>`;
-      //   buyLink.style.display = 'none';
-      // }
+      if (creditStatus.needs_subscription) {
+        banner.style.display = 'block';
+        statusText.innerHTML = 'You need an active subscription to create stories.<br><small>Subscribe for $99/month and get 10 stories included. Stories reset monthly.</small>';
+        buyLink.textContent = 'Subscribe for $99/month';
+        buyLink.href = '#';
+        buyLink.onclick = function(e) { e.preventDefault(); openMonthlySubscription(); };
+      } else if (creditStatus.can_buy_extra_credits) {
+        banner.style.display = 'block';
+        statusText.innerHTML = `You've used all 10 included stories this month.<br><small>You have ${creditStatus.extra_credits} extra credits remaining. Extra credits don't expire but you can only buy them after using all monthly stories.</small>`;
+        buyLink.textContent = 'Buy Extra Stories for $6.90';
+        buyLink.href = '#';
+        buyLink.onclick = function(e) { e.preventDefault(); openExtraCredits(); };
+      } else {
+        // Show remaining stories with expiration info
+        const remaining = 10 - creditStatus.stories_used_this_month;
+        banner.style.display = 'block';
+        
+        // Format billing date if available
+        let billingDateText = 'your billing date';
+        if (creditStatus.next_billing_date) {
+          try {
+            const billingDate = new Date(creditStatus.next_billing_date);
+            if (!isNaN(billingDate.getTime())) {
+              billingDateText = formatDate(billingDate);
+            }
+          } catch (e) {
+            console.error('Error formatting billing date:', e);
+          }
+        }
+        
+        statusText.innerHTML = `You have ${remaining} stories remaining this month.<br><small>Your 10 monthly stories reset on ${billingDateText}. Extra credits don't expire.</small>`;
+        buyLink.style.display = 'none';
+      }
       
       // Update user dropdown buttons based on credit status
       updateUserDropdownButtons();
-    }
-    
-    function updateUserDropdownButtons() {
-      // SUBSCRIPTION/CREDIT BUTTONS COMMENTED OUT - Keep for future use
-      // Hide subscription and credit purchase buttons since they're disabled
-      const monthlyBtn = document.querySelector('.monthly-btn');
-      const extraBtn = document.querySelector('.extra-btn');
       
-      if (monthlyBtn) {
-        monthlyBtn.style.display = 'none';
+      // Load and display subscription info
+      loadSubscriptionInfo();
+    }
+    
+    function loadSubscriptionInfo() {
+      fetch('/api/stripe/subscription-info')
+        .then(response => response.json())
+        .then(data => {
+          const manageBtn = document.getElementById('manageSubscriptionBtn');
+          const subscribeBtn = document.getElementById('subscribeBtn');
+          const manageBannerBtn = document.getElementById('manageSubscriptionBannerBtn');
+          
+          if (data.has_active_subscription && data.stripe_customer_id) {
+            // Show manage button, hide subscribe button
+            if (manageBtn) manageBtn.style.display = 'block';
+            if (subscribeBtn) subscribeBtn.style.display = 'none';
+            if (manageBannerBtn) manageBannerBtn.style.display = 'inline-block';
+          } else {
+            // Show subscribe button, hide manage button
+            if (manageBtn) manageBtn.style.display = 'none';
+            if (subscribeBtn) subscribeBtn.style.display = 'block';
+            if (manageBannerBtn) manageBannerBtn.style.display = 'none';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading subscription info:', error);
+        });
+    }
+    
+    function openManageSubscription() {
+      openSubscriptionModal();
+    }
+    
+    // Subscription Management Modal Functions
+    function openSubscriptionModal() {
+      const modal = document.getElementById('subscriptionModal');
+      modal.classList.remove('hidden');
+      loadSubscriptionInfoModal();
+    }
+    
+    function closeSubscriptionModal() {
+      const modal = document.getElementById('subscriptionModal');
+      modal.classList.add('hidden');
+      hideCancelOptions();
+    }
+    
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+      const modal = document.getElementById('subscriptionModal');
+      if (event.target === modal) {
+        closeSubscriptionModal();
       }
-      if (extraBtn) {
-        extraBtn.style.display = 'none';
+    });
+    
+    function loadSubscriptionInfoModal() {
+      const loading = document.getElementById('subscriptionLoading');
+      const content = document.getElementById('subscriptionContent');
+      const error = document.getElementById('subscriptionError');
+      
+      loading.style.display = 'block';
+      content.style.display = 'none';
+      error.style.display = 'none';
+      
+      fetch('/api/stripe/subscription-info')
+        .then(response => response.json())
+        .then(data => {
+          loading.style.display = 'none';
+          
+          if (data.error) {
+            error.style.display = 'block';
+            document.getElementById('subscriptionErrorMessage').textContent = data.error;
+            return;
+          }
+          
+          content.style.display = 'block';
+          updateSubscriptionDisplay(data);
+        })
+        .catch(error => {
+          console.error('Error loading subscription info:', error);
+          loading.style.display = 'none';
+          error.style.display = 'block';
+          document.getElementById('subscriptionErrorMessage').textContent = 'Failed to load subscription information. Please try again.';
+        });
+    }
+    
+    function updateSubscriptionDisplay(data) {
+      // Update status
+      const statusEl = document.getElementById('subscriptionStatus');
+      const status = data.subscription_status || (data.has_active_subscription ? 'active' : 'inactive');
+      statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+      statusEl.className = 'status-value ' + (status === 'active' ? 'active' : status === 'canceled' ? 'canceled' : '');
+      
+      // Update current period
+      const periodEl = document.getElementById('currentPeriod');
+      if (data.current_period_start && data.current_period_end) {
+        const start = new Date(data.current_period_start);
+        const end = new Date(data.current_period_end);
+        periodEl.textContent = `${formatDate(start)} - ${formatDate(end)}`;
+      } else {
+        periodEl.textContent = 'N/A';
       }
       
-      // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-      // if (!creditStatus) return;
-      // 
-      // // Show monthly button if user needs subscription or hasn't used all 10 stories yet
-      // if (monthlyBtn) {
-      //   if (creditStatus.needs_subscription || creditStatus.stories_used_this_month < 10) {
-      //     monthlyBtn.style.display = 'block';
-      //     monthlyBtn.innerHTML = '<i class="fas fa-crown" style="margin-right: 8px;"></i>Monthly Plan - $99/month';
-      //   } else {
-      //     monthlyBtn.style.display = 'none';
-      //   }
-      // }
-      // 
-      // // Show extra credits button only if user has subscription and can buy extra credits
-      // if (extraBtn) {
-      //   if (creditStatus.has_active_subscription && creditStatus.can_buy_extra_credits) {
-      //     extraBtn.style.display = 'block';
-      //     extraBtn.innerHTML = '<i class="fas fa-plus-circle" style="margin-right: 8px;"></i>Buy Extra Stories - $6.90';
-      //   } else {
-      //     extraBtn.style.display = 'none';
-      //   }
-      // }
-    }
-
-    async function checkCanCreateStory() {
-      // CREDIT CHECK COMMENTED OUT - Keep for future use
-      // Always allow story creation regardless of credits
-      // if (!creditStatus) {
-      //   await fetchCreditStatus();
-      // }
-      // return creditStatus ? creditStatus.can_create_story : false;
-      return true;  // Allow unlimited story creation
+      // Update next billing date
+      // Use next_billing_date if available (only set when renewing), otherwise use current_period_end as fallback
+      const billingEl = document.getElementById('nextBillingDate');
+      if (data.next_billing_date) {
+        // Subscription is renewing - show next billing date
+        billingEl.textContent = formatDate(new Date(data.next_billing_date));
+      } else if (data.cancel_at_period_end && data.current_period_end) {
+        // Subscription is cancelling - show "No further billing" or the cancellation date
+        billingEl.textContent = 'No further billing';
+      } else if (data.current_period_end) {
+        // Fallback: use current_period_end if next_billing_date not available
+        billingEl.textContent = formatDate(new Date(data.current_period_end));
+      } else {
+        billingEl.textContent = 'N/A';
+      }
+      
+      // Update cancellation info
+      const cancelInfo = document.getElementById('cancelationInfo');
+      const cancelDate = document.getElementById('cancellationDate');
+      if (data.canceled_at || data.cancel_at_period_end) {
+        cancelInfo.style.display = 'flex';
+        if (data.canceled_at) {
+          cancelDate.textContent = formatDate(new Date(data.canceled_at));
+        } else if (data.cancel_at_period_end) {
+          cancelDate.textContent = `End of current period (${formatDate(new Date(data.current_period_end))})`;
+        }
+      } else {
+        cancelInfo.style.display = 'none';
+      }
+      
+      // Show/hide action buttons
+      const reactivateBtn = document.getElementById('reactivateBtn');
+      const cancelBtn = document.getElementById('cancelAtPeriodEndBtn');
+      
+      if (status === 'canceled' || data.cancel_at_period_end) {
+        reactivateBtn.style.display = 'flex';
+        cancelBtn.style.display = 'none';
+      } else if (data.has_active_subscription && status === 'active') {
+        reactivateBtn.style.display = 'none';
+        cancelBtn.style.display = 'flex';
+      } else {
+        reactivateBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+      }
     }
     
-    // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-    // Global error handler for subscription errors
-    function handleApiError(response) {
-      // if (response.status === 403) {
-      //   const data = response.json();
-      //   if (data && data.needs_subscription) {
-      //     window.location.href = '/subscription-required';
-      //     return true;
-      //   }
-      // }
-      return false;
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
     }
     
-    // STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
-    // Payment functions with user metadata
-    // function openMonthlySubscription() {
-    //   const userId = getCurrentUserId();
-    //   console.log('DEBUG: User ID from getCurrentUserId():', userId);
-    //   
-    //   if (!userId) {
-    //     alert('Please log in to subscribe');
-    //     return;
-    //   }
-    //   
-    //   // Use Payment Link with client_reference_id (this works!)
-    //   const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800'; // Monthly subscription URL
-    //   const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
-    //   console.log('DEBUG: Monthly subscription URL:', urlWithUser);
-    //   window.open(urlWithUser, '_blank');
-    //   
-    //   // Show a message to manually activate subscription
-    //   setTimeout(() => {
-    //     if (confirm('After completing payment, click OK to manually activate your subscription.')) {
-    //       activateSubscriptionManually(userId);
-    //     }
-    //   }, 2000);
-    // }
+    function showCancelOptions() {
+      const modal = document.getElementById('cancelOptionsModal');
+      modal.classList.remove('hidden');
+    }
     
-    function activateSubscriptionManually(userId) {
-      fetch('/api/test/activate-subscription', {
+    function hideCancelOptions() {
+      const modal = document.getElementById('cancelOptionsModal');
+      modal.classList.add('hidden');
+    }
+    
+    function cancelSubscription(cancelAtPeriodEnd) {
+      if (!confirm('Are you sure you want to cancel your subscription at the end of the current billing period?')) {
+        return;
+      }
+      
+      fetch('/api/stripe/cancel-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: userId })
+        body: JSON.stringify({
+          cancel_at_period_end: true
+        })
       })
       .then(response => response.json())
       .then(data => {
-        if (data.ok) {
-          alert('Subscription activated! Please refresh the page.');
-          window.location.reload();
+        if (data.error) {
+          alert('Error: ' + data.error);
         } else {
-          alert('Error activating subscription: ' + data.error);
+          alert(data.message);
+          hideCancelOptions();
+          loadSubscriptionInfoModal();
+          // Refresh credit status
+          fetchCreditStatus();
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        alert('Error activating subscription');
+        alert('Error canceling subscription. Please try again.');
       });
     }
     
-    // STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
-    // function openExtraCredits() {
-    //   const userId = getCurrentUserId();
-    //   console.log('🔍 DEBUG: getCurrentUserId() returned:', userId);
-    //   
-    //   if (!userId) {
-    //     alert('Please log in to buy extra credits');
-    //     return;
-    //   }
-    //   
-    //   // Use the extra credits payment link with client_reference_id
-    //   const baseUrl = 'https://buy.stripe.com/test_28E3cnav35BL8nH2Ip8k801'; // Replace with your extra credits link
-    //   const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
-    //   console.log('🔍 DEBUG: Extra credits payment URL:', urlWithUser);
-    //   console.log('🔍 DEBUG: User ID being passed:', userId);
-    //   window.open(urlWithUser, '_blank');
-    //   
-    //   // Show a message to manually activate extra credits if needed
-    //   setTimeout(() => {
-    //     if (confirm('After completing payment, if extra credits are not automatically added, click OK to manually add them.')) {
-    //       activateExtraCreditsManually(userId);
-    //     }
-    //   }, 3000);
-    // }
+    function reactivateSubscription() {
+      if (!confirm('Are you sure you want to reactivate your subscription?')) {
+        return;
+      }
+      
+      fetch('/api/stripe/reactivate-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          alert(data.message);
+          loadSubscriptionInfoModal();
+          // Refresh credit status
+          fetchCreditStatus();
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error reactivating subscription. Please try again.');
+      });
+    }
+    
+    function openStripePortal() {
+      fetch('/api/stripe/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.url) {
+          window.open(data.url, '_blank');
+        } else {
+          alert('Error: ' + (data.error || 'Unable to open customer portal'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error opening customer portal');
+      });
+    }
+    
+    function loadInvoices() {
+      const invoicesList = document.getElementById('invoicesList');
+      invoicesList.innerHTML = '<p style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Loading invoices...</p>';
+      
+      fetch('/api/stripe/invoices')
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            invoicesList.innerHTML = `<p style="color: #DC2626;">Error: ${data.error}</p>`;
+            return;
+          }
+          
+          if (!data.invoices || data.invoices.length === 0) {
+            invoicesList.innerHTML = '<p style="text-align: center; color: #666;">No invoices found.</p>';
+            return;
+          }
+          
+          let html = '';
+          data.invoices.forEach(invoice => {
+            const date = new Date(invoice.created * 1000);
+            const amount = (invoice.amount_paid / 100).toFixed(2);
+            const currency = invoice.currency.toUpperCase();
+            const status = invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1);
+            
+            // Get description or type to show what the invoice is for
+            let invoiceLabel = '';
+            if (invoice.description) {
+              invoiceLabel = invoice.description;
+            } else if (invoice.type === 'subscription') {
+              invoiceLabel = 'Monthly Subscription';
+            } else if (invoice.type === 'one-time') {
+              invoiceLabel = 'Extra Credits';
+            } else {
+              invoiceLabel = invoice.type || 'Payment';
+            }
+            
+            html += `
+              <div class="invoice-item">
+                <div class="invoice-item-info">
+                  <strong>${currency} ${amount} - ${status}</strong>
+                  <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${invoiceLabel}</div>
+                  <small>${formatDate(date)}</small>
+                </div>
+                <div class="invoice-item-actions">
+                  ${invoice.hosted_invoice_url ? `<a href="${invoice.hosted_invoice_url}" target="_blank" class="invoice-btn">View</a>` : ''}
+                  ${invoice.invoice_pdf ? `<a href="${invoice.invoice_pdf}" target="_blank" class="invoice-btn">Download PDF</a>` : ''}
+                </div>
+              </div>
+            `;
+          });
+          
+          invoicesList.innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Error loading invoices:', error);
+          invoicesList.innerHTML = '<p style="color: #DC2626;">Error loading invoices. Please try again.</p>';
+        });
+    }
+    
+    function updateUserDropdownButtons() {
+      const monthlyBtn = document.querySelector('.monthly-btn');
+      const extraBtn = document.querySelector('.extra-btn');
+      
+      if (!creditStatus) return;
+      
+      // Show monthly button if user needs subscription or hasn't used all 10 stories yet
+      if (monthlyBtn) {
+        if (creditStatus.needs_subscription || creditStatus.stories_used_this_month < 10) {
+          monthlyBtn.style.display = 'block';
+          monthlyBtn.innerHTML = '<i class="fas fa-crown" style="margin-right: 8px;"></i>Monthly Plan - $99/month';
+        } else {
+          monthlyBtn.style.display = 'none';
+        }
+      }
+      
+      // Show extra credits button only if user has subscription and can buy extra credits
+      if (extraBtn) {
+        if (creditStatus.has_active_subscription && creditStatus.can_buy_extra_credits) {
+          extraBtn.style.display = 'block';
+          extraBtn.innerHTML = '<i class="fas fa-plus-circle" style="margin-right: 8px;"></i>Buy Extra Stories - $6.90';
+        } else {
+          extraBtn.style.display = 'none';
+        }
+      }
+    }
+
+    async function checkCanCreateStory() {
+      if (!creditStatus) {
+        await fetchCreditStatus();
+      }
+      return creditStatus ? creditStatus.can_create_story : false;
+    }
+    
+    // Global error handler for subscription errors
+    function handleApiError(response) {
+      if (response.status === 403) {
+        const data = response.json();
+        if (data && data.needs_subscription) {
+          window.location.href = '/subscription-required';
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    // Payment functions with user metadata
+    function openMonthlySubscription() {
+      const userId = getCurrentUserId();
+      console.log('DEBUG: User ID from getCurrentUserId():', userId);
+      
+      if (!userId) {
+        alert('Please log in to subscribe');
+        return;
+      }
+      
+      // Try to create checkout session programmatically first
+      fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'subscription' })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.url) {
+          // Always redirect in same window for consistent UX
+          window.location.href = data.url;
+        } else if (data.error) {
+          // Fallback to payment link if checkout session creation fails
+          const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
+          const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+          window.location.href = urlWithUser;
+        }
+      })
+      .catch(error => {
+        console.error('Error creating checkout session:', error);
+        // Fallback to payment link
+        const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
+        const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+        window.location.href = urlWithUser;
+      });
+    }
+    
+    function openExtraCredits() {
+      const userId = getCurrentUserId();
+      console.log('🔍 DEBUG: getCurrentUserId() returned:', userId);
+      
+      if (!userId) {
+        alert('Please log in to buy extra credits');
+        return;
+      }
+      
+      // Show quantity selection modal
+      const modal = document.getElementById('quantityModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        
+        // Reset quantity to 1
+        const quantityInput = document.getElementById('quantityInput');
+        if (quantityInput) {
+          quantityInput.value = 1;
+          updateTotalPrice();
+        }
+      } else {
+        // Fallback: use quantity 1 if modal doesn't exist
+        purchaseExtraCredits(userId, 1);
+      }
+    }
+    
+    function purchaseExtraCredits(userId, quantity) {
+      // Validate quantity
+      quantity = parseInt(quantity) || 1;
+      if (quantity < 1) quantity = 1;
+      if (quantity > 100) quantity = 100;
+      
+      // Try to create checkout session programmatically first
+      fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'extra_credits', quantity: quantity })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.url) {
+          // Always redirect in same window for consistent UX
+          window.location.href = data.url;
+        } else if (data.error) {
+          alert('Error: ' + data.error);
+          // Fallback to payment link if checkout session creation fails
+          const baseUrl = 'https://buy.stripe.com/test_28E3cnav35BL8nH2Ip8k801';
+          const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+          window.location.href = urlWithUser;
+        }
+      })
+      .catch(error => {
+        console.error('Error creating checkout session:', error);
+        alert('Error creating checkout session. Please try again.');
+      });
+    }
+    
+    function updateTotalPrice() {
+      const quantityInput = document.getElementById('quantityInput');
+      const totalPrice = document.getElementById('totalPrice');
+      
+      if (quantityInput && totalPrice) {
+        const quantity = parseInt(quantityInput.value) || 1;
+        const pricePerCredit = 6.90;
+        const total = (quantity * pricePerCredit).toFixed(2);
+        totalPrice.textContent = `Total: $${total}`;
+      }
+    }
     
     function activateExtraCreditsManually(userId) {
       fetch('/api/test/add-extra-credits', {
@@ -4587,22 +5931,17 @@ The email has been sent automatically from your account with PDF attachment.`);
 
     document.getElementById('searchInput').oninput = renderStories;
     document.getElementById('tellStoryBtn').onclick = async () => {
-      // CREDIT CHECK COMMENTED OUT - Keep for future use
-      // Always allow story creation
-      // const canCreate = await checkCanCreateStory();
-      // if (canCreate) {
-      //   window.location.href = '/index';
-      // } else {
-      //   // SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-      //   // Show appropriate message based on subscription status
-      //   // if (creditStatus && creditStatus.needs_subscription) {
-      //   //   alert('You need an active subscription to create stories. Please subscribe to get started.');
-      //   // } else {
-      //   //   alert('You have no story credits remaining. Please purchase extra credits to continue.');
-      //   // }
-      //   alert('You have no story credits remaining. Please purchase extra credits to continue.');
-      // }
-      window.location.href = '/index';  // Always allow story creation
+      const canCreate = await checkCanCreateStory();
+      if (canCreate) {
+        window.location.href = '/index';
+      } else {
+        // Show appropriate message based on subscription status
+        if (creditStatus && creditStatus.needs_subscription) {
+          alert('You need an active subscription to create stories. Please subscribe to get started.');
+        } else {
+          alert('You have no story credits remaining. Please purchase extra credits to continue.');
+        }
+      }
     };
     setupLabelDropdown();
     fetchUser();
@@ -4840,6 +6179,14 @@ The email has been sent automatically from your account with PDF attachment.`);
           body: JSON.stringify({ case_study_id: storyId })
         });
 
+        if (response.status === 403) {
+          const data = await response.json();
+          alert('Only company owners can generate booms. Please contact your company owner.');
+          if (videoBtn) videoBtn.style.display = 'block';
+          if (videoContainer) videoContainer.style.display = 'none';
+          return;
+        }
+
         const data = await response.json();
         
         if (data.status === 'success') {
@@ -5019,6 +6366,14 @@ The email has been sent automatically from your account with PDF attachment.`);
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ case_study_id: storyId })
         });
+
+        if (response.status === 403) {
+          const data = await response.json();
+          alert('Only company owners can generate booms. Please contact your company owner.');
+          if (newsflashVideoBtn) newsflashVideoBtn.style.display = 'block';
+          if (newsflashVideoContainer) newsflashVideoContainer.style.display = 'none';
+          return;
+        }
 
         const data = await response.json();
         
@@ -5203,6 +6558,14 @@ The email has been sent automatically from your account with PDF attachment.`);
           body: JSON.stringify({ case_study_id: storyId })
         });
 
+        if (response.status === 403) {
+          const data = await response.json();
+          alert('Only company owners can generate booms. Please contact your company owner.');
+          if (pictoryVideoBtn) pictoryVideoBtn.style.display = 'block';
+          if (pictoryVideoContainer) pictoryVideoContainer.style.display = 'none';
+          return;
+        }
+
         const data = await response.json();
         
         if (data.status === 'success') {
@@ -5368,6 +6731,20 @@ The email has been sent automatically from your account with PDF attachment.`);
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ case_study_id: storyId })
         });
+
+        if (response.status === 403) {
+          const data = await response.json();
+          alert('Only company owners can generate booms. Please contact your company owner.');
+          if (podcastBtn) {
+            podcastBtn.disabled = false;
+            podcastBtn.textContent = 'Generate Podcast';
+          }
+          if (podcastStatus) {
+            podcastStatus.textContent = '';
+            podcastStatus.style.display = 'none';
+          }
+          return;
+        }
 
         const data = await response.json();
 
@@ -5611,6 +6988,95 @@ The email has been sent automatically from your account with PDF attachment.`);
     document.addEventListener('DOMContentLoaded', function() {
       // Check initial Slack status
       checkSlackConnection();
+      
+      // Initialize quantity modal event listeners
+      const modal = document.getElementById('quantityModal');
+      const quantityInput = document.getElementById('quantityInput');
+      const decreaseBtn = document.getElementById('decreaseQty');
+      const increaseBtn = document.getElementById('increaseQty');
+      const cancelBtn = document.getElementById('cancelQtyBtn');
+      const confirmBtn = document.getElementById('confirmQtyBtn');
+      
+      if (modal && quantityInput) {
+        // Decrease quantity
+        if (decreaseBtn) {
+          decreaseBtn.addEventListener('click', function() {
+            const current = parseInt(quantityInput.value) || 1;
+            if (current > 1) {
+              quantityInput.value = current - 1;
+              updateTotalPrice();
+            }
+          });
+          decreaseBtn.addEventListener('mouseenter', function() {
+            this.style.background = '#F3F4F6';
+          });
+          decreaseBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'white';
+          });
+        }
+        
+        // Increase quantity
+        if (increaseBtn) {
+          increaseBtn.addEventListener('click', function() {
+            const current = parseInt(quantityInput.value) || 1;
+            if (current < 100) {
+              quantityInput.value = current + 1;
+              updateTotalPrice();
+            }
+          });
+          increaseBtn.addEventListener('mouseenter', function() {
+            this.style.background = '#F3F4F6';
+          });
+          increaseBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'white';
+          });
+        }
+        
+        // Update total when input changes
+        quantityInput.addEventListener('input', updateTotalPrice);
+        quantityInput.addEventListener('change', function() {
+          const value = parseInt(this.value) || 1;
+          if (value < 1) this.value = 1;
+          if (value > 100) this.value = 100;
+          updateTotalPrice();
+        });
+        
+        // Cancel button
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+          });
+          cancelBtn.addEventListener('mouseenter', function() {
+            this.style.background = '#F9FAFB';
+          });
+          cancelBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'white';
+          });
+        }
+        
+        // Confirm button
+        if (confirmBtn) {
+          confirmBtn.addEventListener('click', function() {
+            const userId = getCurrentUserId();
+            const quantity = parseInt(quantityInput.value) || 1;
+            modal.style.display = 'none';
+            purchaseExtraCredits(userId, quantity);
+          });
+          confirmBtn.addEventListener('mouseenter', function() {
+            this.style.opacity = '0.9';
+          });
+          confirmBtn.addEventListener('mouseleave', function() {
+            this.style.opacity = '1';
+          });
+        }
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            modal.style.display = 'none';
+          }
+        });
+      }
     });
 
     // =============================
@@ -5869,6 +7335,31 @@ The email has been sent automatically from your account with PDF attachment.`);
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quantity Selection Modal for Extra Credits -->
+  <div id="quantityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 32px; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+      <h2 style="margin: 0 0 16px 0; color: #1F2937; font-size: 1.5rem;">Buy Extra Stories</h2>
+      <p style="color: #6B7280; margin-bottom: 24px;">Each extra story costs $6.90. How many would you like to purchase?</p>
+      
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; margin-bottom: 8px; color: #374151; font-weight: 600;">Quantity:</label>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button id="decreaseQty" style="width: 40px; height: 40px; border: 2px solid #E5E7EB; background: white; border-radius: 8px; cursor: pointer; font-size: 1.2rem; color: #6B7280; transition: all 0.2s;">-</button>
+          <input type="number" id="quantityInput" value="1" min="1" max="100" style="flex: 1; height: 40px; border: 2px solid #E5E7EB; border-radius: 8px; padding: 0 12px; font-size: 1rem; text-align: center;">
+          <button id="increaseQty" style="width: 40px; height: 40px; border: 2px solid #E5E7EB; background: white; border-radius: 8px; cursor: pointer; font-size: 1.2rem; color: #6B7280; transition: all 0.2s;">+</button>
+        </div>
+        <div id="totalPrice" style="margin-top: 12px; font-size: 1.1rem; font-weight: 600; color: #059669; text-align: center;">
+          Total: $6.90
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 12px;">
+        <button id="cancelQtyBtn" style="flex: 1; padding: 12px; border: 2px solid #E5E7EB; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #6B7280; transition: all 0.2s;">Cancel</button>
+        <button id="confirmQtyBtn" style="flex: 1; padding: 12px; border: none; background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">Purchase</button>
       </div>
     </div>
   </div>

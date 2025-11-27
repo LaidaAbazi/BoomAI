@@ -3,6 +3,19 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, date, timezone
 from app import db
 
+
+class Company(db.Model):
+    __tablename__ = 'companies'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    owner_user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    owner = relationship('User', back_populates='owned_company', foreign_keys=[owner_user_id])
+    users = relationship('User', back_populates='company', foreign_keys='User.company_id')
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
@@ -10,6 +23,9 @@ class User(db.Model):
     last_name = Column(String(100), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
     password_hash = Column(String(255), nullable=False)
+    # Company / role fields
+    company_id = Column(Integer, ForeignKey('companies.id', ondelete='SET NULL'), nullable=True)
+    role = Column(String(50), nullable=False, default='owner')  # 'owner' or 'employee'
     company_name = Column(String(255))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True))
@@ -54,22 +70,25 @@ class User(db.Model):
     has_active_subscription = Column(Boolean, default=False)
     subscription_start_date = Column(Date, nullable=True)
     
-    
+    stripe_customer_id = Column(String(255), nullable=True)
+    stripe_subscription_id = Column(String(255), nullable=True)
 
-
+    # Relationships
+    company = relationship('Company', back_populates='users', foreign_keys=[company_id])
+    owned_company = relationship('Company', back_populates='owner', uselist=False, foreign_keys=[Company.owner_user_id])
     case_studies = relationship('CaseStudy', back_populates='user')
     slack_installations = relationship('SlackInstallation', back_populates='user', cascade='all, delete-orphan')
     teams_installations = relationship('TeamsInstallation', back_populates='user', cascade='all, delete-orphan')
 
     def can_create_story(self):
         """Check if user can create a story (has active subscription and credits)"""
-        # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
+        # TEMPORARILY DISABLED - Allow story creation without subscription
+        return True  # Always allow
+        
+        # Original code (commented for easy revert):
         # if not self.has_active_subscription:
         #     return False
-        # CREDIT CHECK COMMENTED OUT - Keep for future use
-        # Now allows story creation regardless of subscription and credits
         # return self.stories_used_this_month < 10 or self.extra_credits > 0
-        return True  # Allow unlimited story creation
     
     def can_buy_extra_credits(self):
         """Check if user can buy extra credits (must have used all 10 monthly stories)"""
@@ -77,15 +96,10 @@ class User(db.Model):
     
     def needs_subscription(self):
         """Check if user needs to subscribe to monthly plan"""
-        # SUBSCRIPTION CHECK COMMENTED OUT - Keep for future use
-        # return not self.has_active_subscription
-        # Now always returns False since subscription is not required
-        return False
+        return not self.has_active_subscription
 
     def record_story_creation(self):
         """Record story creation and update counters"""
-        # CREDIT CHECK COMMENTED OUT - Keep for future use
-        # Still tracking usage for analytics, but not blocking
         if self.stories_used_this_month < 10:
             # Use monthly allowance
             self.stories_used_this_month += 1
@@ -94,17 +108,14 @@ class User(db.Model):
             self.extra_credits -= 1
             self.stories_used_this_month += 1
         else:
-            # CREDIT CHECK COMMENTED OUT - Keep for future use
-            # No longer raising error, just incrementing counter for tracking
-            # raise ValueError("No credits left")
-            self.stories_used_this_month += 1  # Still track usage even without credits
+            raise ValueError("No credits left")
 
     def add_extra_credits(self, quantity):
         """Add extra story credits"""
         self.extra_credits += quantity
 
     def reset_monthly_usage(self):
-        """Reset monthly story usage (called by scheduled job)"""
+        """Reset monthly story usage (called on subscription renewal via webhook)"""
         self.stories_used_this_month = 0
         self.last_reset_date = date.today()
 
@@ -113,6 +124,8 @@ class CaseStudy(db.Model):
     __tablename__ = 'case_studies'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    # Optional: company scoping for owner visibility (same company as creator)
+    company_id = Column(Integer, ForeignKey('companies.id', ondelete='CASCADE'), nullable=True)
     title = Column(String(200))
     final_summary = Column(Text)
     final_summary_pdf_path = Column(String(500))
@@ -160,8 +173,16 @@ class CaseStudy(db.Model):
     # Story counting field
     story_counted = Column(Boolean, default=False)
     podcast_script = Column(Text, nullable=True)
+    
+    # Language field
+    language = Column(String(50), nullable=True)  # Store detected language (e.g., 'English', 'Spanish')
+    
+    # Submission fields
+    submitted = Column(Boolean, default=False)  # Whether story has been submitted to owner
+    submitted_at = Column(DateTime(timezone=True), nullable=True)  # When story was submitted
 
     user = relationship('User', back_populates='case_studies')
+    company = relationship('Company')
     solution_provider_interview = relationship('SolutionProviderInterview', uselist=False, back_populates='case_study')
     client_interview = relationship('ClientInterview', uselist=False, back_populates='case_study')
     invite_tokens = relationship('InviteToken', back_populates='case_study')
@@ -239,6 +260,21 @@ class InviteToken(db.Model):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     case_study = relationship('CaseStudy', back_populates='invite_tokens')
+
+
+class CompanyInvite(db.Model):
+    __tablename__ = 'company_invites'
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), nullable=False, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id', ondelete='CASCADE'), nullable=False)
+    role = Column(String(50), nullable=False, default='employee')  # Currently only 'employee'
+    token = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    accepted_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    used = Column(Boolean, default=False)
+
+    company = relationship('Company', backref='invites')
 
 # Association table for many-to-many relationship between CaseStudy and Label
 case_study_labels = Table(
@@ -352,4 +388,17 @@ class OAuthState(db.Model):
     
     def is_valid(self):
         """Check if the state is valid (not expired and not used)"""
-        return not self.is_expired() and not self.used 
+        return not self.is_expired() and not self.used
+
+class StripeWebhookEvent(db.Model):
+    """Track processed Stripe webhook events for idempotency"""
+    __tablename__ = 'stripe_webhook_events'
+    id = Column(Integer, primary_key=True)
+    event_id = Column(String(255), unique=True, nullable=False, index=True)  # Stripe event ID
+    event_type = Column(String(100), nullable=False)
+    processed = Column(Boolean, default=False)
+    processed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    def __repr__(self):
+        return f'<StripeWebhookEvent {self.event_id}>' 

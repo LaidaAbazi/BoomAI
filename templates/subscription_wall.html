@@ -172,15 +172,6 @@
       Subscribe Now
     </a>
     
-    <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
-      <p style="margin: 0 0 10px 0; font-size: 14px; color: #856404;">
-        <strong>⚠️ Development Only:</strong> If you've completed payment but subscription isn't activated, click below:
-      </p>
-      <button onclick="activateSubscriptionManually()" style="background: #ffc107; color: #212529; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
-        <i class="fas fa-tools" style="margin-right: 5px;"></i>
-        Manual Activation (Dev Only)
-      </button>
-    </div>
     
     <a href="/dashboard" class="back-to-dashboard">
       <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
@@ -189,69 +180,45 @@
   </div>
   
   <script>
-    // STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
-    // function openSubscription() {
-    //   // Get user ID from data attribute
-    //   const container = document.querySelector('.subscription-container');
-    //   const userId = container.getAttribute('data-user-id');
-    //   
-    //   console.log('DEBUG: User ID from subscription wall:', userId);
-    //   
-    //   if (!userId || userId === 'null') {
-    //     alert('Please log in to subscribe');
-    //     window.location.href = '/login';
-    //     return;
-    //   }
-    //   
-    //   // Use client_reference_id approach (this works with Payment Links!)
-    //   const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
-    //   const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
-    //   console.log('DEBUG: Payment URL with user ID:', urlWithUser);
-    //   window.open(urlWithUser, '_blank');
-    // }
-    
     function openSubscription() {
-      alert('Stripe payment integration is currently disabled. Please contact support for subscription.');
-    }
-    
-    function activateSubscriptionManually() {
+      // Get user ID from data attribute
       const container = document.querySelector('.subscription-container');
       const userId = container.getAttribute('data-user-id');
       
+      console.log('DEBUG: User ID from subscription wall:', userId);
+      
       if (!userId || userId === 'null') {
-        alert('Please log in to activate subscription');
+        alert('Please log in to subscribe');
         window.location.href = '/login';
         return;
       }
       
-      // Confirm this is for development/testing only
-      if (!confirm('⚠️ This is a development-only feature. Only use this if you have completed payment but the subscription was not activated automatically. Continue?')) {
-        return;
-      }
-      
-      fetch('/api/test/activate-subscription', {
+      // Try to create checkout session programmatically first
+      fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: userId })
+        body: JSON.stringify({ type: 'subscription' })
       })
       .then(response => response.json())
       .then(data => {
-        if (data.ok) {
-          if (data.message.includes('already has an active subscription')) {
-            alert('You already have an active subscription! Redirecting to dashboard...');
-          } else {
-            alert('Subscription activated! Redirecting to dashboard...');
-          }
-          window.location.href = '/dashboard';
-        } else {
-          alert('Error activating subscription: ' + data.error);
+        if (data.url) {
+          // Always redirect in same window for consistent UX
+          window.location.href = data.url;
+        } else if (data.error) {
+          // Fallback to payment link if checkout session creation fails
+          const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
+          const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+          window.location.href = urlWithUser;
         }
       })
       .catch(error => {
-        console.error('Error:', error);
-        alert('Error activating subscription');
+        console.error('Error creating checkout session:', error);
+        // Fallback to payment link
+        const baseUrl = 'https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800';
+        const urlWithUser = `${baseUrl}?client_reference_id=${userId}`;
+        window.location.href = urlWithUser;
       });
     }
   </script>

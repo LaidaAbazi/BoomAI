@@ -54,20 +54,23 @@ def create_app(config_name=None):
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev_jwt_secret")
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     
-    # STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
     # Stripe configuration
-    # app.config["STRIPE_WEBHOOK_SECRET"] = os.getenv("STRIPE_WEBHOOK_SECRET")
-    # app.config["STRIPE_SECRET_KEY"] = os.getenv("STRIPE_SECRET_KEY")
+    app.config["STRIPE_WEBHOOK_SECRET"] = os.getenv("STRIPE_WEBHOOK_SECRET")
+    app.config["STRIPE_SECRET_KEY"] = os.getenv("STRIPE_SECRET_KEY")
+    app.config["STRIPE_PUBLISHABLE_KEY"] = os.getenv("STRIPE_PUBLISHABLE_KEY")
+    app.config["STRIPE_SUBSCRIPTION_PRICE_ID"] = os.getenv("STRIPE_SUBSCRIPTION_PRICE_ID", "price_1S7Y1e16ngrFKvMxcgVwYRb4")  # Default to your current price ID
+    app.config["STRIPE_EXTRA_CREDITS_PRICE_ID"] = os.getenv("STRIPE_EXTRA_CREDITS_PRICE_ID", "price_XXXXX")  # Update with your extra credits price ID
+    app.config["STRIPE_SUBSCRIPTION_PAYMENT_LINK"] = os.getenv("STRIPE_SUBSCRIPTION_PAYMENT_LINK", "https://buy.stripe.com/test_cNi7sD8mV0hr8nHbeV8k800")
+    app.config["STRIPE_EXTRA_CREDITS_PAYMENT_LINK"] = os.getenv("STRIPE_EXTRA_CREDITS_PAYMENT_LINK", "https://buy.stripe.com/test_28E3cnav35BL8nH2Ip8k801")
     
     # Calendly configuration
     app.config["CALENDLY_SCHEDULING_LINK"] = os.getenv("CALENDLY_SCHEDULING_LINK", "")
     
-    # STRIPE IMPLEMENTATION COMMENTED OUT - Keep for future use
     # Debug Stripe configuration
-    # webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-    # secret_key = os.getenv("STRIPE_SECRET_KEY")
-    # print(f"DEBUG: STRIPE_WEBHOOK_SECRET loaded: {webhook_secret[:10] if webhook_secret else 'None'}...")
-    # print(f"DEBUG: STRIPE_SECRET_KEY loaded: {secret_key[:10] if secret_key else 'None'}...")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+    secret_key = os.getenv("STRIPE_SECRET_KEY")
+    print(f"DEBUG: STRIPE_WEBHOOK_SECRET loaded: {webhook_secret[:10] if webhook_secret else 'None'}...")
+    print(f"DEBUG: STRIPE_SECRET_KEY loaded: {secret_key[:10] if secret_key else 'None'}...")
     
     # Flasgger configuration
     app.config['SWAGGER'] = {
@@ -317,7 +320,7 @@ def create_app(config_name=None):
     
     # Import models after db initialization
     with app.app_context():
-        from app.models import User, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, Feedback
+        from app.models import User, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, Feedback, StripeWebhookEvent
         
         # Ensure database tables exist
         try:

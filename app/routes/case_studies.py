@@ -8,11 +8,12 @@ from fpdf import FPDF
 from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, StoryFeedback
-from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required, subscription_required
+from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, Label, StoryFeedback, User
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required, subscription_required, owner_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
+from app.utils.language_utils import detect_and_normalize_language
 from app.mappers.case_study_mapper import CaseStudyMapper
 from io import BytesIO
 from flasgger import swag_from
@@ -61,9 +62,29 @@ def get_case_studies():
     """Get all case studies for the current user"""
     try:
         user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
         label_id = request.args.get('label', type=int)
         
-        query = CaseStudy.query.filter_by(user_id=user_id)
+        # Owners see their own stories + submitted employee stories, employees see all their own stories
+        if user.role == 'owner' and user.company_id:
+            # Owner: get their own stories OR submitted stories from their company
+            from sqlalchemy import or_
+            query = CaseStudy.query.filter(
+                CaseStudy.company_id == user.company_id
+            ).filter(
+                or_(
+                    CaseStudy.user_id == user_id,  # Owner's own stories
+                    CaseStudy.submitted == True     # Submitted employee stories
+                )
+            )
+        else:
+            # Employee: only their own stories (submitted or not)
+            query = CaseStudy.query.filter_by(user_id=user_id)
+        
         if label_id:
             query = query.join(CaseStudy.labels).filter(Label.id == label_id)
         
@@ -76,6 +97,18 @@ def get_case_studies():
                 case_study_id=case_study.id,
                 user_id=user_id
             ).first()
+            
+            # Get creator info for owners to see who created each story
+            creator_info = None
+            if user.role == 'owner' and case_study.user_id != user_id:
+                creator = User.query.get(case_study.user_id)
+                if creator:
+                    creator_info = {
+                        'id': creator.id,
+                        'first_name': creator.first_name,
+                        'last_name': creator.last_name,
+                        'email': creator.email
+                    }
             
             case_study_data = {
                 'id': case_study.id,
@@ -110,6 +143,9 @@ def get_case_studies():
                 'email_subject': case_study.email_subject,
                 'email_body': case_study.email_body,
                 'user_feedback': user_feedback.to_dict() if user_feedback else None,
+                'created_by': creator_info,  # Show creator info for owners viewing employee stories
+                'submitted': case_study.submitted,  # Submission status
+                'submitted_at': case_study.submitted_at.isoformat() if case_study.submitted_at else None,  # Submission timestamp
             }
             case_studies_data.append(case_study_data)
         
@@ -163,8 +199,27 @@ def get_case_study(case_study_id):
         user_id = get_current_user_id()
         
         if user_id:
-            # Session-based authentication - filter by user_id
-            case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+            # Session-based authentication - check company access
+            user = User.query.get(user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            
+            case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+            if not case_study:
+                return jsonify({'error': 'Case study not found'}), 404
+            
+            # Check access: owners can see their own stories OR submitted company stories, employees only their own
+            if user.role == 'owner':
+                # Owner: must be from their company AND (their own story OR submitted)
+                if case_study.company_id != user.company_id:
+                    return jsonify({'error': 'Case study not found'}), 404
+                # Allow if it's owner's own story OR if it's submitted
+                if case_study.user_id != user_id and not case_study.submitted:
+                    return jsonify({'error': 'Case study not found'}), 404
+            else:
+                # Employee: must be their own story
+                if case_study.user_id != user_id:
+                    return jsonify({'error': 'Case study not found'}), 404
         else:
             # Token-based authentication - just get the case study directly
             case_study = CaseStudy.query.filter_by(id=case_study_id).first()
@@ -212,6 +267,8 @@ def get_case_study(case_study_id):
             'linkedin_post': case_study.linkedin_post,
             'email_subject': case_study.email_subject,
             'email_body': case_study.email_body,
+            'submitted': case_study.submitted,
+            'submitted_at': case_study.submitted_at.isoformat() if case_study.submitted_at else None,
         }
         
         return jsonify({'success': True, 'case_study': case_study_data})
@@ -618,6 +675,7 @@ def remove_label_from_case_study(case_study_id, label_id):
 
 @bp.route("/generate_linkedin_post", methods=["POST"])
 @login_required
+@owner_required
 @swag_from({
     'tags': ['Case Studies'],
     'summary': 'Generate LinkedIn post',
@@ -655,6 +713,7 @@ def remove_label_from_case_study(case_study_id, label_id):
             }
         },
         400: {'description': 'Missing case study ID or no final summary'},
+        403: {'description': 'Only owners can generate LinkedIn posts'},
         404: {'description': 'Case study not found'},
         500: {'description': 'Error generating LinkedIn post'}
     }
@@ -668,9 +727,20 @@ def generate_linkedin_post():
         if not case_study_id:
             return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
 
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"status": "error", "message": "Case study not found"}), 404
+
+        # Verify company access: owners can generate LinkedIn posts for any company story
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        else:
+            # Employees cannot generate LinkedIn posts
+            return jsonify({"status": "error", "message": "Only owners can generate LinkedIn posts"}), 403
 
         if not case_study.final_summary:
             return jsonify({"status": "error", "message": "No final summary available"}), 400
@@ -750,6 +820,8 @@ def generate_linkedin_post():
 def save_linkedin_post():
     """Save LinkedIn post to case study"""
     try:
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
         data = request.get_json()
         case_study_id = data.get("case_study_id")
         linkedin_post = data.get("linkedin_post")
@@ -763,6 +835,21 @@ def save_linkedin_post():
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Check access: owners can edit any company story, employees only their own
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        else:
+            if case_study.user_id != user_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Employees cannot edit submitted stories
+        if user.role == 'employee' and case_study.submitted:
+            return jsonify({
+                "status": "error",
+                "message": "Cannot edit submitted case study. Please contact your owner to make changes."
+            }), 403
 
         # Save to database
         case_study.linkedin_post = linkedin_post
@@ -832,6 +919,8 @@ def save_linkedin_post():
 def save_email_draft():
     """Save email draft to case study"""
     try:
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
         data = request.get_json()
         case_study_id = data.get("case_study_id")
         email_subject = data.get("email_subject")
@@ -849,6 +938,21 @@ def save_email_draft():
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Check access: owners can edit any company story, employees only their own
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        else:
+            if case_study.user_id != user_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Employees cannot edit submitted stories
+        if user.role == 'employee' and case_study.submitted:
+            return jsonify({
+                "status": "error",
+                "message": "Cannot edit submitted case study. Please contact your owner to make changes."
+            }), 403
 
         # Save to database
         case_study.email_subject = email_subject
@@ -1043,6 +1147,8 @@ def extract_names():
 def save_final_summary():
     """Save final summary"""
     try:
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
         data = request.get_json()
         case_study_id = data.get("case_study_id")
         final_summary = data.get("final_summary")
@@ -1058,9 +1164,28 @@ def save_final_summary():
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Check access: owners can edit any company story, employees only their own
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        else:
+            if case_study.user_id != user_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Employees cannot edit submitted stories
+        if user.role == 'employee' and case_study.submitted:
+            return jsonify({
+                "status": "error",
+                "message": "Cannot edit submitted case study. Please contact your owner to make changes."
+            }), 403
 
         # Update final summary
         case_study.final_summary = final_summary
+
+        # Detect and store language if not already set
+        if not case_study.language:
+            case_study.language = detect_and_normalize_language(final_summary)
 
         # Use edited names from frontend if provided, otherwise extract from final summary
         if solution_provider and client_name and project_name:
@@ -1328,6 +1453,7 @@ def update_case_study_title(case_study_id):
     """Update the title of a case study"""
     try:
         user_id = get_current_user_id()
+        user = User.query.get(user_id)
         data = request.get_json()
         
         if not data or 'title' not in data:
@@ -1345,6 +1471,13 @@ def update_case_study_title(case_study_id):
         if not case_study:
             return jsonify({"status": "error", "message": "Case study not found"}), 404
         
+        # Employees cannot edit submitted stories
+        if user.role == 'employee' and case_study.submitted:
+            return jsonify({
+                "status": "error",
+                "message": "Cannot edit submitted case study. Please contact your owner to make changes."
+            }), 403
+        
         # Update the title
         case_study.title = title
         db.session.commit()
@@ -1353,6 +1486,84 @@ def update_case_study_title(case_study_id):
             "status": "success",
             "message": "Title updated successfully",
             "title": title
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@bp.route('/case_studies/<int:case_study_id>/submit', methods=['POST'])
+@login_required
+@swag_from({
+    'tags': ['Case Studies'],
+    'summary': 'Submit case study to owner',
+    'description': 'Submit a case study to the company owner. Once submitted, employees cannot edit it.',
+    'parameters': [
+        {
+            'name': 'case_study_id',
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'integer'},
+            'description': 'ID of the case study to submit'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Case study submitted successfully',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'status': {'type': 'string'},
+                            'message': {'type': 'string'},
+                            'submitted_at': {'type': 'string', 'format': 'date-time'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {'description': 'Case study already submitted or invalid request'},
+        403: {'description': 'Only employees can submit stories'},
+        404: {'description': 'Case study not found'}
+    }
+})
+def submit_case_study(case_study_id):
+    """Submit a case study to the owner"""
+    try:
+        user_id = get_current_user_id()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        # Only employees can submit stories
+        if user.role != 'employee':
+            return jsonify({
+                "status": "error",
+                "message": "Only employees can submit stories to owners"
+            }), 403
+        
+        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        if not case_study:
+            return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Check if already submitted
+        if case_study.submitted:
+            return jsonify({
+                "status": "error",
+                "message": "This case study has already been submitted"
+            }), 400
+        
+        # Submit the case study
+        case_study.submitted = True
+        case_study.submitted_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Case study submitted successfully to owner",
+            "submitted_at": case_study.submitted_at.isoformat()
         }), 200
         
     except Exception as e:

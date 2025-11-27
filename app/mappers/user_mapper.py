@@ -21,6 +21,9 @@ class UserMapper:
         if 'password' in validated_data:
             validated_data['password_hash'] = generate_password_hash(validated_data.pop('password'))
         
+        # Remove invite_token - it's not a User model field, only used for validation
+        validated_data.pop('invite_token', None)
+        
         return User(**validated_data)
     
     @staticmethod

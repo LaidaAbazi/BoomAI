@@ -4,10 +4,11 @@ import os
 import json
 from datetime import datetime
 from app.models import db, CaseStudy, SolutionProviderInterview, ClientInterview, InviteToken, User
-from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required
+from app.utils.auth_helpers import get_current_user_id, login_required, login_or_token_required, owner_required
 from app.services.ai_service import AIService
 from app.services.case_study_service import CaseStudyService
 from app.utils.text_processing import clean_text, detect_language
+from app.utils.language_utils import detect_and_normalize_language
 from app.services.email_service import EmailService
 from io import BytesIO
 from fpdf import FPDF
@@ -250,6 +251,10 @@ def generate_client_summary():
                     # Update case study with final summary and metadata
                     case_study.final_summary = main_story
                     
+                    # Store normalized language if not already set
+                    if not case_study.language:
+                        case_study.language = detect_and_normalize_language(main_story)
+                    
                     # Handle bytes data in metadata before JSON serialization
                     serializable_meta_data = {}
                     for key, value in meta_data.items():
@@ -387,10 +392,32 @@ def generate_full_case_study():
             return jsonify({"error": "Missing case_study_id"}), 400
         
         user_id = get_current_user_id()
-        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        user = None  # Initialize user variable
         
-        if not case_study:
-            return jsonify({"error": "Case study not found"}), 404
+        # For session-based access, check company access
+        if user_id:
+            user = User.query.get(user_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
+            
+            # Get case study and verify access
+            case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+            if not case_study:
+                return jsonify({"error": "Case study not found"}), 404
+            
+            # Owners can generate for any company story, employees only their own
+            if user.role == 'owner' and user.company_id:
+                if case_study.company_id != user.company_id:
+                    return jsonify({"error": "Case study not found"}), 404
+            else:
+                # Employee: must be their own story
+                if case_study.user_id != user_id:
+                    return jsonify({"error": "Case study not found"}), 404
+        else:
+            # Token-based access - just get the case study
+            case_study = CaseStudy.query.filter_by(id=case_study_id).first()
+            if not case_study:
+                return jsonify({"error": "Case study not found"}), 404
         
         # Check if provider interview exists
         if not case_study.solution_provider_interview:
@@ -422,6 +449,10 @@ def generate_full_case_study():
         
         # Update case study with final summary and metadata
         case_study.final_summary = main_story
+        
+        # Store normalized language if not already set
+        if not case_study.language:
+            case_study.language = detect_and_normalize_language(main_story)
         
         # Handle bytes data in metadata before JSON serialization
         serializable_meta_data = {}
@@ -509,15 +540,13 @@ def generate_full_case_study():
         
         # Record story creation and update user credits (this is when the story is actually completed)
         # Only count the story once per case study, not on every call to generate_full_case_study
-        from app.models import User
-        user = User.query.get(user_id)
         if user and not case_study.story_counted:
-            # CREDIT CHECK COMMENTED OUT - Keep for future use
+            # TEMPORARILY DISABLED - Credit check
             # Check if user can create a story (has active subscription and credits)
             # if not user.can_create_story():
             #     return jsonify({"error": "No credits left. Please purchase extra credits to continue."}), 400
             
-            # Record the story creation (still tracking for future use)
+            # Record the story creation
             user.record_story_creation()
             case_study.story_counted = True  # Mark this case study as counted
             print(f"✅ Story creation recorded for user {user_id}. Stories used this month: {user.stories_used_this_month}")
@@ -720,6 +749,7 @@ def extract_interviewee_name():
 
 @bp.route("/get_email_draft", methods=["POST"])
 @login_required
+@owner_required
 @swag_from({
     'tags': ['Email'],
     'summary': 'Get email draft for case study sharing',
@@ -773,6 +803,7 @@ def extract_interviewee_name():
             }
         },
         400: {'description': 'Missing case study ID'},
+        403: {'description': 'Only owners can generate email drafts'},
         404: {'description': 'Case study not found'},
         500: {'description': 'Failed to generate email draft'}
     }
@@ -788,10 +819,19 @@ def get_email_draft_route():
             return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
         
         user_id = get_current_user_id()
-        case_study = CaseStudy.query.filter_by(id=case_study_id, user_id=user_id).first()
+        user = User.query.get(user_id)
         
+        case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
             return jsonify({"status": "error", "message": "Case study not found"}), 404
+        
+        # Verify company access: owners can generate emails for any company story
+        if user.role == 'owner' and user.company_id:
+            if case_study.company_id != user.company_id:
+                return jsonify({"status": "error", "message": "Case study not found"}), 404
+        else:
+            # Employees cannot generate emails
+            return jsonify({"status": "error", "message": "Only owners can generate email drafts"}), 403
         
         # Get user info
         user = User.query.get(user_id)

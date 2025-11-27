@@ -138,18 +138,30 @@ const metadata = `?prefilled_data[metadata][user_id]=${userId}&prefilled_data[me
 
 ## Monthly Reset
 
-### Manual Reset
+Credits reset automatically when a subscription renews via Stripe webhook events:
+- `invoice.payment_succeeded` or `invoice_payment.paid` 
+- With `billing_reason == 'subscription_cycle'`
+
+**No scheduled job needed** - each user's credits reset on their individual billing cycle date when their subscription renews.
+
+### How It Works
+
+1. When a subscription renews, Stripe sends a webhook event
+2. The `handle_subscription_payment()` function in `app/routes/api.py` processes the event
+3. If `billing_reason == 'subscription_cycle'`, it calls `user.reset_monthly_usage()`
+4. Credits are reset to 0 and `last_reset_date` is updated
+
+### Manual Reset (Testing Only)
+
+For testing purposes, you can manually reset a user's credits:
 ```python
-from app.utils.monthly_reset import reset_monthly_usage
-reset_monthly_usage()
+from app.models import User, db
+user = User.query.get(user_id)
+user.reset_monthly_usage()
+db.session.commit()
 ```
 
-### Scheduled Reset
-Set up a cron job or scheduled task to run monthly:
-```bash
-# Example cron job (runs on 1st of each month at midnight)
-0 0 1 * * /path/to/python /path/to/app/utils/monthly_reset.py
-```
+**Note:** The `app/utils/monthly_reset.py` file is deprecated and should not be used for scheduled resets.
 
 ## Testing
 

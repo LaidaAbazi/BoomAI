@@ -1,5 +1,13 @@
 """
-Monthly reset utility for story usage tracking
+DEPRECATED: Monthly reset utility for story usage tracking
+
+This file is deprecated. Credits now reset automatically on subscription renewal
+via the Stripe webhook handler (handle_subscription_payment in app/routes/api.py).
+
+DO NOT use this for scheduled resets - credits reset on each user's billing cycle
+when their subscription renews (billing_reason == 'subscription_cycle').
+
+This file is kept for reference only and should not be called by any scheduled jobs.
 """
 from datetime import date
 from app.models import db, User
@@ -7,29 +15,21 @@ from app.models import db, User
 
 def reset_monthly_usage():
     """
-    Reset monthly story usage for all users
-    This should be called by a scheduled job (cron, celery, etc.)
+    DEPRECATED: This function should not be called by scheduled jobs.
+    
+    Credits now reset automatically on subscription renewal via Stripe webhooks.
+    Each user's credits reset on their individual billing cycle date when their
+    subscription renews (handled by handle_subscription_payment in api.py).
+    
+    No scheduled job is needed - the renewal handler implements this logic.
     """
-    try:
-        users = User.query.all()
-        reset_count = 0
-        
-        for user in users:
-            # Only reset if it's a new month
-            if user.last_reset_date is None or user.last_reset_date.month != date.today().month:
-                user.reset_monthly_usage()
-                reset_count += 1
-        
-        db.session.commit()
-        print(f"Monthly reset completed. Reset {reset_count} users.")
-        return True
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error during monthly reset: {str(e)}")
-        return False
+    print("WARNING: reset_monthly_usage() is deprecated.")
+    print("Credits reset automatically on subscription renewal via webhooks.")
+    print("DO NOT use this function - it will not be executed.")
+    return False
 
 
 if __name__ == "__main__":
-    # This can be run directly for testing
-    reset_monthly_usage()
+    # This should not be run - credits reset on subscription renewal
+    print("This script is deprecated. Credits reset on subscription renewal.")
+    print("No scheduled job needed.")
