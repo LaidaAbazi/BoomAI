@@ -1973,4 +1973,3 @@ def get_story_feedback(case_study_id):
             })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
-
