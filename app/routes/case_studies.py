@@ -35,6 +35,12 @@ GENERATED_PDFS_DIR = os.path.join(BASE_DIR, 'generated_pdfs')
             'in': 'query',
             'description': 'Filter by label ID',
             'schema': {'type': 'integer'}
+        },
+        {
+            'name': 'creator_id',
+            'in': 'query',
+            'description': 'Filter by creator user ID',
+            'schema': {'type': 'integer'}
         }
     ],
     'responses': {
@@ -68,6 +74,7 @@ def get_case_studies():
             return jsonify({'error': 'User not found'}), 404
         
         label_id = request.args.get('label', type=int)
+        creator_id = request.args.get('creator_id', type=int)
         
         # Owners see their own stories + submitted employee stories, employees see all their own stories
         if user.role == 'owner' and user.company_id:
@@ -88,6 +95,9 @@ def get_case_studies():
         if label_id:
             query = query.join(CaseStudy.labels).filter(Label.id == label_id)
         
+        if creator_id:
+            query = query.filter(CaseStudy.user_id == creator_id)
+        
         case_studies = query.all()
         case_studies_data = []
         
@@ -98,9 +108,8 @@ def get_case_studies():
                 user_id=user_id
             ).first()
             
-            # Get creator info for owners to see who created each story
+            # Get creator info - always include for filtering purposes
             creator_info = None
-            if user.role == 'owner' and case_study.user_id != user_id:
                 creator = User.query.get(case_study.user_id)
                 if creator:
                     creator_info = {
@@ -288,11 +297,6 @@ def get_case_study(case_study_id):
             'submitted_at': case_study.submitted_at.isoformat() if case_study.submitted_at else None,
             'created_by': creator_info,  # Creator info (name, email) - always included
         }
-        
-        # Debug: print to verify created_by is being set
-        print(f"DEBUG get_case_study: created_by value = {creator_info}")
-        print(f"DEBUG get_case_study: case_study.user_id = {case_study.user_id if case_study else 'N/A'}")
-        print(f"DEBUG get_case_study: user_id = {user_id}")
         
         return jsonify({'success': True, 'case_study': case_study_data})
     except Exception as e:

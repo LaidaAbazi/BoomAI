@@ -1638,12 +1638,21 @@
       <div class="sidebar-header">STORIES</div>
       <div class="search-bar" style="position: relative;">
         <input type="text" id="searchInput" placeholder="Search stories..." />
-        <button id="labelFilterIcon" style="background: none; border: none; margin-left: 6px; cursor: pointer; font-size: 1.3rem; color: #06B6D4; display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <button id="labelFilterIcon" style="background: none; border: none; cursor: pointer; font-size: 1.3rem; color: #06B6D4; display: flex; align-items: center;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H20M7 12H17M10 18H14" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
+          <button id="creatorFilterIcon" style="background: none; border: none; cursor: pointer; font-size: 1.3rem; color: #06B6D4; display: flex; align-items: center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
         <div id="labelDropdownMenu" style="display: none; position: absolute; right: 0; top: 110%; background: #fff; box-shadow: 0 4px 16px rgba(60,80,180,0.10); border-radius: 12px; min-width: 180px; z-index: 10; padding: 10px 0; max-height: 240px; overflow-y: auto;">
           <div class="label-chip" style="margin: 4px 12px; cursor: pointer;" data-label-id="">All Labels</div>
           <!-- label chips will be rendered here -->
+        </div>
+        <div id="creatorDropdownMenu" style="display: none; position: absolute; right: 0; top: 110%; background: #fff; box-shadow: 0 4px 16px rgba(60,80,180,0.10); border-radius: 12px; min-width: 180px; z-index: 10; padding: 10px 0; max-height: 240px; overflow-y: auto;">
+          <div class="label-chip" style="margin: 4px 12px; cursor: pointer;" data-creator-id="">All Creators</div>
+          <!-- creator options will be rendered here -->
         </div>
       </div>
       
@@ -1759,6 +1768,7 @@
     let allLabels = [];
     let selectedStoryId = null;
     let labelFilter = null;
+    let creatorFilter = null;
     let currentVideoId = null;
     let videoStatusCheckInterval = null;
     let podcastStatusCheckInterval = null;  // Add this line
@@ -2118,7 +2128,10 @@
     async function fetchStories() {
       try {
         let url = '/api/case_studies';
-        if (labelFilter) url += '?label=' + labelFilter;
+        const params = [];
+        if (labelFilter) params.push('label=' + labelFilter);
+        if (creatorFilter) params.push('creator_id=' + creatorFilter);
+        if (params.length > 0) url += '?' + params.join('&');
         const res = await fetch(url);
         if (res.status === 401) { 
           window.location.href = '/login'; 
@@ -2185,6 +2198,75 @@
       iconBtn.onclick = (e) => {
         e.stopPropagation();
         renderLabelDropdownMenu();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      };
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && e.target !== iconBtn) {
+          menu.style.display = 'none';
+        }
+      });
+    }
+
+    function renderCreatorDropdownMenu() {
+      const menu = document.getElementById('creatorDropdownMenu');
+      menu.innerHTML = '';
+      
+      // Extract unique creators from stories
+      const creatorsMap = new Map();
+      allStories.forEach(story => {
+        if (story.created_by && story.created_by.id) {
+          const creatorId = story.created_by.id;
+          if (!creatorsMap.has(creatorId)) {
+            creatorsMap.set(creatorId, {
+              id: creatorId,
+              name: `${story.created_by.first_name} ${story.created_by.last_name}`,
+              email: story.created_by.email
+            });
+          }
+        }
+      });
+      
+      const creators = Array.from(creatorsMap.values());
+      
+      // All Creators option
+      const allChip = document.createElement('div');
+      allChip.className = 'label-chip' + (!creatorFilter ? ' selected filter' : '');
+      allChip.style.margin = '4px 12px';
+      allChip.style.cursor = 'pointer';
+      allChip.textContent = 'All Creators';
+      allChip.onclick = () => { creatorFilter = null; menu.style.display = 'none'; fetchAndRender(); };
+      menu.appendChild(allChip);
+      
+      // Sort creators by name
+      creators.sort((a, b) => a.name.localeCompare(b.name));
+      
+      creators.forEach(creator => {
+        const chip = document.createElement('div');
+        chip.className = 'label-chip' + (creatorFilter === creator.id ? ' selected filter' : '');
+        chip.style.margin = '4px 12px';
+        chip.style.cursor = 'pointer';
+        chip.textContent = creator.name;
+        chip.onclick = () => { creatorFilter = creator.id; menu.style.display = 'none'; fetchAndRender(); };
+        menu.appendChild(chip);
+      });
+      
+      // Show message if no creators found
+      if (creators.length === 0) {
+        const noCreators = document.createElement('div');
+        noCreators.style.margin = '4px 12px';
+        noCreators.style.color = '#888';
+        noCreators.style.fontSize = '0.9rem';
+        noCreators.textContent = 'No creators found';
+        menu.appendChild(noCreators);
+      }
+    }
+
+    function setupCreatorDropdown() {
+      const iconBtn = document.getElementById('creatorFilterIcon');
+      const menu = document.getElementById('creatorDropdownMenu');
+      iconBtn.onclick = (e) => {
+        e.stopPropagation();
+        renderCreatorDropdownMenu();
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
       };
       document.addEventListener('click', (e) => {
@@ -5944,6 +6026,7 @@ The email has been sent automatically from your account with PDF attachment.`);
       }
     };
     setupLabelDropdown();
+    setupCreatorDropdown();
     fetchUser();
     fetchAndRender();
 
