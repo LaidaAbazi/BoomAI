@@ -134,10 +134,10 @@ class CaseStudy(db.Model):
     sentiment_chart_data = Column(db.LargeBinary, nullable=True)
     meta_data_text = Column(Text, nullable=True)
     linkedin_post = Column(Text, nullable=True)  # Legacy field - kept for backward compatibility
-    linkedin_post_confident = Column(Text, nullable=True)  # Confident & Cheeky variation
-    linkedin_post_pragmatic = Column(Text, nullable=True)  # Pragmatic & Human variation
-    linkedin_post_standard = Column(Text, nullable=True)  # Standard variation
-    linkedin_post_formal = Column(Text, nullable=True)  # Formal & Strategic variation
+    linkedin_post_confident = Column(Text, nullable=True)  
+    linkedin_post_pragmatic = Column(Text, nullable=True)  
+    linkedin_post_standard = Column(Text, nullable=True)  
+    linkedin_post_formal = Column(Text, nullable=True)  
     email_subject = Column(Text, nullable=True)
     email_body = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

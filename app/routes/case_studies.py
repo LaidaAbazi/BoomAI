@@ -140,6 +140,7 @@ def get_case_studies():
                 'podcast_job_id': case_study.podcast_job_id,
                 'podcast_script': case_study.podcast_script,
                 'podcast_created_at': case_study.podcast_created_at.isoformat() if case_study.podcast_created_at else None,
+                'linkedin_post': case_study.linkedin_post,  # Legacy field for backward compatibility
                 'linkedin_posts': {
                     'confident': case_study.linkedin_post_confident,
                     'pragmatic': case_study.linkedin_post_pragmatic,
@@ -250,8 +251,8 @@ def get_case_study(case_study_id):
             'solution_provider_summary': case_study.solution_provider_interview.summary if case_study.solution_provider_interview else None,
             'client_summary': case_study.client_interview.summary if case_study.client_interview else None,
             'client_link_url': case_study.solution_provider_interview.client_link_url if case_study.solution_provider_interview else None,
-            'created_at': case_study.created_at.isoformat(),
-            'updated_at': case_study.updated_at.isoformat(),
+            'created_at': case_study.created_at.isoformat() if case_study.created_at else None,
+            'updated_at': case_study.updated_at.isoformat() if case_study.updated_at else None,
             'video_status': case_study.video_status,
             'pictory_video_status': case_study.pictory_video_status,
             'podcast_status': case_study.podcast_status,
@@ -271,6 +272,7 @@ def get_case_study(case_study_id):
             'podcast_job_id': case_study.podcast_job_id,
             'podcast_script': case_study.podcast_script,
             'podcast_created_at': case_study.podcast_created_at.isoformat() if case_study.podcast_created_at else None,
+            'linkedin_post': case_study.linkedin_post,  # Legacy field for backward compatibility
             'linkedin_posts': {
                 'confident': case_study.linkedin_post_confident,
                 'pragmatic': case_study.linkedin_post_pragmatic,
@@ -807,30 +809,46 @@ def generate_linkedin_post():
                 return None
         
         # Save all variations to database
+        # Only update variations that successfully generated - don't overwrite with None
         confident_content = get_variation_content("confident")
         pragmatic_content = get_variation_content("pragmatic")
         standard_content = get_variation_content("standard")
         formal_content = get_variation_content("formal")
         
-        case_study.linkedin_post_confident = confident_content
-        case_study.linkedin_post_pragmatic = pragmatic_content
-        case_study.linkedin_post_standard = standard_content
-        case_study.linkedin_post_formal = formal_content
+        # Only update database fields if content was successfully generated and is not empty
+        # This preserves existing content if a variation fails to generate or generates empty content
+        # Use same logic as API response to ensure consistency
+        if confident_content and confident_content.strip():
+            case_study.linkedin_post_confident = confident_content
+        if pragmatic_content and pragmatic_content.strip():
+            case_study.linkedin_post_pragmatic = pragmatic_content
+        if standard_content and standard_content.strip():
+            case_study.linkedin_post_standard = standard_content
+        if formal_content and formal_content.strip():
+            case_study.linkedin_post_formal = formal_content
         
         db.session.commit()
 
-        # Build response with only successful variations
+        # Build response with only successful variations (non-empty content)
+        # Use same logic as database save to ensure consistency
         linkedin_posts = {}
-        if confident_content:
+        if confident_content and confident_content.strip():
             linkedin_posts["confident"] = confident_content
-        if pragmatic_content:
+        if pragmatic_content and pragmatic_content.strip():
             linkedin_posts["pragmatic"] = pragmatic_content
-        if standard_content:
+        if standard_content and standard_content.strip():
             linkedin_posts["standard"] = standard_content
-        if formal_content:
+        if formal_content and formal_content.strip():
             linkedin_posts["formal"] = formal_content
         
         print(f"✅ Returning {len(linkedin_posts)} successful variations: {list(linkedin_posts.keys())}")
+        
+        # Verify that at least one variation generated successfully
+        if not linkedin_posts:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to generate any LinkedIn post variations. Please try again."
+            }), 500
         
         return jsonify({
             "status": "success",
@@ -925,17 +943,35 @@ def save_linkedin_post():
             }), 403
 
         # Save all variations to database
+        # Only update fields that are actually present in the request to avoid overwriting with None
         if linkedin_posts:
-            case_study.linkedin_post_confident = linkedin_posts.get("confident")
-            case_study.linkedin_post_pragmatic = linkedin_posts.get("pragmatic")
-            case_study.linkedin_post_standard = linkedin_posts.get("standard")
-            case_study.linkedin_post_formal = linkedin_posts.get("formal")
+            # Only update fields that are explicitly provided in the request
+            if "confident" in linkedin_posts:
+                case_study.linkedin_post_confident = linkedin_posts.get("confident")
+            if "pragmatic" in linkedin_posts:
+                case_study.linkedin_post_pragmatic = linkedin_posts.get("pragmatic")
+            if "standard" in linkedin_posts:
+                case_study.linkedin_post_standard = linkedin_posts.get("standard")
+            if "formal" in linkedin_posts:
+                case_study.linkedin_post_formal = linkedin_posts.get("formal")
         
         # Save legacy field for backward compatibility
-        if linkedin_post is not None:
+        # Priority: 1) linkedin_post (active tab's content from frontend), 2) standard variation, 3) any other variation
+        # Only update if a non-empty value is provided (empty strings should not overwrite existing data)
+        if linkedin_post is not None and linkedin_post.strip():
+            # Use the active tab's content (sent from frontend)
             case_study.linkedin_post = linkedin_post
-        elif linkedin_posts.get("standard"):
-            case_study.linkedin_post = linkedin_posts.get("standard")
+        elif linkedin_posts:
+            # Fallback: use standard if available, otherwise use the first available variation
+            if linkedin_posts.get("standard") and linkedin_posts.get("standard").strip():
+                case_study.linkedin_post = linkedin_posts.get("standard")
+            else:
+                # Find the first non-empty variation
+                for variation_key in ["confident", "pragmatic", "formal", "standard"]:
+                    content = linkedin_posts.get(variation_key)
+                    if content and content.strip():
+                        case_study.linkedin_post = content
+                        break
         
         db.session.commit()
 

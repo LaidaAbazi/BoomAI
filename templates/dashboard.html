@@ -3103,27 +3103,38 @@
               });
               const data = await res.json();
               if (data.status === 'success') {
-                // Update all variations
-                const linkedinPosts = data.linkedin_posts || {};
+                // Merge newly generated variations with existing ones
+                // This preserves previously saved variations that weren't regenerated
+                const newlyGenerated = data.linkedin_posts || {};
+                const existingPosts = story.linkedin_posts || {};
+                
+                // Merge: newly generated overwrites existing, but keep existing if not regenerated
+                const mergedLinkedinPosts = {
+                  ...existingPosts,
+                  ...newlyGenerated
+                };
+                
+                // Update textareas with merged data
                 variations.forEach(variation => {
                   if (textareas[variation.key]) {
-                    textareas[variation.key].value = linkedinPosts[variation.key] || 'No LinkedIn post generated yet.';
+                    // Use merged data, fallback to legacy field, then default message
+                    textareas[variation.key].value = mergedLinkedinPosts[variation.key] || story.linkedin_post || 'No LinkedIn post generated yet.';
                   }
                 });
                 
-                // Update the story in the local array to persist the LinkedIn posts
+                // Update the story in the local array to persist the merged LinkedIn posts
                 const storyIndex = allStories.findIndex(s => s.id === story.id);
                 if (storyIndex !== -1) {
-                  allStories[storyIndex].linkedin_posts = linkedinPosts;
+                  allStories[storyIndex].linkedin_posts = mergedLinkedinPosts;
                   // Set legacy field to standard for backward compatibility if needed
-                  if (linkedinPosts.standard) {
-                    allStories[storyIndex].linkedin_post = linkedinPosts.standard;
+                  if (mergedLinkedinPosts.standard) {
+                    allStories[storyIndex].linkedin_post = mergedLinkedinPosts.standard;
                   }
                 }
                 
                 // Update the active tab's content
                 if (textareas[activeTab]) {
-                  textareas[activeTab].value = linkedinPosts[activeTab] || 'No LinkedIn post generated yet.';
+                  textareas[activeTab].value = mergedLinkedinPosts[activeTab] || story.linkedin_post || 'No LinkedIn post generated yet.';
                 }
                 
                 // Show save button after generation
@@ -3184,23 +3195,37 @@
               }
 
               // Save the active tab's content to the legacy field for backward compatibility
+              // Only include linkedin_post if there's actual content (not empty string)
               const activeContent = textareas[activeTab]?.value.trim() || '';
+              const requestBody = {
+                case_study_id: story.id,
+                linkedin_posts: linkedinPosts
+              };
+              
+              // Only add linkedin_post if there's actual content
+              if (activeContent) {
+                requestBody.linkedin_post = activeContent;
+              }
               
               const res = await fetch('/api/save_linkedin_post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  case_study_id: story.id,
-                  linkedin_post: activeContent,
-                  linkedin_posts: linkedinPosts
-                })
+                body: JSON.stringify(requestBody)
               });
               const data = await res.json();
               if (data.status === 'success') {
                 // Update the story in the local array
                 const storyIndex = allStories.findIndex(s => s.id === story.id);
                 if (storyIndex !== -1) {
-                  allStories[storyIndex].linkedin_post = activeContent;
+                  // Only update linkedin_post if there's actual content (matches backend behavior)
+                  // If empty, backend will use fallback logic, so preserve existing value or use standard
+                  if (activeContent) {
+                    allStories[storyIndex].linkedin_post = activeContent;
+                  } else if (linkedinPosts.standard) {
+                    // Use standard variation as fallback if active tab is empty
+                    allStories[storyIndex].linkedin_post = linkedinPosts.standard;
+                  }
+                  // Always update linkedin_posts with the saved variations
                   allStories[storyIndex].linkedin_posts = linkedinPosts;
                 }
                 alert('✅ LinkedIn posts saved successfully!');
