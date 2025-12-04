@@ -2992,7 +2992,7 @@
           // Initialize names and display
           extractNamesFromFinalSummary();
 
-          // LinkedIn post section
+          // LinkedIn post section with 4 variations
           const linkedinSection = document.createElement('div');
           linkedinSection.style.marginTop = '24px';
           linkedinSection.style.padding = '16px';
@@ -3001,27 +3001,102 @@
           linkedinSection.style.border = '1px solid #e2e8f0';
 
           const linkedinHeader = document.createElement('h3');
-          linkedinHeader.textContent = 'LinkedIn Post';
+          linkedinHeader.textContent = 'LinkedIn Posts';
           linkedinHeader.style.marginBottom = '12px';
           linkedinHeader.style.color = '#1e293b';
           linkedinSection.appendChild(linkedinHeader);
 
-          const linkedinContent = document.createElement('textarea');
-          linkedinContent.id = `linkedin-post-${story.id}`;
-          linkedinContent.style.marginBottom = '16px';
-          linkedinContent.style.padding = '12px';
-          linkedinContent.style.backgroundColor = '#fff';
-          linkedinContent.style.borderRadius = '8px';
-          linkedinContent.style.border = '1px solid #e2e8f0';
-          linkedinContent.style.width = '100%';
-          linkedinContent.style.minHeight = '200px';
-          linkedinContent.style.fontFamily = 'inherit';
-          linkedinContent.style.fontSize = '14px';
-          linkedinContent.style.lineHeight = '1.6';
-          linkedinContent.style.resize = 'vertical';
-          linkedinContent.value = story.linkedin_post || 'No LinkedIn post generated yet.';
-          linkedinContent.placeholder = 'LinkedIn post will appear here after generation...';
-          linkedinSection.appendChild(linkedinContent);
+          // Create tabs for the 4 variations
+          const tabContainer = document.createElement('div');
+          tabContainer.style.marginBottom = '16px';
+          
+          const tabButtons = document.createElement('div');
+          tabButtons.style.display = 'flex';
+          tabButtons.style.gap = '8px';
+          tabButtons.style.marginBottom = '12px';
+          tabButtons.style.borderBottom = '2px solid #e2e8f0';
+          
+          const variations = [
+            { key: 'confident', label: 'Confident & Cheeky' },
+            { key: 'pragmatic', label: 'Pragmatic & Human' },
+            { key: 'standard', label: 'Standard' },
+            { key: 'formal', label: 'Formal & Strategic' }
+          ];
+          
+          const linkedinPosts = story.linkedin_posts || {};
+          const textareas = {};
+          let activeTab = 'standard';
+          
+          // Create tab buttons
+          variations.forEach(variation => {
+            const tabBtn = document.createElement('button');
+            tabBtn.textContent = variation.label;
+            tabBtn.style.padding = '8px 16px';
+            tabBtn.style.border = 'none';
+            tabBtn.style.borderBottom = '2px solid transparent';
+            tabBtn.style.background = 'transparent';
+            tabBtn.style.color = '#64748b';
+            tabBtn.style.cursor = 'pointer';
+            tabBtn.style.fontSize = '14px';
+            tabBtn.style.fontWeight = '500';
+            tabBtn.style.transition = 'all 0.2s';
+            tabBtn.dataset.variation = variation.key;
+            
+            if (variation.key === activeTab) {
+              tabBtn.style.color = '#0077B5';
+              tabBtn.style.borderBottomColor = '#0077B5';
+              tabBtn.style.fontWeight = '600';
+            }
+            
+            tabBtn.onclick = () => {
+              // Update active tab
+              activeTab = variation.key;
+              tabButtons.querySelectorAll('button').forEach(btn => {
+                btn.style.color = '#64748b';
+                btn.style.borderBottomColor = 'transparent';
+                btn.style.fontWeight = '500';
+              });
+              tabBtn.style.color = '#0077B5';
+              tabBtn.style.borderBottomColor = '#0077B5';
+              tabBtn.style.fontWeight = '600';
+              
+              // Show/hide textareas
+              Object.keys(textareas).forEach(key => {
+                textareas[key].style.display = key === variation.key ? 'block' : 'none';
+              });
+            };
+            
+            tabButtons.appendChild(tabBtn);
+          });
+          
+          tabContainer.appendChild(tabButtons);
+          
+          // Create textareas for each variation
+          variations.forEach(variation => {
+            const textarea = document.createElement('textarea');
+            textarea.id = `linkedin-post-${variation.key}-${story.id}`;
+            textarea.style.marginBottom = '16px';
+            textarea.style.padding = '12px';
+            textarea.style.backgroundColor = '#fff';
+            textarea.style.borderRadius = '8px';
+            textarea.style.border = '1px solid #e2e8f0';
+            textarea.style.width = '100%';
+            textarea.style.minHeight = '200px';
+            textarea.style.fontFamily = 'inherit';
+            textarea.style.fontSize = '14px';
+            textarea.style.lineHeight = '1.6';
+            textarea.style.resize = 'vertical';
+            textarea.style.display = variation.key === activeTab ? 'block' : 'none';
+            textarea.value = linkedinPosts[variation.key] || story.linkedin_post || 'No LinkedIn post generated yet.';
+            textarea.placeholder = `${variation.label} LinkedIn post will appear here after generation...`;
+            textareas[variation.key] = textarea;
+            tabContainer.appendChild(textarea);
+          });
+          
+          linkedinSection.appendChild(tabContainer);
+          
+          // Use the active tab's textarea as the main linkedinContent for backward compatibility
+          const linkedinContent = textareas[activeTab];
 
           const linkedinBtnContainer = document.createElement('div');
           linkedinBtnContainer.style.display = 'flex';
@@ -3043,9 +3118,11 @@
           shareBtn.style.transition = 'all 0.2s';
           shareBtn.style.boxShadow = '0 2px 8px rgba(0, 119, 181, 0.15)';
           shareBtn.style.flex = '1';
-          shareBtn.disabled = !story.linkedin_post;
+          // Check if any LinkedIn posts exist
+          const hasAnyLinkedInPost = story.linkedin_post || (story.linkedin_posts && Object.values(story.linkedin_posts).some(p => p));
+          shareBtn.disabled = !hasAnyLinkedInPost;
           shareBtn.onclick = async () => {
-            const postContent = story.linkedin_post || linkedinContent.value;
+            const postContent = textareas[activeTab]?.value || (story.linkedin_posts && story.linkedin_posts[activeTab]) || story.linkedin_post || linkedinContent.value;
             
             if (!postContent || postContent.trim() === '' || postContent === 'No LinkedIn post generated yet.') {
               alert('Please generate a LinkedIn post first before sharing.');
@@ -3108,21 +3185,49 @@
               });
               const data = await res.json();
               if (data.status === 'success') {
-                linkedinContent.value = data.linkedin_post;
-                // Update the story in the local array to persist the LinkedIn post
+                // Merge newly generated variations with existing ones
+                // This preserves previously saved variations that weren't regenerated
+                const newlyGenerated = data.linkedin_posts || {};
+                const existingPosts = story.linkedin_posts || {};
+                
+                // Merge: newly generated overwrites existing, but keep existing if not regenerated
+                const mergedLinkedinPosts = {
+                  ...existingPosts,
+                  ...newlyGenerated
+                };
+                
+                // Update textareas with merged data
+                variations.forEach(variation => {
+                  if (textareas[variation.key]) {
+                    // Use merged data, fallback to legacy field, then default message
+                    textareas[variation.key].value = mergedLinkedinPosts[variation.key] || story.linkedin_post || 'No LinkedIn post generated yet.';
+                  }
+                });
+                
+                // Update the story in the local array to persist the merged LinkedIn posts
                 const storyIndex = allStories.findIndex(s => s.id === story.id);
                 if (storyIndex !== -1) {
-                  allStories[storyIndex].linkedin_post = data.linkedin_post;
+                  allStories[storyIndex].linkedin_posts = mergedLinkedinPosts;
+                  // Set legacy field to standard for backward compatibility if needed
+                  if (mergedLinkedinPosts.standard) {
+                    allStories[storyIndex].linkedin_post = mergedLinkedinPosts.standard;
+                  }
                 }
+                
+                // Update the active tab's content
+                if (textareas[activeTab]) {
+                  textareas[activeTab].value = mergedLinkedinPosts[activeTab] || story.linkedin_post || 'No LinkedIn post generated yet.';
+                }
+                
                 // Show save button after generation
                 saveLinkedInBtn.style.display = 'block';
                 // Enable share button if it exists
                 if (shareBtn) {
                   shareBtn.disabled = false;
                 }
-                alert('LinkedIn post generated successfully!');
+                alert('LinkedIn posts generated successfully!');
               } else {
-                alert('Failed to generate LinkedIn post: ' + data.message);
+                alert('Failed to generate LinkedIn posts: ' + data.message);
               }
             } catch (error) {
               alert('Failed to create LinkedIn post. Please try again.');
@@ -3147,42 +3252,71 @@
           saveLinkedInBtn.style.cursor = 'pointer';
           saveLinkedInBtn.style.transition = 'all 0.2s';
           saveLinkedInBtn.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.15)';
-          saveLinkedInBtn.style.display = story.linkedin_post ? 'block' : 'none';
+          // Show save button if any LinkedIn post exists
+          const hasLinkedInPosts = story.linkedin_post || (story.linkedin_posts && Object.values(story.linkedin_posts).some(p => p));
+          saveLinkedInBtn.style.display = hasLinkedInPosts ? 'block' : 'none';
 
           saveLinkedInBtn.onclick = async () => {
             saveLinkedInBtn.disabled = true;
             saveLinkedInBtn.textContent = 'Saving...';
             try {
-              const postContent = linkedinContent.value.trim();
-              if (!postContent || postContent === 'No LinkedIn post generated yet.') {
-                alert('Please generate or enter a LinkedIn post first.');
+              // Save all variations
+              const linkedinPosts = {};
+              variations.forEach(variation => {
+                const content = textareas[variation.key]?.value.trim() || '';
+                if (content && content !== 'No LinkedIn post generated yet.') {
+                  linkedinPosts[variation.key] = content;
+                }
+              });
+              
+              if (Object.keys(linkedinPosts).length === 0) {
+                alert('Please generate or enter at least one LinkedIn post first.');
                 saveLinkedInBtn.disabled = false;
                 saveLinkedInBtn.textContent = '💾 Save Post';
                 return;
               }
 
+              // Save the active tab's content to the legacy field for backward compatibility
+              // Only include linkedin_post if there's actual content (not empty string)
+              const activeContent = textareas[activeTab]?.value.trim() || '';
+              const requestBody = {
+                case_study_id: story.id,
+                linkedin_posts: linkedinPosts
+              };
+              
+              // Only add linkedin_post if there's actual content
+              if (activeContent) {
+                requestBody.linkedin_post = activeContent;
+              }
+              
               const res = await fetch('/api/save_linkedin_post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  case_study_id: story.id,
-                  linkedin_post: postContent
-                })
+                body: JSON.stringify(requestBody)
               });
               const data = await res.json();
               if (data.status === 'success') {
                 // Update the story in the local array
                 const storyIndex = allStories.findIndex(s => s.id === story.id);
                 if (storyIndex !== -1) {
-                  allStories[storyIndex].linkedin_post = postContent;
+                  // Only update linkedin_post if there's actual content (matches backend behavior)
+                  // If empty, backend will use fallback logic, so preserve existing value or use standard
+                  if (activeContent) {
+                    allStories[storyIndex].linkedin_post = activeContent;
+                  } else if (linkedinPosts.standard) {
+                    // Use standard variation as fallback if active tab is empty
+                    allStories[storyIndex].linkedin_post = linkedinPosts.standard;
+                  }
+                  // Always update linkedin_posts with the saved variations
+                  allStories[storyIndex].linkedin_posts = linkedinPosts;
                 }
-                alert('✅ LinkedIn post saved successfully!');
+                alert('✅ LinkedIn posts saved successfully!');
               } else {
-                alert('❌ Failed to save LinkedIn post: ' + (data.message || 'Unknown error'));
+                alert('❌ Failed to save LinkedIn posts: ' + (data.message || 'Unknown error'));
               }
             } catch (error) {
-              console.error('Error saving LinkedIn post:', error);
-              alert('❌ Failed to save LinkedIn post. Please try again.');
+              console.error('Error saving LinkedIn posts:', error);
+              alert('❌ Failed to save LinkedIn posts. Please try again.');
             } finally {
               saveLinkedInBtn.disabled = false;
               saveLinkedInBtn.textContent = '💾 Save Post';
@@ -3191,12 +3325,19 @@
           linkedinBtnContainer.appendChild(saveLinkedInBtn);
           linkedinBtnContainer.appendChild(shareBtn);
 
-          // Show save button when post is generated or edited
-          linkedinContent.addEventListener('input', () => {
-            if (linkedinContent.value.trim() && linkedinContent.value !== 'No LinkedIn post generated yet.') {
-              saveLinkedInBtn.style.display = 'block';
-              // Enable share button when content is available
-              shareBtn.disabled = false;
+          // Show save button when any post is generated or edited
+          variations.forEach(variation => {
+            if (textareas[variation.key]) {
+              textareas[variation.key].addEventListener('input', () => {
+                const hasContent = Object.values(textareas).some(ta => 
+                  ta.value.trim() && ta.value !== 'No LinkedIn post generated yet.'
+                );
+                if (hasContent) {
+                  saveLinkedInBtn.style.display = 'block';
+                  // Enable share button when content is available
+                  shareBtn.disabled = false;
+                }
+              });
             }
           });
 

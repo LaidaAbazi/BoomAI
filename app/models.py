@@ -13,7 +13,7 @@ class Company(db.Model):
 
     # Relationships
     owner = relationship('User', back_populates='owned_company', foreign_keys=[owner_user_id])
-    users = relationship('User', back_populates='company', foreign_keys='User.company_id')
+    users = relationship('User', back_populates='company', foreign_keys=lambda: [User.company_id])
 
 
 class User(db.Model):
@@ -133,7 +133,11 @@ class CaseStudy(db.Model):
     final_summary_word_data = Column(db.LargeBinary)
     sentiment_chart_data = Column(db.LargeBinary, nullable=True)
     meta_data_text = Column(Text, nullable=True)
-    linkedin_post = Column(Text, nullable=True)
+    linkedin_post = Column(Text, nullable=True)  # Legacy field - kept for backward compatibility
+    linkedin_post_confident = Column(Text, nullable=True)  
+    linkedin_post_pragmatic = Column(Text, nullable=True)  
+    linkedin_post_standard = Column(Text, nullable=True)  
+    linkedin_post_formal = Column(Text, nullable=True)  
     email_subject = Column(Text, nullable=True)
     email_body = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
