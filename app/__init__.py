@@ -155,6 +155,19 @@ def create_app(config_name=None):
                         'linkedin_post': {'type': 'string'},
                         'email_subject': {'type': 'string'},
                         'email_body': {'type': 'string'},
+                        'submitted': {'type': 'boolean'},
+                        'submitted_at': {'type': 'string', 'format': 'date-time'},
+                        'created_by': {
+                            'type': 'object',
+                            'nullable': True,
+                            'description': 'Creator information (name and email) - shown for owners viewing employee stories',
+                            'properties': {
+                                'id': {'type': 'integer'},
+                                'first_name': {'type': 'string'},
+                                'last_name': {'type': 'string'},
+                                'email': {'type': 'string', 'format': 'email'}
+                            }
+                        },
                         'labels': {
                             'type': 'array',
                             'items': {'$ref': '#/components/schemas/Label'}

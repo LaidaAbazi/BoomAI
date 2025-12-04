@@ -205,6 +205,7 @@ def get_case_study(case_study_id):
     """Get a single case study by ID"""
     try:
         user_id = get_current_user_id()
+        creator_info = None  # Initialize at the start to ensure it's always defined
         
         if user_id:
             # Session-based authentication - check company access
@@ -228,6 +229,20 @@ def get_case_study(case_study_id):
                 # Employee: must be their own story
                 if case_study.user_id != user_id:
                     return jsonify({'error': 'Case study not found'}), 404
+            
+            # Get creator info - always show who created the story for authenticated users
+            try:
+                creator = User.query.get(case_study.user_id)
+                if creator:
+                    creator_info = {
+                        'id': creator.id,
+                        'first_name': creator.first_name,
+                        'last_name': creator.last_name,
+                        'email': creator.email
+                    }
+            except Exception as e:
+                print(f"Error fetching creator info: {e}")
+                creator_info = None
         else:
             # Token-based authentication - just get the case study directly
             case_study = CaseStudy.query.filter_by(id=case_study_id).first()
@@ -238,10 +253,12 @@ def get_case_study(case_study_id):
                 invite_token = InviteToken.query.filter_by(token=token).first()
                 if not invite_token or invite_token.case_study_id != case_study_id:
                     return jsonify({'error': 'Invalid token for this case study'}), 403
+            
+            # No creator info for token-based access
+            creator_info = None
         
         if not case_study:
             return jsonify({'error': 'Case study not found'}), 404
-        
         
         case_study_data = {
             'id': case_study.id,
@@ -283,7 +300,13 @@ def get_case_study(case_study_id):
             'email_body': case_study.email_body,
             'submitted': case_study.submitted,
             'submitted_at': case_study.submitted_at.isoformat() if case_study.submitted_at else None,
+            'created_by': creator_info,  # Creator info (name, email) - always included
         }
+        
+        # Debug: print to verify created_by is being set
+        print(f"DEBUG get_case_study: created_by value = {creator_info}")
+        print(f"DEBUG get_case_study: case_study.user_id = {case_study.user_id if case_study else 'N/A'}")
+        print(f"DEBUG get_case_study: user_id = {user_id}")
         
         return jsonify({'success': True, 'case_study': case_study_data})
     except Exception as e:
@@ -2093,4 +2116,3 @@ def get_story_feedback(case_study_id):
             })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
-
