@@ -3,6 +3,7 @@ import os
 import json
 import re
 import uuid
+import logging
 from datetime import datetime, UTC, timezone
 from fpdf import FPDF
 from docx import Document
@@ -118,8 +119,8 @@ def get_case_studies():
                 'solution_provider_summary': case_study.solution_provider_interview.summary if case_study.solution_provider_interview else None,
                 'client_summary': case_study.client_interview.summary if case_study.client_interview else None,
                 'client_link_url': case_study.solution_provider_interview.client_link_url if case_study.solution_provider_interview else None,
-                'created_at': case_study.created_at.isoformat(),
-                'updated_at': case_study.updated_at.isoformat(),
+                'created_at': case_study.created_at.isoformat() if case_study.created_at else None,
+                'updated_at': case_study.updated_at.isoformat() if case_study.updated_at else None,
                 'video_status': case_study.video_status,
                 'pictory_video_status': case_study.pictory_video_status,
                 'podcast_status': case_study.podcast_status,
@@ -139,7 +140,12 @@ def get_case_studies():
                 'podcast_job_id': case_study.podcast_job_id,
                 'podcast_script': case_study.podcast_script,
                 'podcast_created_at': case_study.podcast_created_at.isoformat() if case_study.podcast_created_at else None,
-                'linkedin_post': case_study.linkedin_post,
+                'linkedin_posts': {
+                    'confident': case_study.linkedin_post_confident,
+                    'pragmatic': case_study.linkedin_post_pragmatic,
+                    'standard': case_study.linkedin_post_standard,
+                    'formal': case_study.linkedin_post_formal
+                },
                 'email_subject': case_study.email_subject,
                 'email_body': case_study.email_body,
                 'user_feedback': user_feedback.to_dict() if user_feedback else None,
@@ -151,6 +157,7 @@ def get_case_studies():
         
         return jsonify({'success': True, 'case_studies': case_studies_data})
     except Exception as e:
+        logging.error(f"Error fetching case studies: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/case_studies/<int:case_study_id>', methods=['GET'])
@@ -264,7 +271,12 @@ def get_case_study(case_study_id):
             'podcast_job_id': case_study.podcast_job_id,
             'podcast_script': case_study.podcast_script,
             'podcast_created_at': case_study.podcast_created_at.isoformat() if case_study.podcast_created_at else None,
-            'linkedin_post': case_study.linkedin_post,
+            'linkedin_posts': {
+                'confident': case_study.linkedin_post_confident,
+                'pragmatic': case_study.linkedin_post_pragmatic,
+                'standard': case_study.linkedin_post_standard,
+                'formal': case_study.linkedin_post_formal
+            },
             'email_subject': case_study.email_subject,
             'email_body': case_study.email_body,
             'submitted': case_study.submitted,
@@ -678,8 +690,8 @@ def remove_label_from_case_study(case_study_id, label_id):
 @owner_required
 @swag_from({
     'tags': ['Case Studies'],
-    'summary': 'Generate LinkedIn post',
-    'description': 'Generate a LinkedIn post from case study content',
+    'summary': 'Generate LinkedIn post variations',
+    'description': 'Generate four variations of LinkedIn posts from case study content using different prompt styles: Confident, Pragmatic, Standard, and Formal',
     'requestBody': {
         'required': True,
         'content': {
@@ -699,14 +711,38 @@ def remove_label_from_case_study(case_study_id, label_id):
     },
     'responses': {
         200: {
-            'description': 'LinkedIn post generated successfully',
+            'description': 'LinkedIn post variations generated successfully',
             'content': {
                 'application/json': {
                     'schema': {
                         'type': 'object',
                         'properties': {
-                            'status': {'type': 'string'},
-                            'linkedin_post': {'type': 'string'}
+                            'status': {
+                                'type': 'string',
+                                'example': 'success'
+                            },
+                            'linkedin_posts': {
+                                'type': 'object',
+                                'description': 'Four variations of LinkedIn posts with different tones and styles',
+                                'properties': {
+                                    'confident': {
+                                        'type': 'string',
+                                        'description': 'Confident variation - sharply confident, witty, and punchy voice'
+                                    },
+                                    'pragmatic': {
+                                        'type': 'string',
+                                        'description': 'Pragmatic variation - grounded, relatable, authentic voice'
+                                    },
+                                    'standard': {
+                                        'type': 'string',
+                                        'description': 'Standard variation - conversational, expert, and authentic voice'
+                                    },
+                                    'formal': {
+                                        'type': 'string',
+                                        'description': 'Formal variation - formal, strategic, and highly analytical voice'
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -715,7 +751,7 @@ def remove_label_from_case_study(case_study_id, label_id):
         400: {'description': 'Missing case study ID or no final summary'},
         403: {'description': 'Only owners can generate LinkedIn posts'},
         404: {'description': 'Case study not found'},
-        500: {'description': 'Error generating LinkedIn post'}
+        500: {'description': 'Error generating LinkedIn post variations'}
     }
 })
 def generate_linkedin_post():
@@ -745,24 +781,60 @@ def generate_linkedin_post():
         if not case_study.final_summary:
             return jsonify({"status": "error", "message": "No final summary available"}), 400
 
-        # Generate LinkedIn post
+        # Generate LinkedIn post variations using Gemini
         ai_service = AIService()
-        linkedin_post = ai_service.generate_linkedin_post(case_study.final_summary)
+        result = ai_service.generate_linkedin_post_variations(case_study.final_summary)
         
         # Check if generation was successful
-        if linkedin_post.startswith("Failed to generate") or linkedin_post.startswith("Error generating") or linkedin_post.startswith("AI service not available"):
+        if result.get("status") == "error":
             return jsonify({
                 "status": "error", 
-                "message": linkedin_post
+                "message": result.get("message", "Failed to generate LinkedIn posts")
             }), 500
         
-        # Save to database
-        case_study.linkedin_post = linkedin_post
+        variations = result.get("variations", {})
+        
+        print(f"📥 Received {len(variations)} variations: {list(variations.keys())}")
+        
+        # Helper function to safely extract content
+        def get_variation_content(variation_key):
+            variation = variations.get(variation_key, {})
+            if variation.get("status") == "success":
+                return variation.get("content")
+            else:
+                error_msg = variation.get("content", "Unknown error")
+                print(f"⚠️ Variation {variation_key} failed: {error_msg[:100]}")
+                return None
+        
+        # Save all variations to database
+        confident_content = get_variation_content("confident")
+        pragmatic_content = get_variation_content("pragmatic")
+        standard_content = get_variation_content("standard")
+        formal_content = get_variation_content("formal")
+        
+        case_study.linkedin_post_confident = confident_content
+        case_study.linkedin_post_pragmatic = pragmatic_content
+        case_study.linkedin_post_standard = standard_content
+        case_study.linkedin_post_formal = formal_content
+        
         db.session.commit()
 
+        # Build response with only successful variations
+        linkedin_posts = {}
+        if confident_content:
+            linkedin_posts["confident"] = confident_content
+        if pragmatic_content:
+            linkedin_posts["pragmatic"] = pragmatic_content
+        if standard_content:
+            linkedin_posts["standard"] = standard_content
+        if formal_content:
+            linkedin_posts["formal"] = formal_content
+        
+        print(f"✅ Returning {len(linkedin_posts)} successful variations: {list(linkedin_posts.keys())}")
+        
         return jsonify({
             "status": "success",
-            "linkedin_post": linkedin_post
+            "linkedin_posts": linkedin_posts
         })
 
     except Exception as e:
@@ -824,13 +896,14 @@ def save_linkedin_post():
         user = User.query.get(user_id)
         data = request.get_json()
         case_study_id = data.get("case_study_id")
-        linkedin_post = data.get("linkedin_post")
+        linkedin_post = data.get("linkedin_post")  # Legacy field
+        linkedin_posts = data.get("linkedin_posts", {})  # New field with all variations
 
         if not case_study_id:
             return jsonify({"status": "error", "message": "Missing case_study_id"}), 400
 
-        if linkedin_post is None:
-            return jsonify({"status": "error", "message": "Missing linkedin_post"}), 400
+        if linkedin_post is None and not linkedin_posts:
+            return jsonify({"status": "error", "message": "Missing linkedin_post or linkedin_posts"}), 400
 
         case_study = CaseStudy.query.filter_by(id=case_study_id).first()
         if not case_study:
@@ -851,8 +924,19 @@ def save_linkedin_post():
                 "message": "Cannot edit submitted case study. Please contact your owner to make changes."
             }), 403
 
-        # Save to database
-        case_study.linkedin_post = linkedin_post
+        # Save all variations to database
+        if linkedin_posts:
+            case_study.linkedin_post_confident = linkedin_posts.get("confident")
+            case_study.linkedin_post_pragmatic = linkedin_posts.get("pragmatic")
+            case_study.linkedin_post_standard = linkedin_posts.get("standard")
+            case_study.linkedin_post_formal = linkedin_posts.get("formal")
+        
+        # Save legacy field for backward compatibility
+        if linkedin_post is not None:
+            case_study.linkedin_post = linkedin_post
+        elif linkedin_posts.get("standard"):
+            case_study.linkedin_post = linkedin_posts.get("standard")
+        
         db.session.commit()
 
         return jsonify({

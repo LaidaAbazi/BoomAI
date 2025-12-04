@@ -2,17 +2,29 @@ import os
 import requests
 import json
 from typing import Dict, Any, Optional
+from google import genai
+from google.genai import types
 
 class AIService:
     """AI service for OpenAI integration"""
     
     def __init__(self):
         self.openai_api_key = os.environ.get('OPENAI_API_KEY')
+        self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
         self.openai_config = {
             "model": "gpt-3.5-turbo",
             "max_tokens": 1000,
             "temperature": 0.7
         }
+        # Initialize Gemini client if API key is available
+        if self.gemini_api_key:
+            try:
+                self.gemini_client = genai.Client(api_key=self.gemini_api_key)
+            except Exception as e:
+                print(f"Warning: Could not initialize Gemini client: {str(e)}")
+                self.gemini_client = None
+        else:
+            self.gemini_client = None
     
     def generate_text(self, prompt: str, max_tokens: int = None) -> str:
         """Generate text using OpenAI API"""
@@ -298,6 +310,440 @@ Before finalizing the post:
         except Exception as e:
             print(f"Error generating LinkedIn post: {str(e)}")
             return "Error generating LinkedIn post. Please try again."
+    
+    def _get_linkedin_prompt_variations(self):
+        """Return the four LinkedIn post prompt variations"""
+        # Prompt 1: Confident, slightly cheeky, but still clearly professional
+        confident_prompt = """
+    ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+
+**DO NOT output any section labels.
+   Forbidden labels include: "HOOK", "STORY", "TAKEAWAY", "CLOSING", "HASHTAGS", or any variation (lowercase, uppercase, bold, with or without colons).  
+   If the model outputs ANY label, the output is invalid. 
+   DO NOT use more than 3 emojis in the post.**
+
+ Act as a LinkedIn content strategist who writes like a confident founder/creator, using a sharply confident, witty, and punchy voice. Avoid clichés. The content must be high-impact and highly readable.
+
+IMPORTANT: Write the LinkedIn post in the same language as the case study content below.
+
+Write a scroll-stopping LinkedIn post on the following story shown between '<<' and '>>':
+
+'<<'{case_study_text}'>>'
+
+🔥 ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+FORBIDDEN WORDS & LABELS (CRITICAL):
+
+NEVER use "the results," "the result?", "the impact," or "the solution?".
+
+DO NOT output any section labels (e.g., "HOOK," "STORY," "TAKEAWAY").
+
+TOTAL LENGTH: Total post length MUST be between 80 and 120 words (inclusive).
+
+TONE & READABILITY: The tone must be Sharply Confident and Professional. Write at a middle-school reading level. Sentences must be under 10 words (aim for 5-8). Avoid ALL clichés and robotic phrases.
+
+SECTION 1: THE HOOK
+HOOK FORMAT: The FIRST LINE of the post must be the Hook.
+
+Max 10 words. One sentence only.
+
+Must be strong, provocative, and opinionated.
+
+NO emojis, NO hashtags, NO links.
+
+SECTION 2: THE STORY (BODY)
+STORY STRUCTURE: The Story must be 4 to 6 paragraphs long. Use light humor, sharper phrasing, and natural contrast/tension.
+
+PARAGRAPH FORMAT:
+
+Each paragraph must be 1 to 3 sentences maximum.
+
+Each sentence MUST appear on its own line. (No paragraph may exceed 2 lines total on screen).
+
+Use blank lines to separate paragraphs.
+
+EMOJI RULE: The post MUST use between 1 and 3 emojis total (inclusive). Emojis CANNOT appear in the Hook, but they MAY appear in the Story paragraphs or the Takeaway.
+
+SECTION 3: THE CONCLUSION
+TAKEAWAY: Must be 1 to 2 lines only. Summarize the key insight using mini punchlines and clear contrast. No labels.
+
+CLOSING/ENGAGEMENT: Must be EXACTLY one question. One line only. No emojis.
+
+HASHTAGS: Must be 3 to 5 hashtags on the final line, separated by spaces.
+
+SECTION 4: FINAL CHECKS
+ROBOTIC PHRASING: AVOID "Enter [company]," "They succeeded," or "A single solution…".
+
+FORMATTING: NO markdown formatting (no bold, no italics, no headers, no lists). NO sarcasm toward people.
+
+If the model violates ANY rule above, especially Rule #1, regenerate until compliant. """
+        
+        # Prompt 2: A senior IC or manager sharing what actually worked
+        pragmatic_prompt = """
+    ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+
+**DO NOT output any section labels.
+   Forbidden labels include: "HOOK", "STORY", "TAKEAWAY", "CLOSING", "HASHTAGS", or any variation (lowercase, uppercase, bold, with or without colons).  
+   If the model outputs ANY label, the output is invalid. 
+   DO NOT use more than 3 emojis in the post.**
+
+Act as a seasoned business leader who writes with a Pragmatic, Human, and Authentic voice. Your focus is on simple truths, real execution, and empathetic insight. The post must feel grounded and relatable.
+
+IMPORTANT: Write the LinkedIn post in the same language as the case study content below.
+
+Write a scroll-stopping LinkedIn post on the following story shown between '<<' and '>>':
+
+'<<'{case_study_text}'>>'
+
+🔥 ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+FORBIDDEN WORDS & LABELS (CRITICAL):
+
+NEVER use "the results," "the result?", "the impact," or "the solution?".
+
+DO NOT output any section labels (e.g., "HOOK," "STORY," "TAKEAWAY,").
+
+TOTAL LENGTH: Total post length MUST be between 80 and 120 words (inclusive).
+
+TONE & READABILITY: The tone must be Pragmatic, Authentic, and Empathetic. Write at a middle-school reading level. Sentences must be under 10 words (aim for 5-8). Avoid ALL corporate jargon, clichés, and overly aggressive language.
+
+SECTION 1: THE HOOK
+HOOK FORMAT: The FIRST LINE of the post must be the Hook.
+
+Max 10 words. One sentence only.
+
+Must be immediately relatable and focused on a common pain point (e.g., "We overthink the simple stuff, every time.").
+
+NO emojis, NO hashtags, NO links.
+
+SECTION 2: THE STORY (BODY)
+STORY STRUCTURE: The Story must be 4 to 6 paragraphs long. Focus on the actual, simple steps taken and the human element of change. Use a clear contrast of Struggle vs. Simple Fix.
+
+PARAGRAPH FORMAT:
+
+Each paragraph must be 1 to 3 sentences maximum.
+
+Each sentence MUST appear on its own line. (No paragraph may exceed 2 lines total on screen).
+
+Use blank lines to separate paragraphs.
+
+EMOJI RULE: The post MUST use between 1 and 3 emojis total (inclusive). Emojis CANNOT appear in the Hook, but they MAY appear in the Story paragraphs or the Takeaway.
+
+SECTION 3: THE CONCLUSION
+TAKEAWAY: Must be 1 to 2 lines only. Summarize the key insight by offering a piece of authentic, practical advice. No labels.
+
+CLOSING/ENGAGEMENT: Must be EXACTLY one question. One line only. No emojis.
+
+HASHTAGS: Must be 3 to 5 hashtags on the final line, separated by spaces. Focus on industry and leadership terms.
+
+SECTION 4: FINAL CHECKS
+ROBOTIC PHRASING: AVOID "Enter [company]," "They succeeded," or "A single solution…".
+
+FORMATTING: NO markdown formatting (no bold, no italics, no headers, no lists).
+
+If the model violates ANY rule above, especially Rule #1, regenerate until compliant.
+
+"""
+        
+        # Prompt 3: Standard prompt
+        standard_prompt = """
+           ### ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+
+1. DO NOT output any section labels.  
+   Forbidden labels include: "HOOK", "STORY", "TAKEAWAY", "CLOSING", "HASHTAGS", or any variation (lowercase, uppercase, bold, with or without colons).  
+   If the model outputs ANY label, the output is invalid. DO NOT use more than 3 emojis in the post.
+
+2. FIRST LINE = Hook.  
+   - Max 10 words.  
+   - NO emojis, NO hashtags, NO links.  
+   - One sentence only.
+
+3. STORY = 4 to 6 paragraphs.  
+   - Each paragraph 1 to 3 sentences maximum.  
+   - Each sentence MUST appear on its own line.  
+   - No paragraph may exceed 2 lines total on screen.  
+   - No labels, no bullets, no numbering.  
+   - No emojis in more than 3 total sentences in the entire post.
+
+4. LANGUAGE RULE: Use the same language as the case study.
+
+5. LENGTH RULE: Total post length MUST be between 80 and 120 words (inclusive).  
+   The model must self-check and keep within this range.
+   
+
+6. FORBIDDEN WORDS & PHRASES:  
+   - NEVER use "the results", "the result?", or "the impact".  
+   - NEVER use "the solution?" as a phrase.  
+   - NEVER use "Enter [company]".  
+   - Avoid robotic phrasing like: "This wasn't a simple task." "They succeeded." "A single solution…".
+
+7. TAKEAWAY = 1 to 2 lines only.  
+   Short, poetic, memorable. No labels.
+
+8. CLOSING = EXACTLY one question.  
+   One line only. No emojis.
+
+9. HASHTAGS = 3 to 5 hashtags on the last line.  
+   Only plain hashtags. No emojis. No section labels.
+
+10. NO markdown formatting:  
+    - No bold  
+    - No italics  
+    - No headers (#, ##, ###)  
+    - No lists  
+    - No colons after labels (since labels are forbidden entirely)
+
+11. EMOJI RULE: The post MUST use **between 1 and 3 emojis total** (inclusive).
+- Emojis CANNOT appear in the hook.
+- Emojis may appear only inside the story paragraphs or takeaway.
+
+
+If the model violates ANY rule above, regenerate until compliant.
+
+
+        Act as a **LinkedIn content strategist and viral copywriter** with a proven record of creating high-engagement posts that drive massive reach, discussion, and shares among professionals.
+ **IMPORTANT: Write the LinkedIn post in the same language as the case study content below.**
+
+
+Write a **scroll-stopping LinkedIn post** on the following story shown between '<<' and '>>':
+
+'<<'{case_study_text}'>>'
+
+Follow the structure, style, and tone instructions below carefully.
+
+### **STRUCTURE: The Viral LinkedIn Framework**
+
+1. **HOOK (1 line, max 10 words):**
+
+   * Capture attention immediately with a thought-provoking question.
+   * Keep it extremely short and punchy.
+   * Example: "What if a piano could change a child's life?"
+   * No hashtags, emojis, or links in the hook.
+
+2. **STORY (4–6 very short paragraphs):**
+
+ - Tell the story in ultra-short paragraphs (1–3 sentences each).
+- Use one idea per paragraph.
+- Add blank lines between paragraphs for visual breathing room and to preserve paragraph context.
+- Format each sentence in the paragraph on a separate line, so sentences within a paragraph appear line-  by-line, but paragraphs are not broken up beyond that.
+- Write like you speak — simple, human, conversational.
+- Keep sentences short and punchy (5–12 words each).
+- Be authentic and avoid jargon like "synergy," "game-changer," or "innovative solutions."
+- Facts and emotions > adjectives and fluff.
+- Show contrast: "Most schools see X. [Company] saw Y."
+- Include NO MORE THAN 3 emojis total per ENTIRE POST.
+
+ 
+3. **TAKEAWAY (1–2 very short lines):**
+
+   * Summarize the key insight in a memorable, poetic way.
+   * Keep it extremely concise (1–2 sentences max).
+   * Example: "Sometimes, the most powerful tools for change don't run on code. They run on keys."
+   
+4. **CLOSING / ENGAGEMENT (1 line):**
+
+   * End with a single **question** that invites comments.
+   * Keep it short and natural.
+   * Example: "Would you agree that every school should have access to music education like this?"
+   
+5. **HASHTAGS (optional, 3–5 hashtags):**
+
+   * Add 3–5 relevant hashtags at the end, separated by spaces.
+   * Example: "#Education #Music #Impact #Inclusion"
+   
+---
+
+### 🧭 **STYLE GUIDELINES**
+
+* **Tone:** Conversational, expert, and authentic — like a trusted peer, not a marketer.
+* **Readability:** Write at a **middle-school reading level** (short, clear sentences).
+* **Sentence length:** Keep most under **10–12 words**. Many should be 5–8 words.
+* **Paragraph length:** Maximum 1–2 lines per paragraph. Use lots of white space.
+* **Avoid:** Buzzwords, exclamation overuse, self-congratulation, or forced "corporate" tone.
+* **Avoid robotic words:** NEVER use "Enter" (as in "Enter [company name]") - it sounds AI-generated and robotic. Instead, naturally introduce the company or person: "Meet [company]" or "Here's how [company]..." or just start with the story naturally.
+* **Avoid "the results":** NEVER use "the results" - it sounds robotic and AI-generated. Instead, say what actually happened: "sales went up 30%", "they saved time", "it worked", "their numbers improved", "they saw huge improvements".
+* **Use:** Line breaks for rhythm and white space — readability drives engagement. Add blank lines between paragraphs.
+* **Voice:** Confident, empathetic, and human — share lessons, not lectures.
+* **Emotion:** Include tension or contrast (e.g. "what I expected" vs. "what really happened").
+* **Length:** Aim for **80–120 words total** — much shorter and more concise than typical posts. Be extremely concise.
+* **Titles:** Don't use section titles or headers.
+* **Formatting:** Use blank lines between paragraphs to create visual breathing room.
+
+---
+
+### ✅ **Final Output Checklist**
+
+Before finalizing the post:
+
+* [ ] Hook is extremely short (max 10 words) and curiosity-driven.
+* [ ] Every paragraph is 1–2 lines maximum.
+* [ ] Blank lines between paragraphs for visual breathing room.
+* [ ] Story feels human, not "marketing copy."
+* [ ] One clear insight or takeaway.
+* [ ] Ends with one powerful question — not multiple CTAs.
+* [ ] Total length is 80–120 words (much shorter than typical posts).
+* [ ] 3–5 hashtags at the end (optional but recommended).
+* [ ] Extremely concise — every word counts.
+
+"""
+        
+        # Prompt 4: Very formal, precise, calm - like a quarterly report or board deck
+        formal_prompt = """
+    ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+
+**DO NOT output any section labels.
+   Forbidden labels include: "HOOK", "STORY", "TAKEAWAY", "CLOSING", "HASHTAGS", or any variation (lowercase, uppercase, bold, with or without colons).  
+   If the model outputs ANY label, the output is invalid. 
+   DO NOT use more than 3 emojis in the post.**
+
+ Act as a Senior Consultant or VP of Strategy who writes with a Formal, Strategic, and Highly Analytical voice. Your focus is on complex organizational change, systemic execution, and quantifiable business outcomes. The post must convey expertise and strategic depth.
+
+IMPORTANT: Write the LinkedIn post in the same language as the case study content below.
+
+Write a scroll-stopping LinkedIn post on the following story shown between '<<' and '>>':
+
+'<<'{case_study_text}'>>'
+
+🔥 ABSOLUTE, NON-NEGOTIABLE RULES (THE MODEL MUST FOLLOW THESE EXACTLY)
+
+FORBIDDEN WORDS & LABELS (CRITICAL):
+
+NEVER use "the results," "the result?", "the impact," or "the solution?".
+
+DO NOT output any section labels (e.g., "HOOK," "STORY," "TAKEAWAY,").
+
+TOTAL LENGTH: Total post length MUST be between 80 and 120 words (inclusive).
+
+TONE & READABILITY: The tone must be Formal, Strategic, and Precise. Write with short, clear sentences. Sentences must be under 12 words. Avoid ALL slang, clichés, and overly casual phrasing.
+
+SECTION 1: THE HOOK
+
+HOOK FORMAT: The FIRST LINE of the post must be the Hook.
+
+Max 10 words. One sentence only.
+
+Must be strategic, professional, and focused on an organizational challenge (e.g., "Misaligned stakeholders erode organizational value.").
+
+NO emojis, NO hashtags, NO links.
+
+SECTION 2: THE STORY (BODY)
+
+STORY STRUCTURE: The Story must be 4 to 6 paragraphs long. Focus on the strategic decision-making process, framework application, and execution rigor. Use a clear contrast of Problem Complexity vs. Structured Intervention.
+
+PARAGRAPH FORMAT:
+
+Each paragraph must be 1 to 3 sentences maximum.
+
+Each sentence MUST appear on its own line. (No paragraph may exceed 2 lines total on screen).
+
+Use blank lines to separate paragraphs.
+
+EMOJI RULE: The post MUST use between 1 and 3 emojis total (inclusive). Emojis CANNOT appear in the Hook, but they MAY appear in the Story paragraphs or the Takeaway. Use professional, reserved emojis (e.g., ✅, ➡️, ⬆️).
+
+SECTION 3: THE CONCLUSION
+
+TAKEAWAY: Must be 1 to 2 lines only. Summarize the key insight by offering a piece of actionable, high-level strategic guidance. No labels.
+
+CLOSING/ENGAGEMENT: Must be EXACTLY one question. One line only. No emojis. The question should target executive-level thought.
+
+HASHTAGS: Must be 3 to 5 hashtags on the final line, separated by spaces. Focus on professional and strategic terminology.
+
+SECTION 4: FINAL CHECKS
+
+ROBOTIC PHRASING: AVOID "Enter [company]," "They succeeded," or "A single solution…".
+
+FORMATTING: NO markdown formatting (no bold, no italics, no headers, no lists).
+
+If the model violates ANY rule above, especially Rule #1, regenerate until compliant.
+"""
+        
+        return {
+            "confident": confident_prompt,
+            "pragmatic": pragmatic_prompt,
+            "standard": standard_prompt,
+            "formal": formal_prompt
+        }
+    
+    def generate_linkedin_post_with_gemini(self, case_study_text, prompt_template):
+        """Generate a LinkedIn post using Gemini with a specific prompt template"""
+        if not self.gemini_api_key or not self.gemini_client:
+            return ("AI service not available - Gemini API key not configured", 0, 0)
+        
+        try:
+            # Format the prompt with the case study text
+            prompt = prompt_template.format(case_study_text=case_study_text)
+            
+            # Generate content with Gemini
+            response = self.gemini_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.7,
+                    max_output_tokens=10000
+                )
+            )
+
+            if response.text:
+                generated_text = response.text.strip()
+                return (generated_text, 0, 0)  # Token counting can be added later if needed
+            else:
+                return ("Failed to generate LinkedIn post. Empty response from Gemini.", 0, 0)
+        
+        except Exception as e:
+            return (f"Error generating LinkedIn post: {str(e)}", 0, 0)
+    
+    def generate_linkedin_post_variations(self, case_study_text):
+        """Generate all 4 LinkedIn post variations using Gemini"""
+        if not self.gemini_api_key or not self.gemini_client:
+            return {
+                "status": "error",
+                "message": "AI service not available - Gemini API key not configured"
+            }
+        
+        try:
+            prompt_variations = self._get_linkedin_prompt_variations()
+            results = {}
+            
+            print(f"🔍 Generating {len(prompt_variations)} LinkedIn post variations...")
+            
+            # Generate each variation
+            for variation_key, prompt_template in prompt_variations.items():
+                print(f"⏳ Generating {variation_key} variation...")
+                try:
+                    post_text, _, _ = self.generate_linkedin_post_with_gemini(case_study_text, prompt_template)
+                    
+                    # Check if generation was successful
+                    if post_text.startswith("Failed to generate") or post_text.startswith("Error generating") or post_text.startswith("AI service not available"):
+                        print(f"❌ Failed to generate {variation_key}: {post_text[:100]}")
+                        results[variation_key] = {
+                            "status": "error",
+                            "content": post_text
+                        }
+                    else:
+                        print(f"✅ Successfully generated {variation_key} ({len(post_text)} chars)")
+                        results[variation_key] = {
+                            "status": "success",
+                            "content": post_text
+                        }
+                except Exception as e:
+                    print(f"❌ Exception generating {variation_key}: {str(e)}")
+                    results[variation_key] = {
+                        "status": "error",
+                        "content": f"Error generating {variation_key} variation: {str(e)}"
+                    }
+            
+            print(f"📊 Generation complete. Results: {list(results.keys())}")
+            return {
+                "status": "success",
+                "variations": results
+            }
+            
+        except Exception as e:
+            print(f"❌ Fatal error in generate_linkedin_post_variations: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "status": "error",
+                "message": f"Error generating LinkedIn post variations: {str(e)}"
+            }
     
     def generate_client_summary(self, transcript: str, case_study_summary: str) -> str:
         """Generate client interview summary"""
