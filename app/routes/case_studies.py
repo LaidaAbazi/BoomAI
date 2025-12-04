@@ -111,14 +111,14 @@ def get_case_studies():
             
             # Get creator info - always include for filtering purposes
             creator_info = None
-                creator = User.query.get(case_study.user_id)
-                if creator:
-                    creator_info = {
-                        'id': creator.id,
-                        'first_name': creator.first_name,
-                        'last_name': creator.last_name,
-                        'email': creator.email
-                    }
+            creator = User.query.get(case_study.user_id)
+            if creator:
+                creator_info = {
+                    'id': creator.id,
+                    'first_name': creator.first_name,
+                    'last_name': creator.last_name,
+                    'email': creator.email
+                }
             
             case_study_data = {
                 'id': case_study.id,
